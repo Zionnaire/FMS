@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core - Global Notification Center Drawer</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "outline-variant": "#c1c8c6",
+          "on-secondary-fixed-variant": "#59413d",
+          "surface-container-low": "#f6f3f1",
+          "surface-tint": "#496360",
+          "tertiary-container": "#163a2d",
+          "on-surface-variant": "#414847",
+          "on-tertiary-fixed": "#002116",
+          "surface-bright": "#fcf9f7",
+          "on-secondary-container": "#795e59",
+          "tertiary": "#002419",
+          "secondary-fixed-dim": "#e1bfb9",
+          "error-container": "#ffdad6",
+          "inverse-primary": "#b0ccc8",
+          "surface-container-highest": "#e5e2e0",
+          "background": "#fcf9f7",
+          "inverse-surface": "#1e3835",
+          "on-tertiary-container": "#7fa494",
+          "surface-container": "#f0edeb",
+          "on-primary-container": "#86a19d",
+          "tertiary-fixed-dim": "#a8cfbd",
+          "on-surface": "#1b1c1b",
+          "on-primary-fixed": "#04201d",
+          "primary-container": "#1e3835",
+          "on-background": "#1b1c1b",
+          "secondary-fixed": "#ffdad4",
+          "on-secondary": "#ffffff",
+          "surface-dim": "#dcd9d8",
+          "surface-container-high": "#eae8e6",
+          "on-tertiary": "#ffffff",
+          "tertiary-fixed": "#c4ebd9",
+          "on-primary": "#ffffff",
+          "on-primary-fixed-variant": "#314c48",
+          "on-secondary-fixed": "#2a1713",
+          "secondary": "#735854",
+          "primary": "#072320",
+          "error": "#ba1a1a",
+          "on-error": "#ffffff",
+          "on-tertiary-fixed-variant": "#2a4d40",
+          "primary-fixed": "#cbe8e4",
+          "surface-variant": "#e5e2e0",
+          "surface-container-lowest": "#ffffff",
+          "secondary-container": "#f7d3cd",
+          "primary-fixed-dim": "#b0ccc8",
+          "on-error-container": "#93000a",
+          "surface": "#fcf9f7",
+          "outline": "#727877",
+          "inverse-on-surface": "#f3f0ee"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "2xl": "1rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "gutter-mobile": "0.75rem",
+          "margin": "2rem",
+          "space-lg": "1.75rem",
+          "gutter": "1.25rem",
+          "space-md": "1.25rem",
+          "margin-mobile": "1rem",
+          "space-sm": "0.75rem",
+          "space-xs": "0.375rem",
+          "space-xl": "2.5rem"
+        },
+        "fontFamily": {
+          "body-lg": ["Plus Jakarta Sans"],
+          "body-sm": ["Plus Jakarta Sans"],
+          "headline-lg": ["Playfair Display"],
+          "headline-xl": ["Playfair Display"],
+          "headline-md": ["Playfair Display"],
+          "title-lg": ["Plus Jakarta Sans"],
+          "title-md": ["Plus Jakarta Sans"],
+          "title-sm": ["Plus Jakarta Sans"],
+          "label-md": ["Plus Jakarta Sans"],
+          "label-sm": ["Plus Jakarta Sans"],
+          "mono": ["JetBrains Mono"]
+        }
+      }
+    }
+  }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.25); }
+    }
+    .animate-pulse-dot {
+      animation: pulse-dot 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#fcf9f7] text-[#1b1c1b] antialiased overflow-hidden select-none font-body-sm text-[13px]">
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between p-4 bg-[#1E3835] z-40 border-r border-[#16302D]">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2.5 px-1 pb-3 border-b border-[#2d4d49]">
+<div class="w-8 h-8 rounded-lg bg-[#F7D3CD] flex items-center justify-center text-[#1E3835] font-mono text-[13px] font-bold tracking-tight shadow-sm">
+          EF
+        </div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[17px] font-semibold text-white tracking-tight">EFIMS Core</span>
+<span class="font-mono text-[10px] text-[#A8CFBD] uppercase tracking-wider">PROD - NG CORE BANKING</span>
+</div>
+</div>
+<button class="w-full h-9 bg-[#2A4D40] hover:bg-[#345e4e] text-white rounded-xl text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[17px]" data-icon="add_circle">add_circle</span>
+<span>New Escalation</span>
+</button>
+<nav class="flex flex-col gap-1 mt-1">
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#F7D3CD] text-[#1E3835] font-semibold cursor-pointer shadow-sm" href="#">
+<span class="material-symbols-outlined text-[18px] text-[#1E3835]" data-icon="crisis_alert">crisis_alert</span>
+<span class="text-[12px] tracking-wide uppercase font-bold">Incidents</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="folder_managed">folder_managed</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Cases</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="manage_search">manage_search</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Investigations</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="shield">shield</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Evidence Vault</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="lock_reset">lock_reset</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Containment &amp; Recovery</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="policy">policy</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Regulatory &amp; CAPA</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="settings">settings</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Configuration</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A8CFBD] hover:text-white hover:bg-[#2A4D40]/60 transition-colors cursor-pointer" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="history_edu">history_edu</span>
+<span class="text-[12px] tracking-wide uppercase font-medium">Audit Trail</span>
+</a>
+</nav>
+</div>
+<div class="pt-3 border-t border-[#2d4d49] flex flex-col gap-1.5 text-[#A8CFBD]">
+<div class="flex items-center gap-2 px-2 py-1 text-[11px] font-mono">
+<span class="material-symbols-outlined text-[15px] text-[#A8CFBD]" data-icon="verified_user">verified_user</span>
+<span>System Health: Operational</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 text-[11px] font-mono">
+<span class="material-symbols-outlined text-[15px] text-[#A8CFBD]" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span>Audit &amp; Privacy Compartment</span>
+</div>
+</div>
+</aside>
+<header class="fixed top-0 left-64 right-0 h-[60px] flex items-center justify-between px-6 bg-[#FCF9F7] border-b border-[#E5E2E0] z-30 shadow-xs">
+<div class="flex items-center gap-6 flex-1">
+<span class="font-headline-md text-[17px] font-semibold text-[#072320]">EFIMS Forensic Engine</span>
+<div class="relative w-80">
+<div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#727877]">
+<span class="material-symbols-outlined text-[16px]" data-icon="search">search</span>
+</div>
+<input class="h-[34px] w-full pl-8 pr-16 bg-white text-[#1b1c1b] border border-[#E5E2E0] rounded-xl text-[12px] focus:ring-2 focus:ring-[#1E3835] outline-none transition-all" placeholder="Search incidents, hashes, accounts..." type="text"/>
+<div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+<kbd class="px-1.5 py-0.5 font-mono text-[10px] bg-[#F0EDEB] text-[#727877] rounded border border-[#E5E2E0]">Ctrl + K</kbd>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAE8E6] border border-[#E5E2E0] text-[#072320] text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[14px] text-[#1E3835]" data-icon="lock">lock</span>
+<span>AML/MLRO Tier-1</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 text-[#727877] hover:text-[#072320] hover:bg-[#F0EDEB] rounded-lg transition-colors" title="Warnings">
+<span class="material-symbols-outlined text-[20px]" data-icon="warning">warning</span>
+</button>
+<button class="relative p-1.5 bg-[#F7D3CD]/50 text-[#1E3835] rounded-lg ring-1 ring-[#F7D3CD] transition-colors" title="Notifications">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white"></span>
+</button>
+</div>
+<div class="h-5 w-px bg-[#E5E2E0] mx-1"></div>
+<div class="flex items-center gap-2.5 pl-1">
+<div class="w-8 h-8 rounded-full bg-[#F7D3CD] text-[#59413D] flex items-center justify-center text-[12px] font-bold border border-[#E1BFB9]">
+          KA
+        </div>
+<div class="hidden xl:flex flex-col">
+<span class="text-[12px] font-semibold text-[#072320]">K. Adeleke</span>
+<span class="font-mono text-[#727877] text-[10px]">Lead AML Analyst L3</span>
+</div>
+</div>
+</div>
+</header>
+<main class="ml-64 mt-[60px] p-6 min-h-screen pb-20 pointer-events-none bg-[#FCF9F7]">
+<div class="grid grid-cols-4 gap-4 mb-6">
+<div class="bg-white p-4 rounded-2xl border border-[#E5E2E0] shadow-xs flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-[11px] font-semibold uppercase tracking-wider text-[#727877]">ACTIVE S1 INCIDENTS</span>
+<span class="w-2 h-2 rounded-full bg-[#EF4444] animate-pulse-dot"></span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-[26px] font-bold text-[#072320]">03</span>
+<span class="font-mono text-[11px] text-[#EF4444] font-semibold">+1 critical</span>
+</div>
+<div class="font-mono text-[11px] text-[#727877] mt-1">CBN 1hr deadline enforced</div>
+</div>
+<div class="bg-white p-4 rounded-2xl border border-[#E5E2E0] shadow-xs flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-[11px] font-semibold uppercase tracking-wider text-[#727877]">PENDING PND FREEZES</span>
+<span class="material-symbols-outlined text-[16px] text-[#727877]" data-icon="lock_clock">lock_clock</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-[26px] font-bold text-[#072320]">07</span>
+<span class="font-mono text-[11px] text-[#727877]">₦142.8M held</span>
+</div>
+<div class="font-mono text-[11px] text-[#727877] mt-1">4 awaiting dual sign-off</div>
+</div>
+<div class="bg-white p-4 rounded-2xl border border-[#E5E2E0] shadow-xs flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-[11px] font-semibold uppercase tracking-wider text-[#727877]">REGULATORY QUEUE (NFIU)</span>
+<span class="material-symbols-outlined text-[16px] text-[#1E3835]" data-icon="assured_workload">assured_workload</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-[26px] font-bold text-[#072320]">12</span>
+<span class="font-mono text-[11px] text-[#1E3835] font-semibold">100% On-time</span>
+</div>
+<div class="font-mono text-[11px] text-[#727877] mt-1">GoAML API connected</div>
+</div>
+<div class="bg-white p-4 rounded-2xl border border-[#E5E2E0] shadow-xs flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-[11px] font-semibold uppercase tracking-wider text-[#727877]">SYSTEM CONTAINMENT RATE</span>
+<span class="material-symbols-outlined text-[16px] text-[#1E3835]" data-icon="speed">speed</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-[26px] font-bold text-[#072320]">98.4%</span>
+<span class="font-mono text-[11px] text-[#1E3835] font-semibold">Avg 8.4m</span>
+</div>
+<div class="font-mono text-[11px] text-[#727877] mt-1">NIBSS instant revokes</div>
+</div>
+</div>
+<div class="bg-white rounded-2xl border border-[#E5E2E0] shadow-xs overflow-hidden">
+<div class="px-4 py-3 border-b border-[#E5E2E0] flex items-center justify-between bg-[#F6F3F1]/50">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-[15px] font-semibold text-[#072320]">High-Consequence Incident Queue</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#CBE8E4] text-[#072320]">Live Ingestion</span>
+</div>
+<div class="font-mono text-[11px] text-[#727877]">
+          Refreshed 12s ago • Central Routing Gateway
+        </div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="h-9 bg-[#FAF8F6] border-b border-[#E5E2E0] text-[11px] font-semibold uppercase tracking-wider text-[#727877]">
+<th class="px-4 py-2">SEVERITY</th>
+<th class="px-4 py-2">INCIDENT REF</th>
+<th class="px-4 py-2">ORIGIN PROTOCOL</th>
+<th class="px-4 py-2">FLAGGED AMOUNT</th>
+<th class="px-4 py-2">ACCOUNT IDENTIFIER</th>
+<th class="px-4 py-2">SLA COUNTDOWN</th>
+<th class="px-4 py-2 text-right">CONTAINMENT</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#E5E2E0]/60 text-[12px]">
+<tr class="h-11 hover:bg-[#F6F3F1]/40">
+<td class="px-4 py-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse-dot"></span> S1 CRITICAL
+              </span>
+</td>
+<td class="px-4 py-2 font-mono font-semibold text-[#072320]">INC-2024-8902</td>
+<td class="px-4 py-2 text-[#414847]">Unauthorized NIBSS Instant</td>
+<td class="px-4 py-2 font-mono font-semibold text-[#072320]">₦45,000,000.00</td>
+<td class="px-4 py-2 font-mono text-[#727877]">0192837411 (GTB)</td>
+<td class="px-4 py-2 font-mono text-[#EF4444] font-semibold">14m 12s remaining</td>
+<td class="px-4 py-2 text-right">
+<span class="font-mono text-[#1E3835] font-medium">Pending MLRO</span>
+</td>
+</tr>
+<tr class="h-11 hover:bg-[#F6F3F1]/40">
+<td class="px-4 py-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span> S2 HIGH
+              </span>
+</td>
+<td class="px-4 py-2 font-mono font-semibold text-[#072320]">INC-2024-8894</td>
+<td class="px-4 py-2 text-[#414847]">Structured Smurfing (Layering)</td>
+<td class="px-4 py-2 font-mono font-semibold text-[#072320]">₦18,200,000.00</td>
+<td class="px-4 py-2 font-mono text-[#727877]">Cluster #CL-882 (5 Accs)</td>
+<td class="px-4 py-2 font-mono text-[#727877]">1h 45m</td>
+<td class="px-4 py-2 text-right">
+<span class="font-mono text-[#1E3835] font-medium">Active Analysis</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+<div class="fixed inset-0 bg-[#072320]/30 backdrop-blur-[3px] z-50 transition-opacity duration-200" id="backdropOverlay"></div>
+<section class="fixed top-0 right-0 h-screen w-[480px] bg-white border-l border-[#E5E2E0] shadow-2xl z-50 flex flex-col justify-between transform transition-transform duration-300 ease-out" id="notificationDrawer">
+<header class="flex flex-col border-b border-[#E5E2E0] bg-[#FCF9F7] pt-5 px-6 pb-3 shrink-0">
+<div class="flex items-center justify-between pb-3.5">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-[#F0EDEB] border border-[#E5E2E0] flex items-center justify-center text-[#1E3835] shadow-xs">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<h2 class="font-headline-md text-[18px] font-bold text-[#072320] tracking-tight">Notification Enclave</h2>
+<p class="font-mono text-[11px] text-[#727877] tracking-tight">Operational Alert Compartment</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="flex items-center gap-1.5 px-3 py-1.5 text-[#59413D] hover:text-[#072320] hover:bg-[#F0EDEB] rounded-lg transition-colors font-mono text-[11px] font-semibold" title="Mark all as read">
+<span class="material-symbols-outlined text-[15px]" data-icon="done_all">done_all</span>
+<span>Mark all read</span>
+</button>
+<button class="flex items-center justify-center w-8 h-8 rounded-full text-[#727877] hover:text-[#072320] hover:bg-[#EAE8E6] border border-transparent hover:border-[#E5E2E0] transition-colors" title="Close Drawer (Esc)">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
+<button class="px-3.5 py-1.5 rounded-full bg-[#F7D3CD] text-[#1E3835] font-semibold text-[12px] flex items-center gap-1.5 whitespace-nowrap shadow-xs transition-all">
+<span>All</span>
+<span class="px-1.5 py-0.5 rounded-full font-mono text-[10px] bg-white/80 text-[#1E3835] font-bold">18</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-[#F0EDEB] hover:bg-[#EAE8E6] text-[#414847] hover:text-[#072320] text-[12px] font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors">
+<span>Unread</span>
+<span class="px-1.5 py-0.5 rounded-full font-mono text-[10px] bg-[#FECACA] text-[#991B1B] font-bold">5</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-[#F0EDEB] hover:bg-[#EAE8E6] text-[#414847] hover:text-[#072320] text-[12px] font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors">
+<span>SLA Breaches</span>
+<span class="px-1.5 py-0.5 rounded-full font-mono text-[10px] bg-white text-[#727877] font-semibold border border-[#E5E2E0]">3</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-[#F0EDEB] hover:bg-[#EAE8E6] text-[#414847] hover:text-[#072320] text-[12px] font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors">
+<span>Approvals</span>
+<span class="px-1.5 py-0.5 rounded-full font-mono text-[10px] bg-white text-[#727877] font-semibold border border-[#E5E2E0]">4</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto px-6 py-4 space-y-3.5 bg-[#FAF8F6]">
+<article class="bg-[#FFF1F2] border border-[#FECDD3] border-l-4 border-l-[#EF4444] rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow">
+<div class="flex items-start gap-3.5">
+<div class="relative shrink-0 mt-0.5">
+<div class="w-8 h-8 rounded-xl bg-[#FFE4E6] flex items-center justify-center text-[#BE123C] border border-[#FECDD3]">
+<span class="material-symbols-outlined text-[18px]" data-icon="timer">timer</span>
+</div>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#EF4444] ring-2 ring-[#FFF1F2] animate-pulse-dot"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="text-[13px] font-bold text-[#9F1239] tracking-tight">
+                SLA Breach Imminent (14 mins remaining)
+              </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EF4444] text-white">
+                S1 CRITICAL
+              </span>
+</div>
+<p class="mt-1.5 text-[12.5px] text-[#881337] leading-relaxed">
+              Incident <span class="font-mono font-semibold text-[#072320]">INC-2024-8902</span> (Unauthorized NIBSS Transfer <span class="font-mono font-semibold text-[#072320]">₦45,000,000</span>) will breach CBN 1-hour containment threshold.
+            </p>
+<div class="mt-3 flex items-center justify-between pt-2.5 border-t border-[#FECDD3]">
+<div class="flex items-center gap-3">
+<button class="text-[#1E3835] hover:text-[#072320] text-[12px] font-bold flex items-center gap-1 hover:underline">
+<span>Open Incident Queue</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<span class="text-[#FECDD3]">•</span>
+<button class="text-[#727877] hover:text-[#072320] text-[12px] font-medium">
+                  Reassign
+                </button>
+</div>
+<span class="font-mono text-[10.5px] text-[#9F1239]/80 font-medium">
+                2 mins ago • Automated Monitor
+              </span>
+</div>
+</div>
+</div>
+</article>
+<article class="bg-white border border-[#E5E2E0] border-l-4 border-l-[#F59E0B] rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow">
+<div class="flex items-start gap-3.5">
+<div class="shrink-0 mt-0.5">
+<div class="w-8 h-8 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#92400E]">
+<span class="material-symbols-outlined text-[18px]" data-icon="verified_user">verified_user</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="text-[13px] font-bold text-[#072320] tracking-tight">
+                Post-No-Debit (PND) Approval Pending
+              </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                DUAL-AUTH
+              </span>
+</div>
+<p class="mt-1.5 text-[12.5px] text-[#414847] leading-relaxed">
+              Analyst <span class="font-semibold text-[#072320]">K. Adeleke</span> requested emergency wire freeze on GTB Account <span class="font-mono text-[#072320] bg-[#F0EDEB] px-1.5 py-0.5 rounded-md border border-[#E5E2E0]">0192837411</span> (Case <span class="font-mono text-[#1E3835] font-semibold">#CS-2024-1102</span>).
+            </p>
+<div class="mt-3 flex items-center justify-between pt-2.5 border-t border-[#E5E2E0]/80">
+<div class="flex items-center gap-2">
+<button class="h-7 px-3.5 bg-[#2A4D40] hover:bg-[#1E3835] text-white rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+<span class="material-symbols-outlined text-[13px]" data-icon="lock">lock</span>
+<span>Approve PND</span>
+</button>
+<button class="h-7 px-3 bg-white border border-[#E5E2E0] hover:bg-[#F6F3F1] text-[#072320] rounded-full text-[11px] font-medium transition-colors">
+                  View Evidence
+                </button>
+</div>
+<span class="font-mono text-[10.5px] text-[#727877]">
+                18 mins ago
+              </span>
+</div>
+</div>
+</div>
+</article>
+<article class="bg-white border border-[#E5E2E0] border-l-4 border-l-[#4A7BB0] rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow">
+<div class="flex items-start gap-3.5">
+<div class="shrink-0 mt-0.5">
+<div class="w-8 h-8 rounded-xl bg-[#E0EDFA] border border-[#BFDBFE] flex items-center justify-center text-[#1E4E8C]">
+<span class="material-symbols-outlined text-[18px]" data-icon="folder_special">folder_special</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="text-[13px] font-bold text-[#072320] tracking-tight">
+                Assigned to AML/MLRO Investigation
+              </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#EAE8E6] text-[#072320]">
+<span class="material-symbols-outlined text-[10px]" data-icon="lock">lock</span> COMPARTMENT
+              </span>
+</div>
+<p class="mt-1.5 text-[12.5px] text-[#414847] leading-relaxed">
+              Case <span class="font-mono font-semibold text-[#072320]">#CS-2024-0994</span> (<span class="italic text-[#072320]">"Structured Cash Smurfing Cluster"</span>) has been assigned to you by Lead Investigator.
+            </p>
+<div class="mt-3 flex items-center justify-between pt-2.5 border-t border-[#E5E2E0]/80">
+<button class="text-[#1E3835] hover:text-[#072320] text-[12px] font-bold flex items-center gap-1 hover:underline">
+<span>Access Vault Dossier</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+</button>
+<span class="font-mono text-[10.5px] text-[#727877]">
+                1 hour ago
+              </span>
+</div>
+</div>
+</div>
+</article>
+<article class="bg-white border border-[#E5E2E0] border-l-4 border-l-[#2A4D40] rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow">
+<div class="flex items-start gap-3.5">
+<div class="shrink-0 mt-0.5">
+<div class="w-8 h-8 rounded-xl bg-[#E8F5EE] border border-[#C2E7D0] flex items-center justify-center text-[#1E3835]">
+<span class="material-symbols-outlined text-[18px]" data-icon="task_alt">task_alt</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="text-[13px] font-bold text-[#072320] tracking-tight">
+                NFIU STR Acknowledged
+              </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#E8F5EE] text-[#1E3835] border border-[#C2E7D0]">
+                ACK: 200 OK
+              </span>
+</div>
+<p class="mt-1.5 text-[12.5px] text-[#414847] leading-relaxed">
+              Suspicious Transaction Report <span class="font-mono font-semibold text-[#072320]">#STR-2024-0041</span> successfully received by Nigerian Financial Intelligence Unit gateway.
+            </p>
+<div class="mt-3 flex items-center justify-between pt-2.5 border-t border-[#E5E2E0]/80">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-[#727877]">
+<span class="material-symbols-outlined text-[13px] text-[#1E3835]" data-icon="fingerprint">fingerprint</span>
+<span>SHA256: 7e89b...c41</span>
+</div>
+<span class="font-mono text-[10.5px] text-[#727877]">
+                3 hours ago
+              </span>
+</div>
+</div>
+</div>
+</article>
+<article class="bg-white/80 border border-[#E5E2E0] border-l-4 border-l-[#A8CFBD] rounded-xl p-4 shadow-xs opacity-85 hover:opacity-100 transition-opacity">
+<div class="flex items-start gap-3.5">
+<div class="shrink-0 mt-0.5">
+<div class="w-8 h-8 rounded-xl bg-[#F0EDEB] flex items-center justify-center text-[#727877]">
+<span class="material-symbols-outlined text-[18px]" data-icon="sync">sync</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="text-[13px] font-semibold text-[#59413D] tracking-tight">
+                Core Banking Sanctions List Synced
+              </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#F0EDEB] text-[#727877] border border-[#E5E2E0]">
+                OFAC / PEP
+              </span>
+</div>
+<p class="mt-1.5 text-[12px] text-[#727877] leading-relaxed">
+              Automated ingestion completed. 1,420 delta records updated from UN &amp; OFAC consolidated feeds.
+            </p>
+<div class="mt-2.5 flex items-center justify-between">
+<span class="font-mono text-[10px] text-[#727877]/80">
+                4 hours ago • Scheduled Batch
+              </span>
+</div>
+</div>
+</div>
+</article>
+</div>
+<footer class="p-4 px-6 bg-[#FCF9F7] border-t border-[#E5E2E0] shrink-0 flex items-center justify-between font-mono text-[11px]">
+<a class="text-[#1E3835] hover:text-[#072320] font-semibold flex items-center gap-1.5 transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px]" data-icon="tune">tune</span>
+<span>Configure Alert Preferences</span>
+</a>
+<a class="text-[#59413D] hover:text-[#072320] flex items-center gap-1 font-medium transition-colors" href="#">
+<span>Full Audit History</span>
+<span class="material-symbols-outlined text-[13px]" data-icon="arrow_outward">arrow_outward</span>
+</a>
+</footer>
+</section>
+<script>
+    document.addEventListener('keydown', function(event) {
+      if (event.key === "Escape") {
+        const drawer = document.getElementById('notificationDrawer');
+        const overlay = document.getElementById('backdropOverlay');
+        if (drawer && overlay) {
+          drawer.classList.toggle('translate-x-full');
+          overlay.classList.toggle('hidden');
+        }
+      }
+    });
+  </script>
+</body></html>

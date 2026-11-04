@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core | Master Case Detail &amp; Dossier Overview</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Theme Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary": "#072320",
+            "on-background": "#1b1c1b",
+            "inverse-on-surface": "#f3f0ee",
+            "inverse-surface": "#30302f",
+            "surface": "#fcf9f7",
+            "on-tertiary-container": "#7fa494",
+            "outline": "#727877",
+            "surface-bright": "#fcf9f7",
+            "surface-variant": "#e5e2e0",
+            "primary-container": "#1e3835",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-surface": "#1b1c1b",
+            "primary-fixed-dim": "#b0ccc8",
+            "surface-tint": "#496360",
+            "outline-variant": "#c1c8c6",
+            "secondary-fixed": "#ffdad4",
+            "surface-container-highest": "#e5e2e0",
+            "on-primary-container": "#86a19d",
+            "on-tertiary": "#ffffff",
+            "tertiary": "#002419",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "on-primary": "#ffffff",
+            "on-primary-fixed-variant": "#314c48",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#002116",
+            "surface-container-low": "#f6f3f1",
+            "on-secondary-container": "#795e59",
+            "on-surface-variant": "#414847",
+            "background": "#fcf9f7",
+            "on-error-container": "#93000a",
+            "inverse-primary": "#b0ccc8",
+            "surface-container": "#f0edeb",
+            "secondary-container": "#ffdad4",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "surface-container-lowest": "#ffffff",
+            "on-primary-fixed": "#04201d",
+            "surface-container-high": "#eae8e6",
+            "tertiary-container": "#163a2d",
+            "on-secondary-fixed": "#2a1713",
+            "tertiary-fixed": "#c4ebd9",
+            "primary-fixed": "#cbe8e4",
+            "error": "#ba1a1a",
+            "secondary": "#735854",
+            "error-container": "#ffdad6",
+            "surface-dim": "#dcd9d8",
+            "on-secondary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1.25rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.75rem",
+            "margin-mobile": "1rem",
+            "margin": "2rem",
+            "space-xs": "0.375rem",
+            "gutter-mobile": "0.75rem",
+            "space-lg": "1.75rem",
+            "space-md": "1.25rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Playfair Display"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "headline-md": ["Playfair Display"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(240, 237, 235, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(193, 200, 198, 0.8);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-row overflow-x-hidden selection:bg-secondary-container selection:text-on-secondary-fixed">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT: SideNavBar (Anchored Desktop Navigation)                 -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between py-6 px-4 z-40 bg-primary-container text-on-primary border-r border-outline-variant/10 shadow-2xl shrink-0">
+<!-- Brand / Botanical Emblem Header -->
+<div class="flex flex-col space-y-6">
+<div class="flex items-center space-x-3 px-2">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-surface-bright tracking-tight">EFIMS Core</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">AML Operations</span>
+</div>
+</div>
+<!-- Navigation Tabs (Targeted Active Item: 'Cases') -->
+<nav aria-label="Main Navigation" class="flex flex-col space-y-1.5">
+<!-- 1. Incidents -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">warning</span>
+<span class="font-label-md text-label-md">Incidents</span>
+</a>
+<!-- 2. Cases (ACTIVE TAB) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full bg-secondary-container text-on-secondary-container font-semibold transition-all duration-200 shadow-sm" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">work</span>
+<span class="font-label-md text-label-md text-on-secondary-fixed font-bold">Cases</span>
+</a>
+<!-- 3. Investigations -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">policy</span>
+<span class="font-label-md text-label-md">Investigations</span>
+</a>
+<!-- 4. Evidence Vault -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">lock</span>
+<span class="font-label-md text-label-md">Evidence Vault</span>
+</a>
+<!-- 5. Containment & Recovery -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">shield</span>
+<span class="font-label-md text-label-md">Containment &amp; Recovery</span>
+</a>
+<!-- 6. Regulatory & CAPA -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">gavel</span>
+<span class="font-label-md text-label-md">Regulatory &amp; CAPA</span>
+</a>
+<!-- 7. Configuration -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">tune</span>
+<span class="font-label-md text-label-md">Configuration</span>
+</a>
+<!-- 8. Audit Trail -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-full text-on-primary-container/80 hover:text-on-primary hover:bg-primary/40 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg">history</span>
+<span class="font-label-md text-label-md">Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Telemetry & Investigator Botanical Bio Widget -->
+<div class="flex flex-col space-y-3 pt-4 border-t border-outline-variant/10">
+<div class="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/40 backdrop-blur-sm">
+<div class="flex items-center space-x-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary-fixed"></span>
+</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">System Telemetry</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-mono">99.98% OK</span>
+</div>
+<div class="flex items-center space-x-3 px-3 py-2.5 rounded-2xl bg-surface-container-highest/10 border border-outline-variant/10">
+<div class="w-9 h-9 rounded-full bg-secondary-fixed-dim/40 flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-body-sm text-surface truncate font-semibold">Senior Lead Investigator</span>
+<span class="font-label-sm text-label-sm text-on-primary-container/80 truncate">Clearance: Tier III (MLRO)</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKBENCH CANVAS AREA                                               -->
+<!-- ========================================================================= -->
+<div class="flex-1 ml-64 flex flex-col min-w-0 bg-background">
+<!-- SHARED COMPONENT: TopNavBar -->
+<header class="docked full-width top-0 sticky z-30 bg-surface/90 backdrop-blur-md border-b border-outline-variant/20 shadow-sm flex justify-between items-center w-full px-8 py-3.5">
+<!-- Search & Operational Breadcrumb -->
+<div class="flex items-center space-x-6">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-outline text-lg">search</span>
+<input class="w-80 pl-10 pr-4 py-2 rounded-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container/20 transition-all" placeholder="Search case dossier, BVN, transaction ID..." type="text"/>
+</div>
+<div class="hidden lg:flex items-center space-x-2 font-label-md text-label-md text-on-surface-variant">
+<span class="text-on-surface-variant">Cases</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-semibold">CS-2024-0419</span>
+<span class="inline-flex items-center ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-error-container text-on-error-container">
+            SLA Breach Alerts (2)
+          </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-surface-container text-on-surface-variant border border-outline-variant/20">
+            Clearance Tier III
+          </span>
+</div>
+</div>
+<!-- Trailing Action Controls -->
+<div class="flex items-center space-x-3">
+<!-- Emergency Freeze -->
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-full border border-error/30 text-error hover:bg-error-container/30 font-label-md text-label-md transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-base">emergency_home</span>
+<span>Emergency Freeze</span>
+</button>
+<!-- Create Incident -->
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md shadow-sm transition-all active:scale-95" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+<span>Create Incident</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/30 mx-1"></div>
+<!-- Notification & Tier III Actions -->
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors relative" title="Notifications" type="button">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Security &amp; Shield" type="button">
+<span class="material-symbols-outlined text-xl">shield</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ring-2 ring-secondary-container ml-1">
+<img class="w-full h-full object-cover" data-alt="Investigator portrait in high-end editorial lighting wearing professional executive attire against a warm neutral cream studio backdrop, displaying composed vigilance and institutional leadership in AML forensics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZ33gjofZxmpyZQ9M-A2eDONtWWLMmMeBBI8eCYS2Bl9r72oZWq9UFGukk1gqXma7ElX18xanudMbWPYQ7XU7tG8EWWvEykiDYEJH6rKM1cgjpStwdx3lHTQj-pRqbzkiEGUVh-gSgyLEztvp_oNU5RhfPzkn8AqXi9wEmCOKpZkVX_tzbOCw7j4ycCR6DnJaxdjbaFdZkq8im9akKjOIxIj6fmf82HwMsvzwcyrEpdaBGB3VdxGZGvw"/>
+</div>
+</div>
+</header>
+<!-- CONTENT WORKSPACE: Asymmetric 2/3 and 1/3 Bento Grid Layout -->
+<main class="p-8 max-w-[1600px] w-full mx-auto space-y-6">
+<!-- ===================================================================== -->
+<!-- CASE HEADER BANNER & STATS STRIP                                     -->
+<!-- ===================================================================== -->
+<section class="rounded-3xl bg-surface-container-lowest border border-outline-variant/30 p-6 shadow-sm relative overflow-hidden">
+<!-- Subtle botanical rose atmospheric ambient gradient glow -->
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-secondary-container/25 blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+<div class="space-y-2">
+<div class="flex flex-wrap items-center gap-2.5">
+<span class="font-mono text-xs font-bold px-3 py-1 rounded-full bg-primary-container text-surface-bright tracking-wider">CS-2024-0419</span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                Tier 1 Critical
+              </span>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold">
+                Active Investigation
+              </span>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm border border-outline-variant/30">
+<span class="material-symbols-outlined text-sm">balance</span>
+                CBN / NFIU Escalated
+              </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-headline-lg text-primary tracking-tight">
+              Syndicated NIBSS Clearing Drain &amp; Rapid Mule Dispersion
+            </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+              High-frequency multi-clearing session automated diversion targeting Tier-1 Settlement accounts, executing immediate splitting into decentralized micro-mule accounts across digital non-bank fintechs.
+            </p>
+</div>
+<!-- Fast Dossier State Controls -->
+<div class="flex items-center gap-3 shrink-0">
+<button class="px-4 py-2.5 rounded-full border border-primary-container/20 text-primary-container font-label-md text-label-md hover:bg-surface-container flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-base">print</span>
+              Export Brief
+            </button>
+<button class="px-5 py-2.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary shadow-sm flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-base">lock_open</span>
+              Dual-Custody Sign-Off
+            </button>
+</div>
+</div>
+<!-- Quick Stats Ribbon (4 Metrics Bento) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-outline-variant/20">
+<!-- 1. Disputed Value -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-between">
+              Disputed Value
+              <span class="material-symbols-outlined text-outline text-base">account_balance</span>
+</span>
+<div class="mt-2 font-kpi-metric text-kpi-metric text-primary font-kpi-metric">
+              ₦45,000,000.00
+            </div>
+<span class="font-label-sm text-label-sm text-secondary flex items-center gap-1 mt-1 font-medium">
+              Gross illicit clearing attempts
+            </span>
+</div>
+<!-- 2. Recovered / Frozen Value -->
+<div class="p-4 rounded-2xl bg-primary-container text-surface-bright shadow-sm relative overflow-hidden">
+<div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
+<span class="material-symbols-outlined text-8xl text-surface">shield_with_heart</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-primary-container flex items-center justify-between">
+              Recovered &amp; Frozen
+              <span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-xs font-bold">84.8%</span>
+</span>
+<div class="mt-2 font-kpi-metric text-kpi-metric text-secondary-fixed font-kpi-metric">
+              ₦38,200,000.00
+            </div>
+<span class="font-label-sm text-label-sm text-on-primary-container flex items-center gap-1 mt-1">
+              Active Post-No-Debit (PND) locked
+            </span>
+</div>
+<!-- 3. Linked Incidents -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-between">
+              Linked Incidents
+              <span class="material-symbols-outlined text-outline text-base">hub</span>
+</span>
+<div class="mt-2 font-kpi-metric text-kpi-metric text-primary font-kpi-metric">
+              4 Incidents
+            </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-1">
+              Cluster Corroboration: 98%
+            </span>
+</div>
+<!-- 4. Linked Entities & BVNs -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-between">
+              Targeted Entities
+              <span class="material-symbols-outlined text-outline text-base">groups</span>
+</span>
+<div class="mt-2 font-kpi-metric text-kpi-metric text-primary font-kpi-metric">
+              12 Entities
+            </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-1">
+              7 High-Velocity Mule Wallets
+            </span>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- TAB NAVIGATION FOR CASE WORKFLOW                                      -->
+<!-- ===================================================================== -->
+<div class="border-b border-outline-variant/30 flex space-x-8">
+<button class="pb-3 border-b-2 border-primary font-title-md text-title-md text-primary font-semibold flex items-center gap-2">
+<span>Overview</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-title-md text-title-md transition-colors flex items-center gap-2">
+<span>Linked Entities &amp; Graph</span>
+<span class="px-2 py-0.5 text-xs rounded-full bg-surface-container text-on-surface-variant">12</span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-title-md text-title-md transition-colors flex items-center gap-2">
+<span>Forensic Evidence</span>
+<span class="px-2 py-0.5 text-xs rounded-full bg-secondary-container text-on-secondary-fixed font-semibold">8 files</span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-title-md text-title-md transition-colors">
+<span>Statutory Filings</span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-title-md text-title-md transition-colors">
+<span>Communications Log</span>
+</button>
+</div>
+<!-- ===================================================================== -->
+<!-- MAIN SPLIT: 2/3 DOSSIER CENTER & 1/3 ORCHESTRATION PANEL               -->
+<!-- ===================================================================== -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- ******************************************************************* -->
+<!-- LEFT / CENTER COLUMN (2/3): DOSSIER NARRATIVE & INCIDENTS MATRIX    -->
+<!-- ******************************************************************* -->
+<div class="lg:col-span-2 space-y-6">
+<!-- 1. Executive Investigation Narrative -->
+<article class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">description</span>
+<h2 class="font-headline-md text-headline-md font-headline-md text-primary">Executive Investigation Narrative</h2>
+</div>
+<span class="text-xs font-mono text-outline">Updated 14 mins ago by A. Balogun</span>
+</div>
+<!-- Narrative Content in Editorial Flow -->
+<div class="prose max-w-none text-on-surface space-y-3 font-body-lg text-body-lg leading-relaxed">
+<p>
+                Between <strong>02:14 UTC and 03:40 UTC</strong> on 19 April 2024, an unauthorized batch settlement transaction protocol routed through an automated API connector triggered an unprecedented automated disbursement anomaly. The originating corporate treasury account belonging to <em>Dangote Cement Corporate Treasury</em> experienced systematic multi-threaded withdrawals amounting to <strong>₦45,000,000.00</strong>.
+              </p>
+<div class="p-4 rounded-2xl bg-surface-container-low border-l-4 border-primary-container text-body-md font-body-md text-on-surface-variant">
+<span class="font-semibold text-primary block mb-1">Corroborated Shell &amp; Dispatch Endpoints:</span>
+                Telemetric tracing indicates a synchronized relay targeting high-velocity clearing routes through GTBank settlement rails before instant decentralization across five non-bank microfinance accounts (principally Kuda MFB, OPay, and PalmPay endpoints).
+              </div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Three beneficiary identities share identical BVN biometric clusters registered in Kano and Port Harcourt, suggesting a pre-purchased or co-opted dormant mule network. Automated fraud rules intercepted ₦38.2M within 11 minutes; legal Post-No-Debit (PND) directives were submitted directly via NFIU channels to preserve salvage liquidity.
+              </p>
+</div>
+<!-- Visual Flow / Dispersion Ribbon -->
+<div class="mt-6 pt-4 border-t border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-3">Dispersion Trajectory Topology</span>
+<div class="flex items-center justify-between gap-2 p-3.5 rounded-2xl bg-surface-container text-xs">
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-primary-container text-surface flex items-center justify-center font-bold">1</span>
+<div>
+<div class="font-bold text-primary">Compromised Vault</div>
+<div class="text-outline text-[11px]">₦45,000,000 (GTB Clearing)</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">arrow_forward</span>
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center font-bold">2</span>
+<div>
+<div class="font-bold text-primary">NIBSS Settlement Bridge</div>
+<div class="text-outline text-[11px]">Instant ACH Dispersal</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">arrow_forward</span>
+<div class="flex items-center gap-2">
+<span class="w-7 h-7 rounded-full bg-error-container text-on-error-container flex items-center justify-center font-bold">3</span>
+<div>
+<div class="font-bold text-primary">7 Mule Accounts</div>
+<div class="text-outline text-[11px]">₦6,800,000 Leakage Risk</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- 2. Linked Incidents Cluster Table -->
+<section class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md font-headline-md text-primary">Aggregated Incidents in Cluster</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Synthesized from telemetric heuristic correlation score &gt; 94%</p>
+</div>
+<button class="text-primary font-label-md text-label-md hover:underline flex items-center gap-1">
+<span>View Full Correlation Matrix</span>
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse font-body-md text-body-md">
+<thead>
+<tr class="border-b border-outline-variant/30 text-on-surface-variant text-xs">
+<th class="py-3 px-3 font-semibold">Incident Ref</th>
+<th class="py-3 px-3 font-semibold">Telemetry Source</th>
+<th class="py-3 px-3 font-semibold">Timestamp</th>
+<th class="py-3 px-3 font-semibold">Exposure</th>
+<th class="py-3 px-3 font-semibold">Status</th>
+<th class="py-3 px-3 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-3 font-mono text-primary font-semibold">INC-2024-8902</td>
+<td class="py-3.5 px-3 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span>GTBank NIBSS Gateway #04</span>
+</td>
+<td class="py-3.5 px-3 text-on-surface-variant font-mono text-xs">19 Apr 02:14 UTC</td>
+<td class="py-3.5 px-3 font-bold text-primary">₦22,500,000.00</td>
+<td class="py-3.5 px-3">
+<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed-variant">Quarantined</span>
+</td>
+<td class="py-3.5 px-3 text-right">
+<button class="text-primary hover:text-primary-container"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-3 font-mono text-primary font-semibold">INC-2024-8842</td>
+<td class="py-3.5 px-3 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span>Kuda MFB Clearing Inbound</span>
+</td>
+<td class="py-3.5 px-3 text-on-surface-variant font-mono text-xs">19 Apr 02:32 UTC</td>
+<td class="py-3.5 px-3 font-bold text-primary">₦15,700,000.00</td>
+<td class="py-3.5 px-3">
+<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-secondary-container text-on-secondary-fixed">80% Frozen</span>
+</td>
+<td class="py-3.5 px-3 text-right">
+<button class="text-primary hover:text-primary-container"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-3 font-mono text-primary font-semibold">INC-2024-8810</td>
+<td class="py-3.5 px-3 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>PalmPay Micro-Wallet Mesh</span>
+</td>
+<td class="py-3.5 px-3 text-on-surface-variant font-mono text-xs">19 Apr 03:05 UTC</td>
+<td class="py-3.5 px-3 font-bold text-primary">₦6,800,000.00</td>
+<td class="py-3.5 px-3">
+<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container text-on-error-container">Uncontained</span>
+</td>
+<td class="py-3.5 px-3 text-right">
+<button class="text-primary hover:text-primary-container"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- 3. Suspect Entity Network -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md font-headline-md text-primary">Suspect Entity Topology &amp; Beneficial Owners</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Corroborated through biometric BVN cross-indexing and shell company registries</p>
+</div>
+<span class="font-label-md text-label-md text-secondary font-bold">12 Linked Nodes</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Entity 1: Shell Corporate Account -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40 transition-all shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between">
+<div>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">Origin Conduit</span>
+<h4 class="font-title-lg text-title-lg font-title-lg text-primary mt-1.5">Apex Synergy Logistics Ltd</h4>
+<p class="font-label-sm text-label-sm text-outline">RC-1920491 • CAC Registered Kano</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-container/40 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">corporate_fare</span>
+</div>
+</div>
+<div class="mt-4 space-y-1.5 text-xs text-on-surface-variant">
+<div class="flex justify-between">
+<span class="text-outline">BVN Link:</span>
+<span class="font-mono font-bold text-on-surface">22189904218 (High Risk)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Primary Bank:</span>
+<span class="font-medium text-on-surface">Guaranty Trust Bank (GTB)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Inflow Intercepted:</span>
+<span class="font-mono font-bold text-primary">₦22,500,000.00</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">block</span> PND Enforced
+                  </span>
+<button class="text-primary font-label-sm text-label-sm hover:underline font-semibold">Inspect BVN Mesh</button>
+</div>
+</div>
+<!-- Entity 2: Rapid Dispatch Mule -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40 transition-all shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between">
+<div>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-fixed">Mule Tier 1 (Intermediary)</span>
+<h4 class="font-title-lg text-title-lg font-title-lg text-primary mt-1.5">Tanimu Usman Garba</h4>
+<p class="font-label-sm text-label-sm text-outline">Account: Kuda MFB #2004918201</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person_search</span>
+</div>
+</div>
+<div class="mt-4 space-y-1.5 text-xs text-on-surface-variant">
+<div class="flex justify-between">
+<span class="text-outline">BVN Match:</span>
+<span class="font-mono font-bold text-on-surface">22894109311 (Co-Signer)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Dispersion Velocity:</span>
+<span class="font-medium text-error">4 transfers / 38 seconds</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Active Freeze:</span>
+<span class="font-mono font-bold text-primary">₦12,400,000.00</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">hourglass_top</span> ₦3.3M Leaked to ATM
+                  </span>
+<button class="text-primary font-label-sm text-label-sm hover:underline font-semibold">View Terminal Logs</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- ******************************************************************* -->
+<!-- RIGHT COLUMN (1/3): CONTAINMENT, SLA CLOCK & ORCHESTRATION         -->
+<!-- ******************************************************************* -->
+<aside class="space-y-6">
+<!-- 1. Regulatory & Statutory Clock (CBN SLA) -->
+<div class="p-6 rounded-3xl bg-primary-container text-surface-bright shadow-lg border border-outline-variant/10 relative overflow-hidden">
+<!-- Organic leaf watermark line-art motif -->
+<div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-9xl">schedule</span>
+</div>
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider font-bold">CBN Mandatory STR SLA</span>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error text-surface">CRITICAL</span>
+</div>
+<div class="space-y-1">
+<div class="font-headline-xl text-headline-xl font-mono text-surface-bright tracking-tight flex items-baseline gap-2">
+<span>05<span class="text-secondary-fixed text-2xl font-light">h</span></span>
+<span>22<span class="text-secondary-fixed text-2xl font-light">m</span></span>
+<span class="text-secondary-fixed/70 text-sm font-sans">14s</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-primary-container">
+                Regulatory window to file Suspicious Transaction Report to NFIU before statutory penalty under AML/CFT 2022 guidelines.
+              </p>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/20 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-primary-container">Mandatory Draft Status:</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed font-bold">75% Formulated</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-primary/60 rounded-full h-2 mt-2 overflow-hidden">
+<div class="bg-secondary-fixed h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<!-- 2. Assigned Investigation Team -->
+<div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg font-title-lg text-primary">Assigned Taskforce</h3>
+<button class="text-primary hover:text-primary-container text-xs font-semibold">+ Assign</button>
+</div>
+<div class="space-y-3">
+<!-- Lead Investigator -->
+<div class="flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary-container/20 shrink-0">
+<img class="w-full h-full object-cover" data-alt="Senior forensic fraud investigator in modern professional office setting with soft studio warm glow lighting, composed expression and bespoke dark tailored suit." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNYDIEO85RiqeGeFF2NWTT0SOACpPuwDn2fmlCoWfZFChbQMIo7Z68VZeWfSCx_HW3VXXmyYT2AfKoo50RGTWpn8sVSboB_CCSu-akc8HKEsdQVk8AydO3N2d3lIevqzK0DebJrMpaWL8nM2ua-6jn9avo-Gs2o-NZ952cPpB15rUFjrnCGB0UA3EdCfjH_tsFcQDUb6w-HpMKiAEQsV6NCLHVLTXKwrxYVlhU30UHoSGembaxwVbEEA"/>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary font-semibold">Adewale Balogun</h4>
+<p class="font-label-sm text-label-sm text-outline">Lead Investigator (L3 MLRO)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-xl">verified</span>
+</div>
+<!-- Forensic Accountant -->
+<div class="flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary-container/20 shrink-0">
+<img class="w-full h-full object-cover" data-alt="Senior forensic financial accountant examining digital data sheets in warm executive boardroom lighting with calm confidence and elegance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiI2Rno8IpNWyRYxHyd5DgD-rXMNHumz1AEFvE7pU61pTq-fUVjohQxdaqqTxq0MAXazvvixwKjjlBrq3nFno4rS0HnCBWjkwvT8GgYeNhIo6GMinwCY5fQmtQeaX0vTvDFl1nBVFWjrfqT7xiJhfxeqX9j8gUjtZKDGUdXHF8wb5EZXhgR_fK9dWLBiCt-NMWPirWveoP1dqt47r5F0awYxc4pv3nDtwAjmaKT_4DsCDLJFynRh0oew"/>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary font-semibold">Fatima Eze</h4>
+<p class="font-label-sm text-label-sm text-outline">Forensic Accountant (ACAMS)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-xl">account_balance_wallet</span>
+</div>
+<!-- Legal Liaison -->
+<div class="flex items-center justify-between p-2.5 rounded-2xl bg-surface-container-low">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary-container/20 shrink-0">
+<img class="w-full h-full object-cover" data-alt="Corporate legal advisor and compliance counsel in warm editorial business aesthetic, poised and focused with institutional poise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8Bd2hEpFC8-4LHKB-y_jPWgsJvoX8otuhfjG63NGtmTw8-DLvBQkHPEV168CWWJNsmsoaNfP_m5h7tpoXlGEehVOVGqAdgbPn1lfG19YYqsT2AiJDp3bbF4gbBch40GSDuZ2aDbwk342BWIgFPsqxB8gYwGv47DjRszw40iK6aDbFvR0h3-9Apgu3cSA8k4GzuojRP4a81qqVdVOt5Q0jRgRqjDinvYT5xOmQVZT1Yz7luqTmT6nHsQ"/>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary font-semibold">Adeola Cole</h4>
+<p class="font-label-sm text-label-sm text-outline">Regulatory Legal Counsel</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-xl">gavel</span>
+</div>
+</div>
+</div>
+<!-- 3. Containment Action Matrix -->
+<div class="p-6 rounded-3xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg font-title-lg text-primary">Containment Action Matrix</h3>
+<span class="material-symbols-outlined text-outline text-lg">tune</span>
+</div>
+<div class="space-y-3 font-body-sm text-body-sm">
+<!-- Action 1: Post-No-Debit -->
+<div class="p-3 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-base">lock</span>
+</div>
+<div>
+<div class="font-bold text-primary">Post-No-Debit (PND)</div>
+<div class="text-outline text-xs">7 Beneficiary Accounts</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant">ACTIVE</span>
+</div>
+<!-- Action 2: API Gateway Quarantine -->
+<div class="p-3 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-base">key_off</span>
+</div>
+<div>
+<div class="font-bold text-primary">Settlement API Cutoff</div>
+<div class="text-outline text-xs">Connector #4 Revoked</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant">ENFORCED</span>
+</div>
+<!-- Action 3: Correspondent Bank Alerts -->
+<div class="p-3 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-base">contact_mail</span>
+</div>
+<div>
+<div class="font-bold text-primary">Correspondent Broadcast</div>
+<div class="text-outline text-xs">3 Clearing Partners Alerted</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-fixed">DISPATCHED</span>
+</div>
+</div>
+</div>
+<!-- 4. Quick Dossier Actions -->
+<div class="p-6 rounded-3xl bg-secondary-container/30 border border-secondary-container p-6 space-y-3">
+<h4 class="font-title-md text-title-md font-title-md text-primary font-bold">Fast Operational Directives</h4>
+<button class="w-full py-3 px-4 rounded-full bg-primary-container text-surface hover:bg-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-base">assignment_turned_in</span>
+<span>Generate Regulatory STR Report</span>
+</button>
+<button class="w-full py-3 px-4 rounded-full bg-secondary-container text-on-secondary-fixed font-label-md text-label-md hover:bg-secondary-fixed-dim transition-all flex items-center justify-center gap-2 font-bold active:scale-[0.98]">
+<span class="material-symbols-outlined text-base">send</span>
+<span>Escalate to Law Enforcement (EFCC/NFIU)</span>
+</button>
+<button class="w-full py-3 px-4 rounded-full border border-primary-container/20 text-primary-container hover:bg-surface-container-lowest font-label-md text-label-md flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-base">gavel</span>
+<span>Request Dual-Custody Asset Seizure</span>
+</button>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</body></html>

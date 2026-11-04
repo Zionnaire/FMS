@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Anonymous Portal — Cryptographic Whistleblower Intake</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-container": "#7fa494",
+          "on-primary-fixed": "#04201d",
+          "primary": "#072320",
+          "surface-bright": "#fcf9f7",
+          "inverse-surface": "#30302f",
+          "secondary-fixed": "#ffdad4",
+          "surface-container-high": "#eae8e6",
+          "on-error-container": "#93000a",
+          "tertiary-container": "#163a2d",
+          "secondary-fixed-dim": "#e1bfb9",
+          "on-primary-fixed-variant": "#314c48",
+          "tertiary-fixed-dim": "#a8cfbd",
+          "surface-container-highest": "#e5e2e0",
+          "on-secondary": "#ffffff",
+          "surface-variant": "#e5e2e0",
+          "surface-container": "#f0edeb",
+          "error-container": "#ffdad6",
+          "surface-container-lowest": "#ffffff",
+          "tertiary-fixed": "#c4ebd9",
+          "surface-dim": "#dcd9d8",
+          "on-tertiary": "#ffffff",
+          "on-tertiary-fixed-variant": "#2a4d40",
+          "on-background": "#1b1c1b",
+          "on-surface": "#1b1c1b",
+          "outline": "#727877",
+          "error": "#ba1a1a",
+          "surface-container-low": "#f6f3f1",
+          "on-primary-container": "#86a19d",
+          "secondary-container": "#ffdad4",
+          "on-secondary-container": "#795e59",
+          "on-secondary-fixed-variant": "#59413d",
+          "primary-fixed-dim": "#b0ccc8",
+          "on-secondary-fixed": "#2a1713",
+          "on-primary": "#ffffff",
+          "inverse-primary": "#b0ccc8",
+          "background": "#fcf9f7",
+          "tertiary": "#002419",
+          "surface": "#fcf9f7",
+          "on-error": "#ffffff",
+          "primary-container": "#1e3835",
+          "inverse-on-surface": "#f3f0ee",
+          "primary-fixed": "#cbe8e4",
+          "on-tertiary-fixed": "#002116",
+          "outline-variant": "#c1c8c6",
+          "on-surface-variant": "#414847"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "margin-mobile": "1rem",
+          "margin": "2rem",
+          "space-sm": "0.75rem",
+          "gutter": "1.25rem",
+          "space-xl": "2.5rem",
+          "space-lg": "1.75rem",
+          "space-md": "1.25rem",
+          "space-xs": "0.375rem",
+          "gutter-mobile": "0.75rem"
+        },
+        "fontFamily": {
+          "headline-xl": ["Playfair Display"],
+          "label-md": ["Plus Jakarta Sans"],
+          "body-sm": ["Plus Jakarta Sans"],
+          "title-lg": ["Plus Jakarta Sans"],
+          "title-md": ["Plus Jakarta Sans"],
+          "body-md": ["Plus Jakarta Sans"],
+          "kpi-metric": ["Plus Jakarta Sans"],
+          "headline-xl-mobile": ["Playfair Display"],
+          "label-sm": ["Plus Jakarta Sans"],
+          "headline-md": ["Playfair Display"],
+          "body-lg": ["Plus Jakarta Sans"],
+          "headline-lg-mobile": ["Playfair Display"],
+          "headline-lg": ["Playfair Display"]
+        },
+        "fontSize": {
+          "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+          "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+          "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+          "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+          "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+          "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+          "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+          "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+          "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+          "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+          "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+          "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }]
+        }
+      }
+    }
+  }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-block;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col selection:bg-secondary-container selection:text-primary">
+<!-- TopNavBar (Shared Component) -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-6 py-3 w-full bg-surface/95 backdrop-blur-md shadow-sm">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container text-surface-bright flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined" data-icon="shield_lock" style="font-variation-settings: 'FILL' 1;">shield_lock</span>
+</div>
+<div>
+<span class="font-headline-lg text-headline-lg font-semibold text-primary dark:text-inverse-primary tracking-tight">EFIMS Anonymous Portal</span>
+<div class="flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-outline">Encrypted Node • 0x9B4E...2014</span>
+</div>
+</div>
+</div>
+<nav class="hidden lg:flex items-center gap-6 ml-4">
+<!-- Exact match for current active workflow: Submit Disclosure -->
+<a class="font-title-md text-title-md text-primary dark:text-inverse-primary border-b-2 border-primary pb-1" href="#submit">Submit Disclosure</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" href="#track">Track Status</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" href="#guarantee">Zero-Log Guarantee</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" href="#pgp">PGP Public Key</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<!-- Search Bar on Right -->
+<div class="hidden sm:flex items-center bg-surface-container rounded-full px-3 py-1.5 border border-outline-variant/40">
+<span class="material-symbols-outlined text-outline text-[18px] mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-0 p-0 text-on-surface text-body-sm focus:ring-0 w-36 placeholder:text-outline/70" placeholder="Lookup receipt token..." type="text"/>
+</div>
+<!-- Actions & Panic Wipe Button -->
+<button class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline/20 font-label-md text-label-md text-primary hover:bg-surface-container-high transition-colors duration-150" onclick="verifyFingerprint()" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="security">security</span>
+        Verify Fingerprint
+      </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-error text-on-error font-title-md text-title-md hover:bg-on-error-container transition duration-150 ease-in-out active:scale-95 shadow-sm" onclick="emergencyPanicWipe()" title="Instant panic redirect and local memory purge" type="button">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+        Emergency Wipe
+      </button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Hero / Cryptographic Guarantee Banner (Level 2 Inverted Spruce Card) -->
+<div class="relative overflow-hidden rounded-xl bg-primary-container text-surface-bright p-6 sm:p-8 shadow-xl mb-8 border border-outline/20">
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-tertiary-container/30 blur-3xl pointer-events-none"></div>
+<div class="absolute right-24 bottom-0 w-60 h-60 rounded-full bg-secondary-container/10 blur-2xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+<div class="max-w-3xl">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary-container/60 text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider mb-4 border border-tertiary-fixed-dim/20">
+<span class="material-symbols-outlined text-[14px]" data-icon="lock_clock">lock_clock</span>
+            Zero-Knowledge Air-Gapped Conduit
+          </div>
+<h1 class="font-headline-xl text-headline-xl text-surface-bright mb-3 tracking-tight font-headline-xl">
+            Sovereign Anonymous Whistleblower Intake
+          </h1>
+<p class="font-body-lg text-body-lg text-on-primary-container max-w-2xl leading-relaxed">
+            End-to-End PGP Encrypted • Browser Fingerprint Stripped • Tor &amp; I2P Compatible. No IP addresses, HTTP Referrers, or Canvas hashes are logged. All evidentiary attachments undergo automatic, client-side metadata sanitization (EXIF, ICC, GPS, and author markers purged) prior to cryptographic ingestion.
+          </p>
+</div>
+<div class="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[240px]">
+<div class="p-3.5 rounded-lg bg-primary/40 border border-outline/20 backdrop-blur-sm flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="shield_lock">shield_lock</span>
+<div>
+<div class="font-label-sm text-label-sm text-surface-dim">Vault Verification</div>
+<div class="font-title-md text-title-md text-surface-bright font-mono text-[12px]">ED25519-SIG-OK</div>
+</div>
+</div>
+<div class="p-3.5 rounded-lg bg-primary/40 border border-outline/20 backdrop-blur-sm flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed" data-icon="key">key</span>
+<div>
+<div class="font-label-sm text-label-sm text-surface-dim">Master PGP Fingerprint</div>
+<div class="font-title-md text-title-md text-surface-bright font-mono text-[11px]">8F29 B103 40C9 9B4E 2014</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Trust Indicators -->
+<div class="mt-6 pt-6 border-t border-outline/20 flex flex-wrap items-center gap-6 font-label-md text-label-md text-on-primary-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[18px]" data-icon="check_circle">check_circle</span>
+          Strict No-Logs Configuration
+        </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[18px]" data-icon="check_circle">check_circle</span>
+          Ephemeral Browser Storage Only
+        </div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[18px]" data-icon="check_circle">check_circle</span>
+          Automated Scrub of Embedded Micro-Signatures
+        </div>
+</div>
+</div>
+<!-- 12-Column Executive Workbench Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Step Wizard Form (8 cols) -->
+<section class="lg:col-span-8 space-y-6">
+<!-- Progress Tracker Header -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
+<div>
+<div class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Protocol Step 01 of 04</div>
+<h2 class="font-headline-md text-headline-md text-primary mt-0.5">Prepare Classified Disclosure</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center font-title-md text-title-md">1</span>
+<div class="w-6 h-0.5 bg-outline-variant"></div>
+<span class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center font-title-md text-title-md">2</span>
+<div class="w-6 h-0.5 bg-outline-variant"></div>
+<span class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center font-title-md text-title-md">3</span>
+<div class="w-6 h-0.5 bg-outline-variant"></div>
+<span class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center font-title-md text-title-md">4</span>
+</div>
+</div>
+<!-- Section 1: Category Selection -->
+<div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant/40 shadow-sm">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-7 h-7 rounded-full bg-primary-container text-surface-bright flex items-center justify-center font-label-md text-label-md">1</div>
+<h3 class="font-headline-md text-headline-md text-primary">Violation Classification</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            Select the primary category that best describes the corporate crime, bribery pipeline, or regulatory bypass.
+          </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="categoryContainer">
+<label class="relative flex items-start p-4 rounded-xl border-2 border-primary bg-surface-container-low cursor-pointer hover:bg-surface-container transition-all">
+<input checked="" class="mt-1 text-primary focus:ring-primary h-4 w-4" name="violation_category" type="radio" value="bribery"/>
+<div class="ml-3">
+<span class="block font-title-md text-title-md text-primary">Bribery &amp; Kickbacks</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant mt-0.5">Procurement graft, secret offshore commissions, and vendor facilitation fees.</span>
+</div>
+</label>
+<label class="relative flex items-start p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-all">
+<input class="mt-1 text-primary focus:ring-primary h-4 w-4" name="violation_category" type="radio" value="ingress_fraud"/>
+<div class="ml-3">
+<span class="block font-title-md text-title-md text-primary">Ingress Clearing Fraud</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant mt-0.5">Customs valuation forgery, clearing house falsification, and duty evasion.</span>
+</div>
+</label>
+<label class="relative flex items-start p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-all">
+<input class="mt-1 text-primary focus:ring-primary h-4 w-4" name="violation_category" type="radio" value="executive_conflict"/>
+<div class="ml-3">
+<span class="block font-title-md text-title-md text-primary">Executive Conflict of Interest</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant mt-0.5">Undisclosed board shell companies, related-party enrichment, and siphon routes.</span>
+</div>
+</label>
+<label class="relative flex items-start p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-all">
+<input class="mt-1 text-primary focus:ring-primary h-4 w-4" name="violation_category" type="radio" value="insider_trading"/>
+<div class="ml-3">
+<span class="block font-title-md text-title-md text-primary">Insider Trading &amp; Market Front-Running</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant mt-0.5">Pre-announcement liquidation, treasury manipulation, or embargo leaks.</span>
+</div>
+</label>
+<label class="relative flex items-start p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-all sm:col-span-2">
+<input class="mt-1 text-primary focus:ring-primary h-4 w-4" name="violation_category" type="radio" value="regulatory_concealment"/>
+<div class="ml-3">
+<span class="block font-title-md text-title-md text-primary">Regulatory Concealment &amp; Settlement Bypass</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant mt-0.5">Suppression of adverse audit memos, destruction of compliance paper trails, and unrecorded shadow settlements.</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Section 2: Incident Details -->
+<div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant/40 shadow-sm">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-7 h-7 rounded-full bg-primary-container text-surface-bright flex items-center justify-center font-label-md text-label-md">2</div>
+<h3 class="font-headline-md text-headline-md text-primary">Incident Telemetry &amp; Narrative</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            Supply verifiable coordinates. Exercise vigilance: exclude personal identity tags, desk numbers, or direct personal pronouns.
+          </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div>
+<label class="block font-title-md text-title-md text-primary mb-2">Subject Organization / Ministry / Entity</label>
+<input class="w-full rounded-full bg-surface-container-low border border-outline-variant/50 px-4 py-2.5 text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="e.g. Apex Maritime Holdings Ltd. / Inland Revenue Directorate" type="text"/>
+</div>
+<div>
+<label class="block font-title-md text-title-md text-primary mb-2">Estimated Value Involved</label>
+<div class="relative flex rounded-full bg-surface-container-low border border-outline-variant/50 overflow-hidden focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+<div class="flex items-center px-3.5 bg-surface-container font-title-md text-title-md text-primary border-r border-outline-variant/40">
+                  ₦ (NGN)
+                </div>
+<input class="w-full bg-transparent border-0 px-4 py-2.5 text-on-surface text-body-md focus:ring-0" placeholder="e.g. 450,000,000" type="text"/>
+<div class="flex items-center pr-3">
+<select class="bg-transparent border-0 text-outline text-label-sm pr-6 py-1 focus:ring-0">
+<option>Exact</option>
+<option>Approximate</option>
+<option>&gt; Threshold</option>
+</select>
+</div>
+</div>
+</div>
+<div>
+<label class="block font-title-md text-title-md text-primary mb-2">Date Range of Offense</label>
+<div class="flex items-center gap-2">
+<input class="w-full rounded-full bg-surface-container-low border border-outline-variant/50 px-4 py-2 text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20" type="date"/>
+<span class="text-outline font-label-md">to</span>
+<input class="w-full rounded-full bg-surface-container-low border border-outline-variant/50 px-4 py-2 text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20" type="date"/>
+</div>
+</div>
+<div>
+<label class="block font-title-md text-title-md text-primary mb-2">Direct Perpetrator Tier</label>
+<select class="w-full rounded-full bg-surface-container-low border border-outline-variant/50 px-4 py-2.5 text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20">
+<option>C-Suite Executive / Board Level</option>
+<option>Directorate / Head of Procurement</option>
+<option>External Intermediary / Clearing Agent</option>
+<option>Treasury &amp; Escrow Manager</option>
+<option>Multiple Colluding Entities</option>
+</select>
+</div>
+</div>
+<!-- Narrative Field -->
+<div>
+<div class="flex items-center justify-between mb-2">
+<label class="block font-title-md text-title-md text-primary">Chronological Narrative &amp; Facts</label>
+<span class="font-label-sm text-label-sm text-outline">Markdown Supported • Sanitized Render</span>
+</div>
+<div class="rounded-xl border border-outline-variant/50 bg-surface-container-lowest overflow-hidden focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+<div class="bg-surface-container-low px-4 py-2 border-b border-outline-variant/40 flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-2">
+<button class="p-1 hover:text-primary" type="button"><span class="material-symbols-outlined text-[18px]" data-icon="format_bold">format_bold</span></button>
+<button class="p-1 hover:text-primary" type="button"><span class="material-symbols-outlined text-[18px]" data-icon="format_italic">format_italic</span></button>
+<button class="p-1 hover:text-primary" type="button"><span class="material-symbols-outlined text-[18px]" data-icon="format_list_bulleted">format_list_bulleted</span></button>
+<button class="p-1 hover:text-primary" type="button"><span class="material-symbols-outlined text-[18px]" data-icon="code">code</span></button>
+</div>
+<div class="flex items-center gap-1.5 text-tertiary">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified_user">verified_user</span>
+                  No Keystroke Timing Telemetry Sent
+                </div>
+</div>
+<textarea class="w-full border-0 p-4 text-on-surface text-body-md focus:ring-0 placeholder:text-outline/70" placeholder="Describe the transaction route, accounting software vouchers, bypassed controls, bank names, and participants.
+Example: 'On 14 August, wire authorization #TX-902 was cleared without dual sign-off via a secondary escrow account in...' " rows="6"></textarea>
+</div>
+<!-- Anonymization Tip Callout -->
+<div class="mt-3 p-3.5 rounded-lg bg-secondary-container/40 border border-secondary-fixed-dim/40 flex items-start gap-3 text-on-secondary-container">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0" data-icon="lightbulb">lightbulb</span>
+<div class="font-body-sm text-body-sm leading-relaxed">
+<strong class="font-title-md">Anonymity Guard:</strong> Do not include your employee ID, shift codes, workstation hostnames, or specific dates/times when only you were present. State verifiable structural facts that investigators can corroborate independently.
+              </div>
+</div>
+</div>
+</div>
+<!-- Section 3: Secure Evidentiary Dropzone -->
+<div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant/40 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-full bg-primary-container text-surface-bright flex items-center justify-center font-label-md text-label-md">3</div>
+<h3 class="font-headline-md text-headline-md text-primary">Evidentiary Dropzone &amp; Client Sanitizer</h3>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-on-tertiary-container bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="memory">memory</span>
+              Wasm Engine Ready
+            </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+            Upload PDFs, spreadsheets, scans, or exported audio. Files are scrubbed locally in your browser memory via WebAssembly before PGP chunking.
+          </p>
+<!-- Drop area -->
+<div class="border-2 border-dashed border-outline/30 rounded-xl p-8 text-center bg-surface-container-low/50 hover:bg-surface-container-low hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="w-14 h-14 mx-auto rounded-full bg-surface-container-highest flex items-center justify-center text-primary group-hover:scale-105 transition-transform mb-3">
+<span class="material-symbols-outlined text-[28px]" data-icon="cloud_upload">cloud_upload</span>
+</div>
+<div class="font-title-md text-title-md text-primary mb-1">
+              Drag and drop classified evidence files here, or <span class="text-on-tertiary-fixed-variant underline">browse files</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline max-w-md mx-auto mb-3">
+              Max file size 120MB per upload. Encrypted in 2MB blocks using Curve25519 session keys.
+            </p>
+<div class="flex items-center justify-center gap-4 text-outline font-label-sm text-label-sm">
+<span>PDF, DOCX, XLSX</span>
+<span>•</span>
+<span>PNG, JPG, TIFF</span>
+<span>•</span>
+<span>WAV, MP3, ZIP</span>
+</div>
+</div>
+<!-- Active Metadata Sanitizer Ledger (Simulated Real-time state) -->
+<div class="mt-4 space-y-3">
+<div class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Active Sanitization Queue</div>
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[24px] mt-0.5" data-icon="description">description</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">q3_offshore_clearing_memo.pdf</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-semibold">SANITIZED</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono mt-1">
+                    SHA-256: e82f3a9710db4...9801 • 3.4 MB
+                  </div>
+</div>
+</div>
+<div class="flex items-center gap-4 text-right">
+<div class="text-left md:text-right">
+<div class="font-label-sm text-label-sm text-on-tertiary-container font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]" data-icon="auto_delete">auto_delete</span>
+                    EXIF, XMP, &amp; Author UID Cleared
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">ICC profile stripped • Zero GPS payload</div>
+</div>
+<button class="text-outline hover:text-error transition-colors p-1" title="Remove attachment" type="button">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<div class="p-4 rounded-lg bg-surface-bright border border-outline-variant/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[24px] mt-0.5" data-icon="table_chart">table_chart</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">wire_ledger_reconciliation_2023.xlsx</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-semibold">SANITIZED</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono mt-1">
+                    SHA-256: 41d9c228a0bc7...e412 • 8.1 MB
+                  </div>
+</div>
+</div>
+<div class="flex items-center gap-4 text-right">
+<div class="text-left md:text-right">
+<div class="font-label-sm text-label-sm text-on-tertiary-container font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]" data-icon="auto_delete">auto_delete</span>
+                    VBA Macros Purged &amp; Company Tag Removed
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">Cell history revision hashes normalized</div>
+</div>
+<button class="text-outline hover:text-error transition-colors p-1" title="Remove attachment" type="button">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 4: Secure Communication Passphrase & Seed Phrase -->
+<div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border border-outline-variant/40 shadow-sm">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-7 h-7 rounded-full bg-primary-container text-surface-bright flex items-center justify-center font-label-md text-label-md">4</div>
+<h3 class="font-headline-md text-headline-md text-primary">Cryptographic Identity &amp; Follow-up Passphrase</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            EFIMS does not ask for your name, mobile number, or email address. To receive prosecutorial follow-up questions and verify case bounty disbursements, preserve this client-side master seed.
+          </p>
+<div class="space-y-4">
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/50">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="key">key</span>
+<span class="font-title-md text-title-md text-primary">Your 12-Word Recovery Seed</span>
+</div>
+<button class="font-label-sm text-label-sm text-on-tertiary-fixed-variant hover:text-primary flex items-center gap-1" onclick="regenerateSeed()" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="refresh">refresh</span>
+                  Regenerate Seed
+                </button>
+</div>
+<div class="grid grid-cols-3 sm:grid-cols-4 gap-2 font-mono text-[13px] text-primary" id="seedGrid">
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">1.</span>velvet</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">2.</span>harbor</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">3.</span>timber</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">4.</span>cipher</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">5.</span>ledger</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">6.</span>zenith</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">7.</span>quarry</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">8.</span>monarch</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">9.</span>spruce</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">10.</span>cobalt</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">11.</span>falcon</div>
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center"><span class="text-outline mr-1">12.</span>vortex</div>
+</div>
+</div>
+<div>
+<label class="block font-title-md text-title-md text-primary mb-2">Optional Secondary Client Passphrase</label>
+<input class="w-full rounded-full bg-surface-container-low border border-outline-variant/50 px-4 py-2.5 text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="Enter an additional offline memorized passphrase (optional)" type="password"/>
+<span class="block font-body-sm text-body-sm text-outline mt-1.5">This passphrase derives an additional Argon2id salt for zero-knowledge decryption.</span>
+</div>
+</div>
+</div>
+<!-- Submit Action Block -->
+<div class="bg-surface-container-lowest p-6 sm:p-8 rounded-xl border-2 border-primary/20 shadow-lg space-y-4">
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+<div>
+<div class="font-headline-md text-headline-md text-primary">Finalize Sovereign Submission</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Generates your tamper-evident 16-character tracking identifier.</p>
+</div>
+<button class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary-container text-surface-bright font-title-lg text-title-lg hover:bg-tertiary transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 group" onclick="handleFormSubmission()" type="button">
+<span>Submit Encrypted Disclosure</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="lock">lock</span>
+</button>
+</div>
+<div class="p-4 rounded-lg bg-error-container/40 border border-error/20 flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-[22px] shrink-0" data-icon="warning">warning</span>
+<div class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+<strong class="font-title-md text-error">Irreversible Cryptographic Action:</strong> Store your 16-character tracking code and 12-word seed immediately after dispatch. EFIMS system administrators, judges, and intake officers hold <strong>zero access</strong> to your master private key and cannot recover orphaned disclosures.
+            </div>
+</div>
+</div>
+</section>
+<!-- Right Column: Security Telemetry & Live Trust Verification (4 cols) -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- Active Security Envelope Widget (Dark Spruce Card) -->
+<div class="rounded-xl bg-primary-container text-surface-bright p-6 shadow-xl border border-outline/20">
+<div class="flex items-center justify-between mb-4 pb-3 border-b border-outline/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="lock">lock</span>
+<span class="font-title-md text-title-md text-surface-bright">Cryptographic Session</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-container text-tertiary-fixed font-mono">TOR-OK</span>
+</div>
+<div class="space-y-3.5 font-body-sm text-body-sm">
+<div class="flex justify-between items-center text-on-primary-container">
+<span>Client Ephemeral Key:</span>
+<span class="font-mono text-surface-bright text-[11px]">X25519-NIST-P384</span>
+</div>
+<div class="flex justify-between items-center text-on-primary-container">
+<span>Fingerprint Scrub:</span>
+<span class="text-tertiary-fixed font-semibold">Canvas &amp; Audio Purged</span>
+</div>
+<div class="flex justify-between items-center text-on-primary-container">
+<span>WebRTC Leak Barrier:</span>
+<span class="text-tertiary-fixed font-semibold">Active Blockade</span>
+</div>
+<div class="flex justify-between items-center text-on-primary-container">
+<span>Session Memory:</span>
+<span class="font-mono text-surface-bright text-[11px]">RAM Ephemeral (0 disk)</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline/20">
+<div class="font-label-sm text-label-sm text-surface-dim mb-2 uppercase tracking-wider">Telemetry Hash Shield</div>
+<div class="p-2.5 rounded bg-primary/60 font-mono text-[11px] text-surface-container-high break-all border border-outline/20 leading-relaxed">
+              BLAKE3: c47a9e102f9435b801deca78423f009e51c8901a88b56f2e449a0
+            </div>
+</div>
+</div>
+<!-- Botanical Editorial Narrative Card -->
+<div class="rounded-xl bg-surface-container-lowest p-6 border border-outline-variant/40 shadow-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-primary flex items-center justify-center mb-4">
+<span class="material-symbols-outlined" data-icon="balance">balance</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Statutory Protection Mandate</h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4">
+            Under Section 44 of the Independent Financial Integrity Act, disclosures submitted through the EFIMS zero-knowledge cryptographic gateway constitute fully privileged testimony.
+          </p>
+<ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-0.5" data-icon="done">done</span>
+<span>Immunity from non-disclosure agreements (NDAs)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-0.5" data-icon="done">done</span>
+<span>Confidential bounty eligibility up to 15% of recovered assets</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-0.5" data-icon="done">done</span>
+<span>Court-enforced witness isolation protocols</span>
+</li>
+</ul>
+</div>
+<!-- Quick Emergency Protocols Card -->
+<div class="rounded-xl bg-surface-container-low p-6 border border-outline-variant/40 shadow-sm">
+<div class="flex items-center gap-2 font-title-md text-title-md text-primary mb-2">
+<span class="material-symbols-outlined text-error" data-icon="shield">shield</span>
+            Physical Safety Guidance
+          </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-4">
+            If you suspect surveillance or if someone approaches your workspace:
+          </p>
+<div class="space-y-2.5">
+<div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-primary">Press Quick Escape Key</span>
+<kbd class="px-2 py-0.5 bg-surface-container-high rounded text-[11px] font-mono font-bold text-primary">ESC twice</kbd>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-primary">Panic Button in Nav</span>
+<span class="font-label-sm text-label-sm text-error font-semibold">Immediate Wipe</span>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 text-center">
+<a class="font-label-sm text-label-sm text-on-tertiary-fixed-variant hover:text-primary inline-flex items-center gap-1" href="https://www.torproject.org" rel="noopener noreferrer" target="_blank">
+              Download Tor Browser for Complete Traffic Obfuscation
+              <span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- PGP Fingerprint Card -->
+<div class="rounded-xl bg-surface-container-lowest p-6 border border-outline-variant/40 shadow-sm text-center">
+<div class="w-12 h-12 mx-auto rounded-full bg-surface-container flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined text-[24px]" data-icon="qr_code_2">qr_code_2</span>
+</div>
+<div class="font-title-md text-title-md text-primary">EFIMS Official Public PGP Key</div>
+<p class="font-body-sm text-body-sm text-outline mb-3">Verify before sending external encrypted mail.</p>
+<div class="bg-surface-container p-2.5 rounded font-mono text-[10px] text-on-surface-variant break-all select-all mb-3 text-left">
+            -----BEGIN PGP PUBLIC KEY BLOCK-----<br/>
+            mQGNBF+9wL0BDAC1p9...EFIMS-PUBLIC-KEY-v5...<br/>
+            FP: 8F29 B103 40C9 9B4E 2014 EF77 021A<br/>
+            -----END PGP PUBLIC KEY BLOCK-----
+          </div>
+<button class="w-full py-2 rounded-full border border-outline/30 font-label-md text-label-md text-primary hover:bg-surface-container transition-colors" onclick="copyPGPKey(this)" type="button">
+            Copy Public Armored Key
+          </button>
+</div>
+</aside>
+</div>
+</main>
+<!-- Submission Confirmation Modal (Hidden by default) -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-primary/60 backdrop-blur-sm" id="receiptModal">
+<div class="bg-surface-container-lowest max-w-lg w-full rounded-2xl p-6 sm:p-8 shadow-2xl border border-outline-variant/60 relative">
+<div class="w-14 h-14 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-[32px]" data-icon="check_circle">check_circle</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary text-center mb-1">Disclosure Ingested &amp; Sealed</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center mb-6">
+        Your transmission has been encrypted with the EFIMS Compartment Level 5 public master key.
+      </p>
+<div class="bg-surface-container p-4 rounded-xl border border-outline-variant/40 mb-4 text-center">
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-1">Your Sovereign 16-Character Tracking Code</div>
+<div class="font-mono font-bold text-kpi-metric text-primary tracking-wider select-all py-1" id="generatedToken">
+          EFIM-9X82-41PQ-08K1
+        </div>
+<div class="font-label-sm text-label-sm text-error mt-1 font-semibold">Store this immediately in an offline location.</div>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-low border border-outline-variant/40 mb-6 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+        Use this code along with your 12-word recovery seed to view case disposition updates, answer blinded questions from prosecutors, or claim asset restitution.
+      </div>
+<div class="flex flex-col sm:flex-row gap-3">
+<button class="flex-1 py-3 rounded-full bg-primary-container text-surface-bright font-title-md text-title-md hover:bg-tertiary transition-colors" onclick="closeModalAndWipe()" type="button">
+          Print / Copy &amp; Clear Memory
+        </button>
+<button class="py-3 px-6 rounded-full bg-error/10 text-error font-title-md text-title-md hover:bg-error hover:text-on-error transition-colors" onclick="emergencyPanicWipe()" type="button">
+          Panic Wipe Now
+        </button>
+</div>
+</div>
+</div>
+<!-- Editorial Footer -->
+<footer class="mt-auto bg-surface-container-low border-t border-outline-variant/40 py-8 px-6">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-outline font-body-sm text-body-sm">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-primary-container text-surface-bright flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[14px]" data-icon="shield">shield</span>
+</div>
+<span>EFIMS Cryptographic Vault Division • Public Anonymized Gateway v5.1.0</span>
+</div>
+<div class="flex items-center gap-6 font-label-md text-label-md">
+<a class="hover:text-primary transition-colors" href="#canary">Warrant Canary</a>
+<span>•</span>
+<a class="hover:text-primary transition-colors" href="#audit">Source Code Audit</a>
+<span>•</span>
+<a class="hover:text-primary transition-colors" href="#reproducible">Reproducible Build Hashes</a>
+</div>
+<div>
+<span>Zero Storage of Client Session Cookies or Identifiers</span>
+</div>
+</div>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+    // Quick emergency wipe protocol: Purge memory/local caches and instantly redirect
+    function emergencyPanicWipe() {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      } catch (e) {}
+      window.location.replace("https://www.google.com");
+    }
+
+    // Double Escape Key triggers emergency panic wipe
+    let lastEscPress = 0;
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const now = Date.now();
+        if (now - lastEscPress < 600) {
+          emergencyPanicWipe();
+        }
+        lastEscPress = now;
+      }
+    });
+
+    // Verify Fingerprint indicator
+    function verifyFingerprint() {
+      alert("Browser Verification Report:\n\n• WebGL Canvas Fingerprint: SPOOFED / DUMMY NOISE\n• User-Agent Hash: STRIPPED\n• Tor SOCKS Proxy Routing: CONFIRMED ENCRYPTED\n• Client IP Leakage: ZERO (Protected)");
+    }
+
+    // Regenerate Seed phrase demo
+    const wordlist = ["velvet", "harbor", "timber", "cipher", "ledger", "zenith", "quarry", "monarch", "spruce", "cobalt", "falcon", "vortex", "meadow", "beacon", "summit", "canyon", "quartz", "willow", "granite", "aurora"];
+    function regenerateSeed() {
+      const grid = document.getElementById('seedGrid');
+      grid.innerHTML = '';
+      const shuffled = [...wordlist].sort(() => 0.5 - Math.random()).slice(0, 12);
+      shuffled.forEach((word, idx) => {
+        const div = document.createElement('div');
+        div.className = "bg-surface-container-lowest p-2 rounded border border-outline-variant/40 text-center";
+        div.innerHTML = `<span class="text-outline mr-1">${idx + 1}.</span>${word}`;
+        grid.appendChild(div);
+      });
+    }
+
+    // PGP Key copy
+    function copyPGPKey(btn) {
+      const originalText = btn.innerText;
+      btn.innerText = "Armored Key Copied!";
+      setTimeout(() => {
+        btn.innerText = originalText;
+      }, 2000);
+    }
+
+    // Form submission demonstration
+    function handleFormSubmission() {
+      // Random 16 character token generator
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let token = 'EFIM-';
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 4; j++) {
+          token += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        if (i < 2) token += '-';
+      }
+      document.getElementById('generatedToken').innerText = token;
+      const modal = document.getElementById('receiptModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModalAndWipe() {
+      const modal = document.getElementById('receiptModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body></html>

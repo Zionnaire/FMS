@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core — Customer 360 &amp; Forensic Entity Profile</title>
+<!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with custom config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed": "#ffdad4",
+            "primary-container": "#1e3835",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#b0ccc8",
+            "on-background": "#1b1c1b",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#002116",
+            "secondary-container": "#ffdad4",
+            "on-tertiary": "#ffffff",
+            "error-container": "#ffdad6",
+            "outline": "#727877",
+            "on-surface": "#1b1c1b",
+            "on-primary-fixed-variant": "#314c48",
+            "tertiary": "#002419",
+            "surface-dim": "#dcd9d8",
+            "background": "#fcf9f7",
+            "tertiary-container": "#163a2d",
+            "surface-container": "#f0edeb",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "inverse-surface": "#30302f",
+            "primary": "#072320",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-tertiary-container": "#7fa494",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-primary-fixed": "#04201d",
+            "on-secondary": "#ffffff",
+            "inverse-on-surface": "#f3f0ee",
+            "on-surface-variant": "#414847",
+            "surface-container-low": "#f6f3f1",
+            "outline-variant": "#c1c8c6",
+            "secondary": "#735854",
+            "tertiary-fixed": "#c4ebd9",
+            "surface-variant": "#e5e2e0",
+            "surface-bright": "#fcf9f7",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed": "#2a1713",
+            "on-primary-container": "#86a19d",
+            "primary-fixed": "#cbe8e4",
+            "surface": "#fcf9f7",
+            "surface-container-highest": "#e5e2e0",
+            "inverse-primary": "#b0ccc8",
+            "surface-tint": "#496360",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-error-container": "#93000a",
+            "surface-container-high": "#eae8e6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2.5rem",
+            "space-xs": "0.375rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem",
+            "space-sm": "0.75rem",
+            "space-lg": "1.75rem",
+            "margin": "2rem",
+            "space-md": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-secondary-fixed selection:text-primary min-h-screen">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT 1: SideNavBar                                            -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 z-40 flex flex-col justify-between bg-primary-container shadow-md border-r border-outline-variant/30">
+<div class="w-64 h-full flex flex-col justify-between p-space-md">
+<!-- Brand & Header -->
+<div>
+<div class="flex items-center gap-3 px-2 py-3 mb-4">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined" data-icon="shield" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-surface-container-lowest tracking-tight leading-tight">EFIMS Core</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container">Financial Crime Intelligence</p>
+</div>
+</div>
+<!-- Action Button CTA -->
+<button class="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all duration-150 active:scale-[0.99]">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+          New Case File
+        </button>
+<!-- Main Nav Hierarchy -->
+<nav aria-label="Primary Navigation" class="space-y-1.5">
+<!-- Overview -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<!-- Network Graph -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span>Network Graph</span>
+</a>
+<!-- Entity Resolution -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+<span>Entity Resolution</span>
+</a>
+<!-- Investigations: ACTIVE SELECTION -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-fixed text-primary font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared" style="font-variation-settings: 'FILL' 1;">folder_shared</span>
+<span>Investigations</span>
+</a>
+<!-- Audit Trail -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+<span>Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Footer Navigation Items & Identity -->
+<div class="pt-4 border-t border-white/10 space-y-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Compliance Rules</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>System Settings</span>
+</a>
+<!-- Biophilic Executive Cardlet -->
+<div class="mt-4 p-3 rounded-xl bg-tertiary-container/80 text-surface-container-lowest flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim/20 flex items-center justify-center text-secondary-fixed shrink-0">
+<span class="material-symbols-outlined" data-icon="local_florist">local_florist</span>
+</div>
+<div class="overflow-hidden">
+<div class="font-label-sm text-label-sm text-secondary-fixed truncate">Supervisory Terminal</div>
+<div class="font-body-sm text-body-sm text-on-tertiary-container truncate">Node #NIG-HQ-04</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT 2: TopNavBar                                             -->
+<!-- ========================================================================= -->
+<header class="sticky top-0 right-0 h-16 z-30 bg-surface/90 backdrop-blur-md shadow-sm border-b border-outline-variant/40">
+<div class="flex justify-between items-center w-full h-full px-space-lg ml-64 max-w-[calc(100%-16rem)]">
+<!-- Search on Left & Product Brand Context -->
+<div class="flex items-center gap-6">
+<span class="font-headline-lg text-headline-lg text-primary tracking-tight hidden xl:inline">
+          EFIMS / Entity Resolution &amp; Network Graph
+        </span>
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-9 pr-4 py-1.5 rounded-full bg-surface-container text-on-surface font-body-md text-body-md placeholder:text-outline border-0 focus:ring-2 focus:ring-primary-container/20" placeholder="Search target, BVN, NIN, RC..." type="text"/>
+</div>
+</div>
+<!-- Center Nav Links -->
+<div class="hidden lg:flex items-center gap-8">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1 transition-colors" href="#">Cluster View</a>
+<a class="text-primary font-title-md text-title-md border-b-2 border-primary pb-1" href="#">Synapse Matrix</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1 transition-colors" href="#">Sanctions List</a>
+</div>
+<!-- Trailing Primary/Secondary Actions & Profile -->
+<div class="flex items-center gap-3">
+<button class="px-3.5 py-1.5 rounded-full border border-primary/20 text-primary font-label-md text-label-md hover:bg-surface-container-high transition-colors active:scale-95 flex items-center gap-1.5">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+          Filter Graph
+        </button>
+<button class="px-4 py-1.5 rounded-full bg-primary-container text-surface-container-lowest font-label-md text-label-md hover:bg-primary transition-colors active:scale-95 flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined" data-icon="file_download">file_download</span>
+          Export Telemetry
+        </button>
+<!-- Utility Icons -->
+<div class="flex items-center border-l border-outline-variant/40 pl-3 ml-1 space-x-1">
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant" title="Notifications">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant" title="History">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant" title="Help">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+<!-- Lead Investigator Avatar -->
+<div class="w-9 h-9 rounded-full bg-secondary-fixed ring-2 ring-primary-container/20 flex items-center justify-center font-title-md text-title-md text-primary overflow-hidden ml-1">
+<img class="w-full h-full object-cover" data-alt="A distinguished executive forensic intelligence officer dressed in a tailored botanical spruce evergreen blazer, illuminated by gentle morning studio lighting in an editorial warm cream atmosphere, looking directly at the camera with sharp professional focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6Dn2GcfbSQlONd5mjyRe3KvM-qPva1zSDiOCBdA9EpKaLQVoYgTKKnvy-Aqn-EHN04PKI113MN9WwKubyYForCe6zXDQo1s8_WxURkYEoL3lTNgoz4PrbaJMd7xOPaf6-oC6bGGRsAks_YqYANuvti4tnMmT6uqZiQo-J9ltnpDotYQl2hlyEGfRGbpenh0F5I306T1kN6Ug4uuryIXIP2q4ZvEuB0fgTP_fqYUfIpIL92kRgSY9kKg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- MAIN WORKBENCH CANVAS (Desktop 1440px wide context)                        -->
+<!-- ========================================================================= -->
+<main class="ml-64 p-space-lg space-y-6 max-w-[1440px]">
+<!-- Top Statutory & Quick Operational Action Bar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30 shadow-sm">
+<!-- Breadcrumbs & Status Tags -->
+<div class="space-y-1">
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-outline">
+<span>Financial Crime</span>
+<span class="material-symbols-outlined" data-icon="chevron_right" style="font-size: 14px;">chevron_right</span>
+<span>Investigations</span>
+<span class="material-symbols-outlined" data-icon="chevron_right" style="font-size: 14px;">chevron_right</span>
+<span>Entity Resolution</span>
+<span class="material-symbols-outlined" data-icon="chevron_right" style="font-size: 14px;">chevron_right</span>
+<span class="text-primary font-bold">ENT-99214-NIG</span>
+</div>
+<div class="flex flex-wrap items-center gap-2 pt-0.5">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary-container text-surface-container-lowest font-label-sm text-label-sm">
+<span class="material-symbols-outlined" data-icon="lock" style="font-size: 13px;">lock</span>
+            CLEARANCE TIER III
+          </span>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary-fixed text-primary font-label-sm text-label-sm">
+            AML RED FLAG (CIRCULAR-2023-B)
+          </span>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">
+            SANCTION MONITORING ACTIVE
+          </span>
+</div>
+</div>
+<!-- Quick Actions Group -->
+<div class="flex flex-wrap items-center gap-2.5">
+<button class="px-4 py-2 rounded-full bg-error text-on-error font-label-md text-label-md flex items-center gap-1.5 shadow-sm hover:bg-error/90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="block">block</span>
+          Freeze Accounts
+        </button>
+<button class="px-4 py-2 rounded-full bg-primary-container text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 hover:bg-primary transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="assignment_late">assignment_late</span>
+          Export SAR Dossier
+        </button>
+<button class="px-4 py-2 rounded-full border border-primary/20 text-primary bg-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container-high transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="link">link</span>
+          Link to Case CS-2024-0419
+        </button>
+</div>
+</div>
+<!-- Header Entity Dossier Hero Section (Velvety Spruce Grounding Card) -->
+<div class="p-space-lg rounded-xl bg-primary-container text-surface-container-lowest shadow-md relative overflow-hidden border border-tertiary-container">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-secondary-fixed/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+<!-- Entity Primary Corporate Title & Statutory Filings -->
+<div class="lg:col-span-5 space-y-2">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest/15 text-secondary-fixed font-label-sm text-label-sm uppercase tracking-wider">
+              Corporate Shell Entity
+            </span>
+<span class="px-2.5 py-0.5 rounded-full bg-error-container/30 text-secondary-fixed-dim font-label-sm text-label-sm">
+              Inactive CAC Filings
+            </span>
+</div>
+<h2 class="font-headline-xl text-headline-xl tracking-tight text-surface-container-lowest">
+            Apex Synergy Logistics Ltd
+          </h2>
+<div class="flex flex-wrap items-center gap-4 font-body-sm text-body-sm text-primary-fixed-dim">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="business" style="font-size: 16px;">business</span>
+              RC-1920491
+            </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="receipt_long" style="font-size: 16px;">receipt_long</span>
+              Tax ID: 20918231-0001
+            </span>
+<span>•</span>
+<span class="text-error-container font-semibold">Jurisdiction: NG-LA</span>
+</div>
+</div>
+<!-- Associated Individual & PEP Flag -->
+<div class="lg:col-span-4 border-l border-white/10 pl-0 lg:pl-6 space-y-2">
+<div class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider">
+            Beneficial Owner &amp; Lead Signatory
+          </div>
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-full bg-secondary-fixed text-primary font-headline-md text-headline-md flex items-center justify-center shrink-0">
+              TG
+            </div>
+<div>
+<div class="font-title-lg text-title-lg text-surface-container-lowest">Tanimu Usman Garba</div>
+<div class="font-body-sm text-body-sm text-secondary-fixed flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="warning" style="font-size: 14px;">warning</span>
+                Flagged High Risk PEP Associate
+              </div>
+</div>
+</div>
+<div class="font-body-sm text-body-sm text-on-primary-container grid grid-cols-2 gap-2 pt-1">
+<span>BVN: <strong class="text-surface-container-lowest">22894109311</strong></span>
+<span>NIN: <strong class="text-surface-container-lowest">49201948102</strong></span>
+</div>
+</div>
+<!-- Dynamic Risk Score Pill -->
+<div class="lg:col-span-3 flex lg:justify-end">
+<div class="p-4 rounded-xl bg-error-container/20 border border-error-container/40 flex items-center gap-4 w-full lg:w-auto">
+<div class="w-14 h-14 rounded-full bg-error flex items-center justify-center text-on-error font-kpi-metric text-kpi-metric shrink-0 shadow-sm">
+              94
+            </div>
+<div>
+<div class="font-label-sm text-label-sm text-error-container uppercase tracking-widest font-bold">
+                Threat Matrix
+              </div>
+<div class="font-title-lg text-title-lg text-secondary-fixed">
+                CRITICAL RISK
+              </div>
+<div class="font-body-sm text-body-sm text-primary-fixed-dim">
+                Confidence 99.4%
+              </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- 3-COLUMN STRUCTURED INVESTIGATION GRID                                    -->
+<!-- ========================================================================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- ======================================================================= -->
+<!-- COLUMN 1: Identity & Biometrics (4 Cols)                                -->
+<!-- ======================================================================= -->
+<section class="lg:col-span-4 space-y-6">
+<!-- Corporate Identity & Legal Presence Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="domain_verification">domain_verification</span>
+<h3>Corporate Registration Details</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-primary font-label-sm text-label-sm">Defunct</span>
+</div>
+<div class="space-y-3 font-body-md text-body-md">
+<div>
+<div class="font-label-sm text-label-sm text-outline">Registered Corporate Office</div>
+<div class="font-title-md text-title-md text-on-surface mt-0.5">Plot 1404B, Bishop Oluwole Street, Victoria Island, Lagos</div>
+<div class="font-body-sm text-body-sm text-error flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined" data-icon="report" style="font-size: 15px;">report</span>
+                Physical site inspection failed: Residential condominium building.
+              </div>
+</div>
+<div class="grid grid-cols-2 gap-3 pt-2">
+<div>
+<div class="font-label-sm text-label-sm text-outline">Incorporation Date</div>
+<div class="text-on-surface font-semibold">14 Nov 2018</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Annual Returns</div>
+<div class="text-error font-semibold">Overdue (4 Years)</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Authorized Share Capital</div>
+<div class="text-on-surface font-semibold">₦10,000,000</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Industry Classification</div>
+<div class="text-on-surface font-semibold">Logistics / Freight</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Biometric Validation & Telecommunication Telemetry Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+<h3>Biometric &amp; SIM Telemetry</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">High Anomaly</span>
+</div>
+<div class="space-y-4">
+<!-- Facial Match Metric Bar -->
+<div class="p-3 rounded-lg bg-surface-container-low">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-primary">BVN Facial Match Discrepancy</span>
+<span class="font-label-md text-label-md text-error font-bold">82% Variance</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 82%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-outline mt-1.5">
+                Passport photo submitted to KYC gateway does not align with NIBSS central repository template.
+              </p>
+</div>
+<!-- SIM Swap Telemetry -->
+<div class="border border-outline-variant/40 rounded-lg p-3 space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-outline" data-icon="sim_card" style="font-size: 16px;">sim_card</span>
+                  SIM Swap &amp; IMSI Volatility
+                </span>
+<span class="text-error font-bold font-label-sm text-label-sm">3 IMSI Changes</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Recorded 3 individual SIM replacements across MTN Nigeria network in the past 14 days, indicative of account takeover vectors.
+              </p>
+<div class="font-label-sm text-label-sm text-outline">
+                Primary Line: +234 (0) 803 *** 4912 (Active)
+              </div>
+</div>
+</div>
+</div>
+<!-- PEP & Sanctions Compliance Clearance Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-3">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md pb-2 border-b border-surface-container">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<h3>PEP &amp; Sanctions Screening</h3>
+</div>
+<div class="space-y-2.5">
+<!-- OFAC Check -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">OFAC SDN International List</div>
+<div class="font-body-sm text-body-sm text-outline">U.S. Dept of Treasury</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Negative Match</span>
+</div>
+<!-- NFIU Check -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-error-container/30 border border-error-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error" data-icon="error" style="font-variation-settings: 'FILL' 1;">error</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">NFIU Domestic Watchlist</div>
+<div class="font-body-sm text-body-sm text-error">Financial Intelligence Unit</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-error font-bold">Positive Match</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- COLUMN 2: Banking & Account Portfolio (4 Cols)                          -->
+<!-- ======================================================================= -->
+<section class="lg:col-span-4 space-y-4">
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div>
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<h3>Linked Banking Portfolio</h3>
+</div>
+<p class="font-body-sm text-body-sm text-outline">4 Associated Core Financial Institutions</p>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-fixed text-primary font-label-sm text-label-sm font-bold">
+              Total Lien: ₦38.2M
+            </span>
+</div>
+<!-- Account Item 1: GTBank -->
+<div class="p-3.5 rounded-xl border border-outline-variant/40 hover:border-primary/40 transition-colors bg-surface-bright space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">Guaranty Trust Bank</span>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">PND Active</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono">Acct: 0148892110 (Corporate Current)</div>
+</div>
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-outline">Current Lien</div>
+<div class="font-title-md text-title-md text-error font-bold">₦22,500,000</div>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1 border-t border-surface-container">
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm text-center">
+                View Ledger
+              </button>
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-primary-container text-surface-container-lowest font-label-sm text-label-sm text-center">
+                Apply Hold
+              </button>
+<button class="py-1.5 px-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error" title="Freeze Inbound ACH">
+<span class="material-symbols-outlined" data-icon="pause_circle" style="font-size: 16px;">pause_circle</span>
+</button>
+</div>
+</div>
+<!-- Account Item 2: Kuda Microfinance Bank -->
+<div class="p-3.5 rounded-xl border border-outline-variant/40 hover:border-primary/40 transition-colors bg-surface-bright space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">Kuda Microfinance Bank</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-primary font-label-sm text-label-sm">Frozen</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono">Acct: 2004918201 (Personal Tier 3)</div>
+</div>
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-outline">Frozen Ledger</div>
+<div class="font-title-md text-title-md text-on-surface font-bold">₦12,400,000</div>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1 border-t border-surface-container">
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm text-center">
+                View Ledger
+              </button>
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container-high text-outline font-label-sm text-label-sm text-center cursor-not-allowed">
+                PND Locked
+              </button>
+<button class="py-1.5 px-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error" title="Freeze Inbound ACH">
+<span class="material-symbols-outlined" data-icon="pause_circle" style="font-size: 16px;">pause_circle</span>
+</button>
+</div>
+</div>
+<!-- Account Item 3: PalmPay -->
+<div class="p-3.5 rounded-xl border border-outline-variant/40 hover:border-primary/40 transition-colors bg-surface-bright space-y-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">PalmPay</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm">Drain Risk</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono">Acct: 9921004812 (Wallet Pay)</div>
+</div>
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-error">ATM Withdrawn</div>
+<div class="font-title-md text-title-md text-error font-bold">₦3,300,000</div>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1 border-t border-surface-container">
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm text-center">
+                View Ledger
+              </button>
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-error text-on-error font-label-sm text-label-sm text-center">
+                Revoke Wallet
+              </button>
+<button class="py-1.5 px-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error" title="Freeze Inbound ACH">
+<span class="material-symbols-outlined" data-icon="pause_circle" style="font-size: 16px;">pause_circle</span>
+</button>
+</div>
+</div>
+<!-- Account Item 4: Zenith Bank -->
+<div class="p-3.5 rounded-xl border border-outline-variant/40 hover:border-primary/40 transition-colors bg-surface-bright space-y-3 opacity-80">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-primary">Zenith Bank</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Dormant</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline font-mono">Acct: 1029384756 (Corporate Domiciliary)</div>
+</div>
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-outline">Balance</div>
+<div class="font-title-md text-title-md text-on-surface font-bold">$1,240.10</div>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1 border-t border-surface-container">
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm text-center">
+                View Ledger
+              </button>
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm text-center">
+                Audit Flow
+              </button>
+<button class="py-1.5 px-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-error" title="Freeze Inbound ACH">
+<span class="material-symbols-outlined" data-icon="pause_circle" style="font-size: 16px;">pause_circle</span>
+</button>
+</div>
+</div>
+<!-- Batch Action Footer for Banking -->
+<button class="w-full py-2.5 rounded-full bg-primary-container text-surface-container-lowest font-label-md text-label-md hover:bg-primary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+            Enforce Global Post-No-Debit (PND) Warrant
+          </button>
+</div>
+</section>
+<!-- ======================================================================= -->
+<!-- COLUMN 3: Behavioral & Device Forensics (4 Cols)                        -->
+<!-- ======================================================================= -->
+<section class="lg:col-span-4 space-y-6">
+<!-- Device Fingerprinting Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="devices">devices</span>
+<h3>Known Device Fingerprints</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">High Velocity</span>
+</div>
+<div class="space-y-3 font-body-sm text-body-sm">
+<div class="flex justify-between items-center p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary" data-icon="smartphone">smartphone</span>
+<div>
+<div class="font-title-md text-title-md text-primary">iPhone 14 Pro</div>
+<div class="font-mono text-outline">MAC: 8A:32:9C:11:F4:D0</div>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-secondary-fixed text-primary font-bold font-label-sm text-label-sm">4 IMEI Swaps</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-outline">Device Velocity Score</span>
+<div class="font-title-md text-title-md text-error font-bold">91 / 100</div>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-outline">Jailbreak / Root</span>
+<div class="font-title-md text-title-md text-error font-bold">Detected (Taurine)</div>
+</div>
+</div>
+</div>
+</div>
+<!-- IP Geolocation & Tor Exit Widget -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-3">
+<div class="flex items-center justify-between pb-2 border-b border-surface-container">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="satellite_alt">satellite_alt</span>
+<h3>Simultaneous Geolocation</h3>
+</div>
+<span class="font-label-sm text-label-sm text-error font-bold animate-pulse">Impossible Speed</span>
+</div>
+<!-- Map / Geolocation Graphic Container -->
+<div class="relative w-full h-36 rounded-lg overflow-hidden border border-outline-variant/50 bg-primary-container">
+<img class="w-full h-full object-cover opacity-60" data-alt="A forensic dark satellite map visualization showing dual glowing connection nodes connecting Lagos Victoria Island with an anonymous European proxy server in Bucharest, rendered with fine botanical evergreen line grids and blush coral node pulses." data-location="Lagos" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzCxcK1aMXZnNCHeUrqajcbM2QwogFMHYL4ofEYz9N0ArGyM6imChodXvcNMSteSfc1SHfEvUFZ3c1ReTrCCqM4IVj20HNCVyDuEsmRVJe5wejYRrs0TdyaFot7TTpV3VEBt1ss0wRE9RWVZ6XRu4oWq-Pp8M_v1njIHc2XfoNIXQTmvd9Sfgx3xFuapVnd9IeXuQgQzEhtJQs43QIaMLssr5F735zs0yYu-BzQSgGwKOwEWZtUQCPkg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-3 text-surface-container-lowest">
+<div class="flex justify-between items-center text-xs font-mono">
+<span>Node A: Lagos (VI) [102.89.23.11]</span>
+<span class="text-secondary-fixed">Live</span>
+</div>
+<div class="flex justify-between items-center text-xs font-mono text-error-container">
+<span>Node B: Bucharest Tor Exit [185.220.101.5]</span>
+<span>Delta: 42s</span>
+</div>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-outline">
+            Simultaneous logins occurred within 42 seconds across two international jurisdictions without intermediate transit signatures.
+          </p>
+</div>
+<!-- KYC Document Repository & Preview Thumbnails -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-3">
+<div class="flex items-center justify-between pb-2 border-b border-surface-container">
+<div class="flex items-center gap-2 text-primary font-title-md text-title-md">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<h3>KYC Document Repository</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline">3 Documents</span>
+</div>
+<div class="grid grid-cols-3 gap-2.5">
+<!-- Doc 1: CAC Certificate -->
+<div class="border border-outline-variant/50 rounded-lg p-2 hover:border-primary transition-colors cursor-pointer group">
+<div class="w-full h-20 rounded bg-surface-container-high overflow-hidden relative mb-1.5">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Official corporate registry certificate document on cream textured stock with embossed Nigerian official government seal, crisp typography, and red wax stamp impression, forensic scan preview." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdIBTXWRaZLjXmkGBuFl-TI-GxZHGtdGLqUv4WTlarhx1sFK49sN-2BRCsWWn0aVn0TxpE5hHgK0q1WSTqC4a6GfymwPBxk5eUlYQElzxYRHNSzV6KcvQ5S1MzphnRfGnJSodKclrdx3ovyFOpUKpdQewCwpfWUa13fTd6k6JWtrVaJ9lt80sZEtLm-BlwpqnDDkIXJRPSm5R8dNPRlNi25_nq_BopPS_8neJOHnzJFbnYRbIuCXb-tg"/>
+<span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-primary">PDF</span>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface truncate">CAC Cert RC-1920491</div>
+<div class="font-body-sm text-body-sm text-outline truncate">Verified 2018</div>
+</div>
+<!-- Doc 2: Utility Bill (Flagged) -->
+<div class="border border-error/50 rounded-lg p-2 bg-error-container/10 hover:border-error transition-colors cursor-pointer group">
+<div class="w-full h-20 rounded bg-surface-container-high overflow-hidden relative mb-1.5">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="A municipal electricity utility billing document marked with digital red forensics overlays pointing to falsified address text alignment in a sleek modern design palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCYjQramtgSpfjwmJDOyzQwQ560pr7n9O48WNZqPer9YAR1GnqEMhoD8fBLfZboMRfKDJPgG5cporjggmxmgVOL3t33IHyjCqHM0Ywc0TD446H8a8lq-HNzy41_2raR_khM6oYP437HBUCUOa9UmSTiDDtGJUgpio8X-ruvWMvTiNYLgN2C2f6QxGoj7EBnoy9Mo64z8oHWAbtgnV4EtHInVHY6E8_38a13qBWdN_vlyW88OJMh51Fsg"/>
+<span class="absolute top-1 right-1 px-1 rounded bg-error text-on-error font-label-sm text-label-sm">FLAG</span>
+</div>
+<div class="font-label-sm text-label-sm text-error truncate">EKEDC Utility Bill</div>
+<div class="font-body-sm text-body-sm text-error truncate">Falsified Address</div>
+</div>
+<!-- Doc 3: Passport Photo -->
+<div class="border border-outline-variant/50 rounded-lg p-2 hover:border-primary transition-colors cursor-pointer group">
+<div class="w-full h-20 rounded bg-surface-container-high overflow-hidden relative mb-1.5">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Official biometric sovereign passport identity page with forensic watermarking lines and biometric facial recognition scan overlay on warm paper tone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4taYc42bUmQ8qHBHplPayPFbuhroKejUPqK5nLa4BqPBiVMynifSot3KsKALucScdcKjBBsHwOTe19tD9D_-C5T5Y6T2I9tGgPbFKp905h66EPtTQuM3x75MvdKtGFtrPG92oDTJBcAL5NL9LjKyfY_kO3b-6PkXJzpyH_d-4xHHWTbxeKc3pd_ua5RfeCzy8cqnMGMuo33pb9Rz6ZPnSlcTbPqXA_VJIKTsx6yqGuMjqU9-0hhHKGQ"/>
+<span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 font-label-sm text-label-sm text-primary">JPG</span>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface truncate">Standard Passport</div>
+<div class="font-body-sm text-body-sm text-outline truncate">Discrepancy 82%</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- ========================================================================= -->
+<!-- IMMUTABLE AUDIT FOOTER BANNER                                             -->
+<!-- ========================================================================= -->
+<footer class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-tertiary-container flex items-center justify-center text-surface-container-lowest shrink-0">
+<span class="material-symbols-outlined" data-icon="lock_clock">lock_clock</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-primary">Immutable Dossier Snapshot (SHA-256):</span>
+<span class="font-mono text-body-sm text-body-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-outline-variant/30 select-all">
+              e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+            </span>
+</div>
+<div class="font-body-sm text-body-sm text-outline mt-0.5">
+            Cryptographically sealed under Federal Anti-Money Laundering Framework (NFIU Circular SEC/2024/09).
+          </div>
+</div>
+</div>
+<div class="flex items-center gap-4 text-right shrink-0">
+<div>
+<div class="font-label-sm text-label-sm text-outline">Last Telemetry Refresh</div>
+<div class="font-label-md text-label-md text-on-surface">Today, 14:02:18 UTC+1</div>
+</div>
+<div class="h-8 w-px bg-outline-variant/50"></div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Attestation Status</div>
+<div class="font-label-md text-label-md text-tertiary flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined" data-icon="verified" style="font-size: 16px;">verified</span>
+            Legally Certified
+          </div>
+</div>
+</div>
+</footer>
+</main>
+</body></html>

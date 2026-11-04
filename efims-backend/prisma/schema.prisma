@@ -1,0 +1,1671 @@
+// EFIMS — identity + configuration + incidents + triage module schema (+ minimal audit-write plumbing identity depends on)
+//
+// Tenancy model (see docs/architecture.md §4.2):
+//   - `Tenant` lives in the control plane — no tenant_id column, never RLS-scoped.
+//   - Every other model here is tenant-scoped: it carries `tenantId` and has a matching
+//     Postgres RLS policy (see prisma/migrations/<ts>_enable_row_level_security/migration.sql)
+//     enforcing `tenant_id = current_setting('app.current_tenant')::uuid`.
+//   - The app-layer tenant context (src/infrastructure/database/tenant-context.ts) sets that
+//     session variable per request/transaction. RLS is the backstop if that code ever has a bug
+//     — per CLAUDE.md non-negotiable #5, tenant isolation is enforced twice, not once.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Runtime app connection — points at efims_app (RLS-respecting, no CREATEROLE/CREATEDB).
+  url       = env("DATABASE_URL")
+  // Migrations need a direct (non-PgBouncer) connection for advisory locks, and the
+  // schema-owning role (neondb_owner on Neon, or a local superuser) — efims_app can't run
+  // migrations by design (NOCREATEROLE/NOCREATEDB), so this deliberately differs from `url`.
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Control plane — NOT tenant-scoped, NOT RLS-protected
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id        String       @id @default(uuid())
+  slug      String       @unique
+  name      String
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  users                 User[]
+  teams                 Team[]
+  auditEvents           AuditEvent[]
+  configurationEntries  ConfigurationEntry[]
+  signals               Signal[]
+  incidents             Incident[]
+  triageAssessments     TriageAssessment[]
+  cases                 Case[]
+  slaClocks             SlaClock[]
+  approvalRequests      ApprovalRequest[]
+  notifications         Notification[]
+  investigationPlans    InvestigationPlan[]
+  issues                InvestigationIssue[]
+  interviews            Interview[]
+  findings              Finding[]
+  evidenceItems         EvidenceItem[]
+  custodyEvents         CustodyEvent[]
+  containmentRequests   ContainmentRequest[]
+  lossEntries           LossEntry[]
+  recoveryEntries       RecoveryEntry[]
+  writeOffEntries       WriteOffEntry[]
+  rootCauseAnalyses     RootCauseAnalysis[]
+  capaActions           CapaAction[]
+  capaValidations       CapaValidation[]
+  regulatoryObligations RegulatoryObligation[]
+  regulatorySubmissions RegulatorySubmission[]
+  accessChangeRequests  AccessChangeRequest[]
+
+  @@map("tenants")
+}
+
+/// A platform-level account — not a tenant `User`, no `tenantId`, no `Role`. Added 2026-10-14
+/// alongside tenant provisioning: EFIMS is multi-tenant by design (CLAUDE.md's "Bank 1 is the
+/// first tenant"), and the account that creates/lists/suspends *tenants themselves* needs to sit
+/// structurally above all of them, not be "a very powerful tenant user." Deliberately its own
+/// model/login/JWT/guard (`PlatformAuthService`/`PlatformAuthGuard` in `src/platform/`), not an
+/// extra-privileged `Role` value — a bug in the per-tenant RBAC system (RolesGuard, the 7-condition
+/// case-access check) structurally cannot grant cross-tenant power, because that power was never
+/// expressed in terms this model's checks even look at. Lives beside `Tenant` in the control
+/// plane: no `tenantId` column, not added to `rls-policies.sql`'s RLS table list.
+model PlatformUser {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("platform_users")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+// ---------------------------------------------------------------------------
+// Tenant-scoped — every model below carries tenantId and is RLS-protected
+// ---------------------------------------------------------------------------
+
+/// A user's primary role. CD-04's approval matrix and the mockups both reference these as
+/// distinct functional roles, not permission bundles — kept as a flat enum for MVP; a
+/// many-to-many Role/Permission model can replace this later without changing callers if it's
+/// introduced behind UsersService.
+///
+/// Expanded from the original 8 to 20 (2026-10-14) to give every distinct front-line function its
+/// own role/dashboard, per an external role-matrix brief — see docs/CHANGELOG.md's dated entry for
+/// the full mapping and what was deliberately left out (a generic capability/permission-string
+/// engine, access-recertification campaigns). `ADMIN` deliberately keeps its existing blanket
+/// case-content bypass (CASE_ROLES/APPROVAL_MATRIX) unchanged — the brief's "admins get no
+/// business-content access by default" principle is honored at the platform-admin layer
+/// (`PlatformUser`, which sits above tenants entirely) instead of by narrowing this tenant-scoped
+/// role, since the single seeded tenant admin drives every existing verification flow.
+enum Role {
+  INVESTIGATOR
+  TEAM_LEAD
+  FRAUD_RISK_MANAGER
+  COMPLIANCE_MLRO
+  LEGAL_COUNSEL
+  CASE_OWNER
+  EXECUTIVE
+  ADMIN
+  INCIDENT_REPORTER
+  TRIAGE_ANALYST
+  EVIDENCE_CUSTODIAN
+  SECURITY_ANALYST
+  OPERATIONS_OFFICER
+  RECOVERY_OFFICER
+  CONTROL_OWNER
+  EFFECTIVENESS_REVIEWER
+  HR_REVIEWER
+  PROTECTED_DISCLOSURE_OFFICER
+  CONFIG_ADMIN
+  AUDITOR
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+/// Sensitive compartments a case can be filed under (docs/architecture.md §4.4). A user only
+/// sees a case whose compartment is in their own grant set.
+enum Compartment {
+  STANDARD
+  AML_MLRO
+  WHISTLEBLOWING
+  LEGAL_PRIVILEGE
+  HR
+  EXECUTIVE
+}
+
+model User {
+  id             String     @id @default(uuid())
+  tenantId       String
+  tenant         Tenant     @relation(fields: [tenantId], references: [id])
+  email          String
+  passwordHash   String
+  fullName       String
+  role           Role
+  /// Numeric clearance tier (1 = Tier I .. 4 = Executive/Cabinet MLRO). Numeric, not an enum,
+  /// so the cases module's `user.clearanceLevel >= case.sensitivityLevel` check
+  /// (docs/architecture.md §4.3) is a plain integer comparison.
+  clearanceLevel Int        @default(1)
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  compartmentGrants    UserCompartmentGrant[]
+  teamMemberships      TeamMembership[]
+  refreshTokens        RefreshToken[]
+  accessChangeRequests AccessChangeRequest[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+model UserCompartmentGrant {
+  id          String      @id @default(uuid())
+  tenantId    String
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  compartment Compartment
+  grantedAt   DateTime    @default(now())
+  grantedBy   String?
+
+  /// Both nullable, both added 2026-10-14 for "temporary grants" — a grant with neither set is
+  /// permanent (the original behavior). `UsersService.getGrantedCompartments` filters out any row
+  /// where `revokedAt` is set or `expiresAt` has passed; this table is otherwise still
+  /// append-mostly (a revoke sets `revokedAt`, it doesn't delete the row — the grant's history is
+  /// itself worth keeping, mirroring this codebase's general preference for append-only audit
+  /// trails over silent deletes).
+  expiresAt DateTime?
+  revokedAt DateTime?
+
+  @@unique([userId, compartment])
+  @@index([tenantId])
+  @@map("user_compartment_grants")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+
+  memberships       TeamMembership[]
+  triageAssignments TriageAssessment[]
+  cases             Case[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("teams")
+}
+
+model TeamMembership {
+  id       String   @id @default(uuid())
+  tenantId String
+  teamId   String
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([tenantId])
+  /// `[teamId, userId]` above only serves queries filtering by teamId (a prefix match) —
+  /// `TeamsService.getUserTeamIds` filters by `userId` alone, on every case-list/case-access
+  /// check in the codebase, and had no covering index without this.
+  @@index([userId])
+  @@map("team_memberships")
+}
+
+/// Opaque refresh tokens, hashed at rest (never store the raw token). The JWT access token is
+/// stateless and short-lived; this table is what makes logout/revocation possible.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tenantId  String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
+}
+
+/// The real `audit` module's ledger (architecture.md: "append-only ledger, write-only API") —
+/// `tenantId` tightened from optional to required as part of that module shipping: every actual
+/// call site (`AuditService.record`) has always required a resolved tenant (see
+/// `AuditService`'s doc comment on why a pre-tenant-resolution failure, e.g. a bad login tenant
+/// slug, is deliberately NOT written here at all), so the nullable column was vestigial —
+/// confirmed zero null-tenant rows existed live before this migration ran.
+///
+/// `hash`/`previousHash` make this a genuine hash chain, one per tenant (never a single global
+/// chain across tenants — that would leak cross-tenant event-ordering/volume information through
+/// an otherwise RLS-isolated table). `previousHash` null means "first event in this tenant's
+/// chain". `AuditService.record` computes `hash` from the new row's own fields plus
+/// `previousHash`, under a per-tenant Postgres advisory lock so concurrent writes for the same
+/// tenant can't both read the same "latest" hash and fork the chain — see that method's doc
+/// comment for the concurrency reasoning. `AuditService.verifyChain` walks a tenant's events in
+/// order and recomputes every hash, so tampering via any path that bypasses the app entirely
+/// (e.g. a direct superuser SQL UPDATE, which this table's own RLS/grants already block for the
+/// app's own role — see rls-policies.sql) is at least detectable after the fact, even though it
+/// can't be prevented at the database level for a true superuser.
+///
+/// No update or delete path exists anywhere in the codebase for this table — keep it that way.
+model AuditEvent {
+  id          String       @id @default(uuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  outcome     AuditOutcome @default(SUCCESS)
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  previousHash String?
+  /// Was nullable for one migration only (`audit_hash_chain`), while a one-time backfill script
+  /// (since removed — its job was done, and it can't type-check against this now-required
+  /// column anyway) gave every pre-existing row a real hash before the following migration
+  /// (`audit_hash_required`) tightened this to required. See docs/CHANGELOG.md's `audit` module
+  /// entry for the full staged-migration reasoning.
+  hash         String
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([tenantId, createdAt])
+  @@map("audit_events")
+}
+
+// ---------------------------------------------------------------------------
+// configuration module — CD-01..CD-08 (docs/configuration-decisions.md)
+// ---------------------------------------------------------------------------
+
+/// One entry per CD item in docs/configuration-decisions.md. Deliberately a single generic
+/// table rather than 8 bespoke ones: every CD is "versioned per-tenant configuration" with the
+/// same lifecycle (draft → ratified → superseded), and the 8 payload shapes are wildly
+/// different (a taxonomy tree vs. an RTO/RPO table vs. an approval matrix) — modeling that
+/// variation as 8 tables would mean 8 near-identical versioning/audit/ratification code paths
+/// for no real benefit. `value`'s shape per key lives in TypeScript
+/// (src/modules/configuration/types/cd-value.types.ts), validated at the service layer, not in
+/// the database.
+enum CdKey {
+  CD_01_INCIDENT_TAXONOMY
+  CD_02_SEVERITY_THRESHOLDS
+  CD_03_SLA_CALENDARS
+  CD_04_APPROVAL_MATRIX
+  CD_05_RETENTION_SCHEDULE
+  CD_06_HISTORICAL_MIGRATION_SCOPE
+  CD_07_RTO_RPO
+  CD_08_AI_USE_CASE_SCOPE
+}
+
+enum ConfigurationStatus {
+  DRAFT
+  RATIFIED
+  SUPERSEDED
+}
+
+/// Deliberately tenant-scoped and RLS-protected like every other model in this file, even
+/// though architecture.md §4.2 describes CD values as living in "the control plane" alongside
+/// `Tenant`. That description is about *governance* (these require an approval workflow, not
+/// ordinary case-handling CRUD) — it is not a statement that they should be visible across
+/// tenant boundaries. A bank's own CD values are exactly the kind of per-bank data RLS exists
+/// to isolate; only `Tenant` itself (which banks exist at all) is a true cross-tenant concern.
+/// See docs/CHANGELOG.md for the date this was decided.
+model ConfigurationEntry {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  key      CdKey
+
+  /// Starts at 1 per (tenantId, key); ConfigurationService computes the next value — Prisma has
+  /// no per-group auto-increment, so this is enforced in application code plus the unique
+  /// constraint below as a backstop against a race producing two rows with the same version.
+  version Int
+  value   Json
+
+  status ConfigurationStatus @default(DRAFT)
+  /// Free-text context a CD's owner attaches — e.g. "Naira thresholds pending Board Risk
+  /// Committee sign-off", echoing the caveats in configuration-decisions.md's own tables.
+  notes  String?
+
+  /// Null until ratified. Only a RATIFIED row with `effectiveDate <= now()` is ever "current" —
+  /// see ConfigurationService.getCurrent.
+  effectiveDate DateTime?
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  ratifiedBy String?
+  ratifiedAt DateTime?
+
+  /// Application-enforced invariant, not a DB constraint: `value` is never updated after a row
+  /// is created — ratifying only ever touches status/ratifiedBy/ratifiedAt/effectiveDate on the
+  /// SAME row (an approval, not a new value) or flips an older row to SUPERSEDED. A changed
+  /// value is always a new row at version+1. There is no DB-level guarantee of this (unlike
+  /// AuditEvent's grant-level REVOKE UPDATE/DELETE) because ratification legitimately needs
+  /// UPDATE — this one is on ConfigurationService and code review, not the database.
+  @@unique([tenantId, key, version])
+  @@index([tenantId, key, status])
+  @@map("configuration_entries")
+}
+
+// ---------------------------------------------------------------------------
+// incidents module — Signal -> Incident (docs/architecture.md §4.1)
+// ---------------------------------------------------------------------------
+//
+// Non-negotiable #1: Signal, Incident, and (eventually) Case are three distinct entities and
+// never collapse into one table. This file currently stops at Incident — Case does not exist
+// yet (it's a later module in the MVP build order), so nothing here references it. When `cases`
+// is built, it will add its own `caseId`-shaped link, not the other way around — `incidents`
+// should not need to know about `cases` to exist and be useful on its own, matching the module
+// boundary rule (non-negotiable #2).
+//
+// What's deliberately NOT here: severity scoring/routing/escalation (that's `triage`'s job,
+// not `incidents`'s — a future TriageAssessment-shaped table referencing incidentId, not a
+// column bolted onto Incident), and automated duplicate-detection (CD-08 explicitly scopes
+// that to a Phase 2 ml-gateway use case — dedupe here is a human reviewer's explicit decision,
+// not a similarity algorithm).
+
+enum SignalSource {
+  RULE_ENGINE
+  CUSTOMER_COMPLAINT
+  STAFF_REPORT
+  WHISTLEBLOWER
+  THIRD_PARTY
+  MANUAL_ENTRY
+}
+
+enum SignalStatus {
+  /// Just received, awaiting a reviewer's validate/reject decision.
+  NEW
+  /// Promoted into a new Incident.
+  VALIDATED
+  /// Reviewer determined this doesn't warrant an incident (false alarm, spam, duplicate report
+  /// of something already fully handled).
+  REJECTED
+  /// Reviewer determined this corroborates an EXISTING incident rather than being new —
+  /// attached to that incident instead of creating one. Distinct from an Incident being merged
+  /// into another Incident (see Incident.status MERGED below); this is a Signal-level decision
+  /// made before any new Incident would even have been created.
+  MERGED
+}
+
+/// The raw incoming report/alert/observation, before anyone has judged whether it's real or
+/// duplicate. Every Incident traces back to at least one Signal that validated it.
+model Signal {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  source      SignalSource
+  /// External system's own identifier for this alert, if it came from one (rule engine trigger
+  /// id, complaint ticket number, etc.) — not unique-constrained, since we can't guarantee
+  /// every source system's id format or uniqueness guarantees.
+  externalRef String?
+  /// Short human-readable description — required even when `payload` carries the full
+  /// structured detail, so a reviewer's queue is scannable without opening every row.
+  summary     String
+  /// Optional structured detail specific to `source`. For SignalSource.WHISTLEBLOWER, this must
+  /// never contain reporter-identifying information — see WhistleblowerIdentityVaultEntry.
+  /// Enforced by SignalsService at write time, not by the database.
+  payload     Json?
+
+  status SignalStatus @default(NEW)
+
+  /// Set once VALIDATED (points at the new Incident) or MERGED (points at the existing Incident
+  /// this corroborates). Null while NEW or after REJECTED.
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+
+  /// Required when status is REJECTED — see SignalsService.reject.
+  rejectedReason String?
+
+  /// userId of whoever submitted this signal. Every intake path in this MVP requires
+  /// authentication (see SignalsController doc comment for why true anonymous whistleblower
+  /// intake is deferred, not silently unsupported).
+  reportedBy String
+  receivedAt DateTime @default(now())
+
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  identityVaultEntry WhistleblowerIdentityVaultEntry?
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("signals")
+}
+
+/// Non-negotiable #7: whistleblower reporter identity lives in a SEPARATE vault from case
+/// content, not as a field on the signal/incident/case record itself. This is that vault, one
+/// row per whistleblower Signal (a Signal, not an Incident — the separation has to hold from
+/// the moment identity is captured, which is at intake, before an Incident may even exist yet).
+/// Read access is gated in WhistleblowerVaultService to a narrow role set, and every read is
+/// audited — see that service's doc comment. There is no additional Postgres-level access
+/// restriction beyond ordinary tenant RLS (this codebase has one application database role,
+/// `efims_app`, for the whole backend — role-specific DB grants aren't practical without a
+/// much heavier per-business-role connection model, which isn't justified at MVP scale). The
+/// real boundary here is that this data is architecturally impossible to reach by querying
+/// Signal or Incident — it requires a deliberate, separately-gated join.
+model WhistleblowerIdentityVaultEntry {
+  id       String @id @default(uuid())
+  tenantId String
+
+  signalId String @unique
+  signal   Signal @relation(fields: [signalId], references: [id], onDelete: Cascade)
+
+  isAnonymous     Boolean @default(false)
+  reporterName    String?
+  reporterContact String?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("whistleblower_identity_vault")
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_REVIEW
+  /// Merged into another Incident — see `mergedIntoIncidentId`. A human reviewer's explicit
+  /// dedupe decision (see the module-level doc comment above on why this isn't automated yet).
+  MERGED
+  REJECTED
+  /// Set by the future `cases` module once it exists — `incidents` only defines the status
+  /// value here because IncidentStatus has to be a closed enum somewhere; `incidents` itself
+  /// never transitions a row into this state.
+  LINKED_TO_CASE
+  CLOSED_NO_CASE
+}
+
+/// The validated, deduplicated unit — this is what "100 alerts -> ~15 incidents" (architecture.md
+/// §4.1) refers to. Classified against the CD-01 taxonomy (category/type/subtype) that the
+/// `configuration` module owns; IncidentsService reads the *current* CD-01 value via
+/// ConfigurationService.getCurrent, never a hardcoded list.
+model Incident {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  /// Human-readable id, e.g. "INC-2026-0001" — unique per tenant, not globally. Generated by
+  /// IncidentsService (count-based per tenant+year; see the comment there on the same race
+  /// caveat and unique-constraint backstop already used for ConfigurationEntry.version).
+  referenceCode String
+
+  /// CD-01 category/type names, validated against the tenant's *current* CD-01 configuration
+  /// at creation time (not re-validated retroactively if CD-01 later changes — an incident
+  /// keeps the classification it was given).
+  category String
+  type     String
+  subtype  String?
+
+  /// STANDARD unless the originating Signal was WHISTLEBLOWER (in which case IncidentsService
+  /// forces WHISTLEBLOWING regardless of what the reviewer requests — see CD-01's "own
+  /// compartment... regardless of the underlying subject matter") or a reviewer deliberately
+  /// elevates it (e.g. an internal-fraud incident into AML_MLRO or HR). Read access is filtered
+  /// by compartment in IncidentsService.list — see that method's doc comment for why this
+  /// extends architecture.md §4.3's compartment rule down to Incident, not just Case.
+  compartment Compartment @default(STANDARD)
+
+  title       String
+  description String
+
+  status IncidentStatus @default(OPEN)
+
+  /// When the underlying event happened, if known and different from when it was reported
+  /// (`createdAt`, below, is always the system record time).
+  occurredAt DateTime?
+
+  mergedIntoIncidentId String?
+  mergedIntoIncident   Incident?  @relation("IncidentMerge", fields: [mergedIntoIncidentId], references: [id])
+  mergedIncidents      Incident[] @relation("IncidentMerge")
+
+  /// Set only by `IncidentsService.linkToCase`, called only from `cases`' CasesService — the
+  /// same "public method on the owning module's service, never a direct cross-module write"
+  /// pattern as `markUnderReview`. Many incidents may link to one case (architecture.md §4.1's
+  /// "100 alerts -> ~15 incidents -> ~3 cases"); an incident links to at most one.
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id])
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  signals           Signal[]
+  relationsFrom     IncidentRelation[] @relation("RelationFrom")
+  relationsTo       IncidentRelation[] @relation("RelationTo")
+  triageAssessments TriageAssessment[]
+  slaClocks         SlaClock[]
+
+  @@unique([tenantId, referenceCode])
+  @@index([tenantId, status])
+  @@index([tenantId, compartment])
+  @@map("incidents")
+}
+
+/// A human reviewer's explicit "these two incidents are related" link (the mockups call this
+/// "Link as Related Incident (Cluster Grouping)", distinct from a full merge). Stored as one
+/// row per link with a fixed direction (`incidentId` -> `relatedIncidentId`); IncidentsService
+/// treats it as symmetric when reading (checks both columns), so callers don't need to know or
+/// care which side of the pair they're looking from.
+model IncidentRelation {
+  id       String @id @default(uuid())
+  tenantId String
+
+  incidentId String
+  incident   Incident @relation("RelationFrom", fields: [incidentId], references: [id], onDelete: Cascade)
+
+  relatedIncidentId String
+  relatedIncident   Incident @relation("RelationTo", fields: [relatedIncidentId], references: [id], onDelete: Cascade)
+
+  linkedBy String
+  linkedAt DateTime @default(now())
+
+  @@unique([incidentId, relatedIncidentId])
+  @@index([tenantId])
+  @@map("incident_relations")
+}
+
+// ---------------------------------------------------------------------------
+// triage module — severity, routing, escalation (architecture.md's module map: "severity
+// engine, routing, escalation"). Deliberately NOT here: SLA clock tracking/deadline math, which
+// architecture.md assigns to `workflow`, not `triage` — this module records a chosen SLA
+// calendar (CD-03) as part of an assessment, but does not start, pause, or watch any clock.
+// Also deliberately NOT here: any general Incident status state machine — see the doc comment
+// on IncidentsService.markUnderReview for the one narrow, single-direction exception.
+// ---------------------------------------------------------------------------
+
+/// Mirrors CD-02's fixed 4-tier scale exactly (docs/configuration-decisions.md) — unlike CD-01
+/// categories/types (freeform, tenant-configured strings), the tier *names* S1-S4 are fixed by
+/// design, so this is a real enum, not a config-validated string. What each tier *means*
+/// (thresholds, urgency) is still config (CD-02), read via ConfigurationService when useful —
+/// TriageService does not hardcode threshold numbers anywhere.
+enum SeverityTier {
+  S1
+  S2
+  S3
+  S4
+}
+
+/// One triage decision event, never mutated after creation — the same "append, don't overwrite"
+/// posture as ConfigurationEntry and the Signal/Incident audit trail. The *current* triage state
+/// of an incident is simply its latest TriageAssessment (by assessedAt); there is no separate
+/// "current" flag or table to keep in sync. `previousAssessmentId` chains a later assessment back
+/// to the one it revises — null on the first (initial) assessment for an incident, non-null on
+/// every later escalation/re-assessment. Deliberately no severity-direction constraint: revising
+/// DOWN (an initial assessment turned out too high) is exactly as valid an "escalation" event as
+/// revising up — the record is what matters, not which direction it moved.
+model TriageAssessment {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  severity SeverityTier
+
+  /// One of CD-03's configured calendar names (e.g. "24x7", "business_hours") — validated
+  /// against the tenant's *current* CD-03 configuration at assessment time by TriageService,
+  /// the same pattern IncidentsService already uses for CD-01. Plain string, not an enum: CD-03
+  /// calendars are tenant-configured, not fixed like SeverityTier.
+  slaCalendarName String
+
+  /// Optional — a severity/calendar decision can be recorded before a routing team is known.
+  /// References `identity`'s Team model directly (a plain FK is fine at the schema level; the
+  /// module-boundary rule is about service-layer access, not the shared Prisma schema file
+  /// every module's models already live in) — existence is validated via UsersService, never a
+  /// direct Team query from this module's own service code.
+  assignedTeamId String?
+  assignedTeam   Team?   @relation(fields: [assignedTeamId], references: [id])
+
+  /// Required, always — a severity/routing decision with no stated reasoning is exactly the
+  /// kind of thing this system's audit-first posture exists to prevent.
+  rationale String
+
+  previousAssessmentId String?
+  previousAssessment   TriageAssessment?  @relation("AssessmentRevision", fields: [previousAssessmentId], references: [id])
+  revisedBy            TriageAssessment[] @relation("AssessmentRevision")
+
+  assessedBy String
+  assessedAt DateTime @default(now())
+
+  @@index([tenantId, incidentId])
+  @@map("triage_assessments")
+}
+
+// ---------------------------------------------------------------------------
+// cases module — "case record, team, status history" per architecture.md's module map. This is
+// the module CLAUDE.md non-negotiable #6 and architecture.md §4.3 are actually about — the full
+// 7-condition access rule (tenant, role, team, subject, conflict, clearance, compartment) is
+// implemented here for the first time, not just referenced. Deliberately NOT here: Parties/
+// Transactions, Evidence/Findings, Tasks/Approvals, Loss/Recovery, Regulatory Obligations, CAPA
+// (architecture.md §4.1's case diagram lists these, but each is its own future module) and any
+// approval-gated state machine (that's `workflow`'s "state machine, SLA clocks, approvals").
+// `CaseStatusHistory` here is a plain append-only log of transitions, not a workflow engine.
+// ---------------------------------------------------------------------------
+
+enum CaseStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  ON_HOLD
+  CLOSED
+}
+
+/// "subject" (architecture.md §4.3: `user.id NOT IN case.subjects` — someone under investigation
+/// on this case) and "conflict" (`user.id NOT IN case.conflicts` — a declared conflict of
+/// interest) are structurally identical: a flag on a (case, user) pair that CasesService's access
+/// check denies on, regardless of every other condition passing. One enum, one table — no reason
+/// for two near-identical models.
+enum CaseUserRelationType {
+  SUBJECT
+  CONFLICT
+}
+
+/// The case record itself. `sensitivityLevel` and `compartment` are the two axes architecture.md
+/// §4.3/§4.4 gate access on — deliberately NOT the same concept as a linked Incident's CD-02
+/// `severity` (triage/response urgency): sensitivity is "who is allowed to see this at all",
+/// severity is "how urgent is the response". A case is not auto-classified from its incidents'
+/// severity; whoever opens it sets sensitivity deliberately (see CasesService.create).
+model Case {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  /// "CASE-2026-0001" — same per-tenant-per-year generation pattern as Incident.referenceCode.
+  referenceCode String
+
+  title       String
+  description String
+
+  status CaseStatus @default(OPEN)
+
+  /// 1-4, directly comparable to User.clearanceLevel (architecture.md §4.3:
+  /// `user.clearance >= case.sensitivity`) — same integer scale, deliberately, so the access
+  /// check is a bare comparison, not a mapping table.
+  sensitivityLevel Int @default(1)
+
+  /// Same Compartment enum Incident already uses — STANDARD is visible to everyone by default;
+  /// the other 5 require an explicit grant, checked the same way IncidentsService.isVisible
+  /// checks it for Incident.
+  compartment Compartment @default(STANDARD)
+
+  /// Null until assigned. architecture.md §4.3's team-match condition only applies once a case
+  /// actually has a team — see the doc comment on CasesService's access check for what happens
+  /// when this is null, and for which roles bypass the team-match requirement entirely
+  /// ("elevated role" in the same architecture.md line).
+  assignedTeamId String?
+  assignedTeam   Team?   @relation(fields: [assignedTeamId], references: [id])
+
+  createdBy String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  incidents             Incident[]
+  userFlags             CaseUserFlag[]
+  statusHistory         CaseStatusHistory[]
+  approvalRequests      ApprovalRequest[]
+  investigationPlans    InvestigationPlan[]
+  issues                InvestigationIssue[]
+  interviews            Interview[]
+  findings              Finding[]
+  evidenceItems         EvidenceItem[]
+  containmentRequests   ContainmentRequest[]
+  lossEntries           LossEntry[]
+  recoveryEntries       RecoveryEntry[]
+  writeOffEntries       WriteOffEntry[]
+  rootCauseAnalyses     RootCauseAnalysis[]
+  capaActions           CapaAction[]
+  regulatoryObligations RegulatoryObligation[]
+
+  @@unique([tenantId, referenceCode])
+  @@index([tenantId, status])
+  @@index([tenantId, compartment])
+  @@map("cases")
+}
+
+/// One row per (case, user) the case's access check must deny on — see the doc comment on
+/// CaseUserRelationType. Deletable (unlike TriageAssessment's pure append-only history): a
+/// declared conflict can be resolved, a subject can be cleared, and this table is an access-
+/// control mechanism, not a historical record — closer in spirit to UserCompartmentGrant than to
+/// an audit trail. Every add/remove is still audited via AuditService, same as any other
+/// access-control change in this codebase.
+model CaseUserFlag {
+  id       String @id @default(uuid())
+  tenantId String
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  userId String
+  type   CaseUserRelationType
+  reason String?
+
+  flaggedBy String
+  flaggedAt DateTime @default(now())
+
+  @@unique([caseId, userId, type])
+  @@index([tenantId])
+  /// `[caseId, userId, type]` above only serves queries filtering by caseId (a prefix match) —
+  /// `CasesService.getFlaggedCaseIds` filters by `userId` alone, on every `GET /cases` call, and
+  /// had no covering index without this.
+  @@index([userId])
+  @@map("case_user_flags")
+}
+
+/// Append-only log of status transitions — NOT a workflow state machine (no validity matrix
+/// beyond "not the same status twice"; that belongs to `workflow` once it exists). Exists purely
+/// so a case's status history is queryable, per architecture.md's "case record, team, status
+/// history" module description.
+model CaseStatusHistory {
+  id       String @id @default(uuid())
+  tenantId String
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  fromStatus CaseStatus?
+  toStatus   CaseStatus
+  reason     String?
+
+  changedBy String
+  changedAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("case_status_history")
+}
+
+// ---------------------------------------------------------------------------
+// workflow module — "state machine, SLA clocks, approvals" per architecture.md's module map.
+// Two genuinely separate concerns sharing one module, per that description: SLA tracking
+// (anchored to Incident, since that's where triage's severity/calendar already live) and a
+// generic approval mechanism (anchored to Case, since CD-04's approval matrix is framed around
+// case-level actions). Deliberately NOT a full state machine covering every entity's every
+// transition — the one integration point this module actually wires up is Case closure
+// requiring an approved ApprovalRequest (see CasesService.updateStatus), not a general-purpose
+// transition-validation engine for every status field in the schema.
+// ---------------------------------------------------------------------------
+
+enum SlaClockStatus {
+  RUNNING
+  PAUSED
+  STOPPED
+}
+
+/// One per incident (in practice — not DB-enforced unique, so a stopped clock could in
+/// principle be followed by a new one, but WorkflowService rejects starting a second RUNNING/
+/// PAUSED clock on the same incident). `targetDeadline` is deliberately caller-supplied, never
+/// computed from a hardcoded "S1 = 4 hours" table: CD-02's `containmentUrgency` is a prose
+/// description ("Immediate, 24x7", "Same business day", ...), not a number anywhere in
+/// configuration-decisions.md — inventing a numeric mapping the source doc doesn't specify would
+/// be exactly the kind of thing this codebase has consistently avoided (see CD-02's
+/// `financialLossThresholdNgn` staying `null` for the same reason). A human sets the actual
+/// deadline; this table tracks and enforces it, it doesn't invent it.
+model SlaClock {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id])
+
+  /// Copied from the incident's current TriageAssessment at start time — see
+  /// WorkflowService.startClock. Informational (which calendar the deadline was set under);
+  /// this table does not itself do calendar-aware time math (e.g. skipping non-business hours).
+  calendarName   String
+  targetDeadline DateTime
+
+  status SlaClockStatus @default(RUNNING)
+
+  startedBy String
+  startedAt DateTime @default(now())
+
+  /// At most one open pause window at a time — not a full pause-history table. Per CD-03
+  /// ("Any SLA pause requires a logged reason and approval"), pausing is role-gated at the
+  /// controller and the pause itself is the logged approval record (`pausedBy` + the
+  /// AuditService event WorkflowService.pause also writes); a table of every past pause/resume
+  /// cycle would be redundant with that audit trail, not a second source of truth for it.
+  pausedBy    String?
+  pausedAt    DateTime?
+  pauseReason String?
+
+  /// Minutes, not milliseconds — Prisma maps a Postgres bigint to JS `BigInt`, which
+  /// `JSON.stringify` throws on by default; every controller response here would break. Minute
+  /// granularity is more than enough precision for an SLA measured in hours/days, and a plain
+  /// `Int` comfortably covers any realistic accumulated pause duration.
+  totalPausedMinutes Int @default(0)
+
+  stoppedBy String?
+  stoppedAt DateTime?
+
+  /// Set by `SlaClockService`'s scheduled breach sweep the first time it notices this clock is
+  /// past `targetDeadline` — guards against emitting a fresh `sla_clock.breached` event (and a
+  /// fresh notification) every time the sweep runs for the same still-breached clock.
+  breachNotifiedAt DateTime?
+
+  @@index([tenantId, incidentId])
+  @@index([status, targetDeadline])
+  @@map("sla_clocks")
+}
+
+/// CD-04's two severity bands ("S1/S2" vs "S3/S4" rows in the approval matrix table) —
+/// deliberately not tied to a specific Incident's TriageAssessment.severity: a Case can
+/// aggregate multiple incidents of different severities, so which band applies is a judgment
+/// call the requester states explicitly (see ApprovalService.request), not something this
+/// module infers by picking "the worst linked incident" or similar unstated aggregation rule.
+enum SeverityBand {
+  S1_S2
+  S3_S4
+}
+
+/// The 4 actions CD-04 actually names. A fixed enum, not a config-validated freeform string —
+/// unlike CD-01's taxonomy (genuinely tenant-configurable), these 4 rows are the matrix's
+/// structure itself, not tenant data.
+enum ApprovalAction {
+  CONTAINMENT
+  LOSS_WRITE_OFF
+  REGULATORY_SUBMISSION
+  CASE_CLOSURE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Who may `decide` a given (action, severityBand) pair is a hardcoded mapping in
+/// WorkflowService (`APPROVAL_MATRIX`), not read from ConfigurationEntry — CD-04's approver
+/// names ("CRO/Executive", "Case Owner + peer review") don't map 1:1 onto the `Role` enum any
+/// more cleanly than CD-01's owner names mapped onto Role in `configuration`'s own README caveat;
+/// see WorkflowService's doc comment for the actual mapping and its approximations.
+model ApprovalRequest {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  action       ApprovalAction
+  severityBand SeverityBand
+
+  status ApprovalStatus @default(PENDING)
+
+  requestNotes String
+  requestedBy  String
+  requestedAt  DateTime @default(now())
+
+  /// Whoever calls `decide` cannot be `requestedBy` — segregation of duties, enforced in
+  /// WorkflowService, not just a UI convention.
+  decisionNotes String?
+  decidedBy     String?
+  decidedAt     DateTime?
+
+  @@index([tenantId, caseId])
+  @@map("approval_requests")
+}
+
+enum AccessChangeType {
+  ROLE_CHANGE
+  GRANT_COMPARTMENT
+  REVOKE_COMPARTMENT
+}
+
+enum AccessChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Maker-checker for role/compartment changes on a tenant `User` — added 2026-10-14 alongside the
+/// 20-role expansion. Deliberately its own model, not a reuse of `ApprovalRequest`: that model's
+/// `caseId` is a mandatory FK to `Case`, the wrong shape for a change that's about a user, not a
+/// case. Same segregation-of-duties rule as `ApprovalRequest`/`ApprovalService.decide`
+/// (`requestedBy` cannot also be `decidedBy`), enforced in the service, not just a UI convention.
+model AccessChangeRequest {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  targetUserId String
+  targetUser   User   @relation(fields: [targetUserId], references: [id])
+
+  changeType AccessChangeType
+  /// Shape depends on `changeType`: `{ role: Role }` for ROLE_CHANGE, `{ compartment: Compartment }`
+  /// for GRANT_COMPARTMENT/REVOKE_COMPARTMENT.
+  payload    Json
+
+  status AccessChangeStatus @default(PENDING)
+
+  requestNotes String
+  requestedBy  String
+  requestedAt  DateTime @default(now())
+
+  decisionNotes String?
+  decidedBy     String?
+  decidedAt     DateTime?
+
+  @@index([tenantId, targetUserId])
+  @@map("access_change_requests")
+}
+
+// ---------------------------------------------------------------------------
+// notifications module — architecture.md: "templates, delivery, escalation". Reacts to domain
+// events other modules emit via EventEmitter2 (architecture.md §5's in-process event pattern) —
+// this module never imports another feature module's service directly; it only listens.
+// ---------------------------------------------------------------------------
+
+/// `type` is a free-text dot-namespaced string (e.g. "approval.requested"), same convention as
+/// `AuditEvent.action` — not a fixed enum, because this module reacts to whatever event names
+/// other modules choose to emit, and hardcoding every possible one here would recreate the same
+/// coupling event-driven design exists to avoid. "Templates" (architecture.md's word) are a
+/// hardcoded TypeScript map in NotificationsService keyed by this string, not a database table —
+/// same reasoning as `workflow`'s `APPROVAL_MATRIX`: nothing reads or writes a template through
+/// an API yet, so a real template-management table would be built ahead of any actual need.
+enum NotificationPriority {
+  NORMAL
+  HIGH
+}
+
+/// The in-app notification itself — its existence IS the IN_APP delivery (pushed live via
+/// RealtimeService at creation time, also queryable/markable-read through the REST API). Other
+/// channels (EMAIL/SMS/PUSH) get a NotificationDelivery row each; IN_APP deliberately doesn't,
+/// to avoid a redundant delivery record for the channel that's already fully represented by this
+/// row's own existence and `readAt`.
+model Notification {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  userId String
+
+  type     String
+  priority NotificationPriority @default(NORMAL)
+  title    String
+  body     String
+  metadata Json?
+
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  deliveries NotificationDelivery[]
+
+  @@index([tenantId, userId, readAt])
+  @@index([tenantId, priority, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum NotificationDeliveryStatus {
+  SENT
+  FAILED
+}
+
+/// One row per non-IN_APP delivery attempt. `status` is always SENT or FAILED, never PENDING —
+/// deliberately: real delivery isn't wired to an external provider yet (see this module's own
+/// README section), so every attempt resolves synchronously and immediately, the same "stub
+/// success, log it, move on" pattern `ml-gateway` doesn't have yet either. Swapping in a real
+/// provider later changes NotificationsService's delivery adapter, not this table.
+model NotificationDelivery {
+  id       String @id @default(uuid())
+  tenantId String
+
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  channel     NotificationChannel
+  status      NotificationDeliveryStatus
+  error       String?
+  attemptedAt DateTime                   @default(now())
+
+  /// Set only when this delivery exists because a HIGH-priority notification went unread past
+  /// the escalation window (see NotificationsService's scheduled sweep) — null for a delivery
+  /// created immediately alongside the notification itself.
+  isEscalation Boolean @default(false)
+
+  @@index([tenantId, notificationId])
+  @@map("notification_deliveries")
+}
+
+// ---------------------------------------------------------------------------
+// investigations module — architecture.md: "plans, issues, interviews, findings". No separate
+// "Investigation" wrapper entity: a Case is already the aggregate root for investigative work
+// (CLAUDE.md frames "case investigation" as a phase of a case's lifecycle, not a second entity
+// alongside it), so every model here references `caseId` directly. Every service method here
+// checks case access via `CasesService.getById` first, the same pattern `workflow`'s SLA clocks
+// use via `IncidentsService.getById` — this module imports `CasesModule` directly (a clean
+// one-directional dependency; unlike `workflow`, nothing in `cases` needs anything from
+// `investigations`, so there's no circularity to design around).
+// ---------------------------------------------------------------------------
+
+enum InvestigationPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+}
+
+/// Versioned like `ConfigurationEntry`/`TriageAssessment` — a new plan revision is a new row,
+/// never a mutation of the last one. "Current" is simply the latest version for the case.
+model InvestigationPlan {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  version    Int
+  objectives String
+  scope      String
+  status     InvestigationPlanStatus @default(DRAFT)
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, caseId, version])
+  @@index([tenantId, caseId])
+  @@map("investigation_plans")
+}
+
+enum IssueStatus {
+  OPEN
+  RESOLVED
+}
+
+/// A specific question/hypothesis/discrepancy the investigation needs to resolve — e.g. "did the
+/// customer authorize this transaction?". `Finding.resolvesIssueId` optionally closes the loop
+/// back to the issue a given finding actually answers, without requiring every finding to
+/// resolve one (some findings are standalone observations, not answers to a raised issue).
+model InvestigationIssue {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  title       String
+  description String
+  status      IssueStatus @default(OPEN)
+
+  raisedBy String
+  raisedAt DateTime @default(now())
+
+  resolution String?
+  resolvedBy String?
+  resolvedAt DateTime?
+
+  findings Finding[]
+
+  @@index([tenantId, caseId])
+  @@map("investigation_issues")
+}
+
+enum IntervieweeRole {
+  SUBJECT
+  WITNESS
+  STAFF
+  CUSTOMER
+  OTHER
+}
+
+/// `intervieweeName` is free text, not a required `User` link — most interviewees (customers,
+/// external witnesses) aren't EFIMS users at all. `intervieweeUserId` is an optional link for
+/// the case where they are (typically `STAFF`), deliberately not a foreign key with referential
+/// integrity enforcement — an interviewed former employee's user row might not even exist by
+/// the time this is recorded, and this field is informational, not load-bearing.
+model Interview {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  intervieweeName   String
+  intervieweeRole   IntervieweeRole
+  intervieweeUserId String?
+
+  conductedBy String
+  conductedAt DateTime
+
+  summary String
+  notes   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("interviews")
+}
+
+/// A documented, evidence-backed conclusion. `supportingEvidence` is a plain text field
+/// describing what backs the finding — a real link to an evidence record waits for the
+/// `evidence` module (vault, hashing, custody) to exist; this is not that module, and doesn't
+/// invent a placeholder relation to a table that isn't built yet.
+model Finding {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  resolvesIssueId String?
+  resolvesIssue   InvestigationIssue? @relation(fields: [resolvesIssueId], references: [id])
+
+  title              String
+  description        String
+  supportingEvidence String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("findings")
+}
+
+// ---------------------------------------------------------------------------
+// evidence module — architecture.md: "vault, hashing, custody, legal hold". §7's security notes
+// name the requirement directly: "hash on ingest + custody log, so tampering is detectable."
+// There is no object-storage/blob infrastructure in this codebase yet (`infrastructure/storage`
+// in architecture.md's module map is aspirational, not built) — `EvidenceItem` stores a SHA-256
+// hash of whatever content the caller supplies at ingest time, plus an `externalRef` pointer to
+// wherever that content actually lives (a case-management DMS, an S3 bucket, a shared drive —
+// this codebase doesn't care), not the content itself. `EvidenceService.verify` lets a caller
+// re-supply the same content later and confirms the hash still matches, the same "detect
+// tampering after the fact" posture `audit`'s hash chain already uses, deliberately not
+// preventive (nothing here can stop someone from altering the *external* copy; only from
+// altering it undetected once this module has a hash on record for it). See the module's own
+// doc comment on `EvidenceService` for why this is a deliberate scope boundary, not a shortcut.
+// ---------------------------------------------------------------------------
+
+enum EvidenceCategory {
+  DOCUMENT
+  SCREENSHOT
+  TRANSACTION_RECORD
+  SYSTEM_LOG
+  STATEMENT
+  COMMUNICATION
+  OTHER
+}
+
+enum CustodyAction {
+  COLLECTED
+  VIEWED
+  EXPORTED
+  TRANSFERRED
+  HASH_VERIFIED
+}
+
+/// Never hard-deleted — same "the record that this was collected is itself part of the case
+/// file" posture as `Incident`/`Case` (see `rls-policies.sql`'s REVOKE DELETE). UPDATE is
+/// granted, but only ever touches the `legalHold*` fields (`EvidenceService.setLegalHold`) — the
+/// content hash and everything else about *what was collected* is otherwise immutable after
+/// ingest, same spirit as `ConfigurationEntry.value` (see that model's own doc comment for why a
+/// DB grant alone can't express "some columns of this row may change, others never").
+model EvidenceItem {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  category    EvidenceCategory
+  title       String
+  description String?
+
+  /// Where the actual content lives outside this database — this module is the hash/custody
+  /// ledger, not a file store. Free text on purpose (a DMS path, an S3 key, a physical exhibit
+  /// tag) — see the module doc comment above.
+  externalRef  String?
+  sourceSystem String?
+
+  /// SHA-256 hex digest of the content supplied at ingest (`EvidenceService.ingest`'s `content`
+  /// input) — never recomputed except by an explicit `.../verify` call, and never mutated once
+  /// set.
+  contentHash String
+
+  /// CD-05: "Evidence objects... legal-hold override that suspends any disposal job... never
+  /// auto-deleted under active hold." No disposal/retention job exists yet in this codebase (see
+  /// the module's own "deliberately not here yet" notes) — this flag is the seam a future
+  /// retention sweep would have to check before ever acting on an evidence row.
+  legalHold       Boolean   @default(false)
+  legalHoldReason String?
+  legalHoldSetBy  String?
+  legalHoldSetAt  DateTime?
+
+  collectedBy String
+  collectedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  custodyEvents CustodyEvent[]
+
+  @@index([tenantId, caseId])
+  @@map("evidence_items")
+}
+
+/// Pure append-only chain-of-custody record — same posture as `Interview`/`Finding`, no
+/// update/delete path at all. `relatedUserId` is who an item was transferred *to* on a
+/// `TRANSFERRED` event; unused for every other action.
+model CustodyEvent {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  evidenceItemId String
+  evidenceItem   EvidenceItem @relation(fields: [evidenceItemId], references: [id])
+
+  action        CustodyAction
+  actorUserId   String
+  relatedUserId String?
+  notes         String?
+
+  occurredAt DateTime @default(now())
+
+  @@index([tenantId, evidenceItemId])
+  @@map("custody_events")
+}
+
+// ---------------------------------------------------------------------------
+// containment module — architecture.md: "action requests, confirmations". CLAUDE.md
+// non-negotiable #8, enforced directly by this schema's own shape, not just application code:
+// "EFIMS never shows a case as 'contained' until a positive ActionConfirmed comes back from the
+// source system. EFIMS never freezes an account or blocks a card itself — it only requests and
+// waits." There is deliberately no boolean "contained" field anywhere (not on `Case`, not
+// computed) — a case's containment posture is always the actual list of `ContainmentRequest`
+// rows and their individual `status`, never a single derived flag that could drift from what
+// actually happened. `status` starts at `REQUESTED`, never anything implying EFIMS itself acted.
+// ---------------------------------------------------------------------------
+
+enum ContainmentActionType {
+  FREEZE_ACCOUNT
+  BLOCK_CARD
+  SUSPEND_ACCESS
+  HOLD_TRANSACTION
+  OTHER
+}
+
+enum ContainmentStatus {
+  REQUESTED
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
+/// Never hard-deleted — the record that a containment action was requested (and how the source
+/// system responded) is itself part of the case file, same posture as `ApprovalRequest`/
+/// `SlaClock`. `approvalId` is required and must reference an `APPROVED` `ApprovalRequest` with
+/// `action = CONTAINMENT` for the same case (enforced by `ApprovalService.assertApproved`, the
+/// same reusable check `CasesService.updateStatus` already uses for case closure) — a
+/// containment request can never exist without CD-04's approval gate having already been
+/// satisfied. No real source-system integration exists (see the module's own doc comment on
+/// `ContainmentService`) — `.../confirm` and `.../reject` are the seam a real webhook/callback
+/// would call, exercised manually for now, same "build the seam now" pattern `notifications`'
+/// stubbed external channels and `evidence`'s `externalRef` already use.
+model ContainmentRequest {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  /// `@@unique` below — one approved CONTAINMENT request authorizes exactly one containment
+  /// action, never an unlimited number of different actions/targets off the same sign-off. Found
+  /// live during this module's own verification: nothing originally stopped the same approvalId
+  /// being reused across multiple `ContainmentRequest` rows, which would have let one approval
+  /// (e.g. "suspend online access") silently authorize an unrelated second action (e.g. "block
+  /// the card") it was never actually asked to approve.
+  approvalId String @unique
+
+  actionType        ContainmentActionType
+  targetDescription String
+  rationale         String
+  status            ContainmentStatus     @default(REQUESTED)
+
+  requestedBy String
+  requestedAt DateTime @default(now())
+
+  confirmationRef String?
+  confirmedAt     DateTime?
+
+  rejectionReason String?
+  rejectedAt      DateTime?
+
+  cancelledBy        String?
+  cancellationReason String?
+  cancelledAt        DateTime?
+
+  @@index([tenantId, caseId])
+  @@map("containment_requests")
+}
+
+// ---------------------------------------------------------------------------
+// recovery module — architecture.md: "loss/recovery ledger, reconciliation". `LossEntry`/
+// `RecoveryEntry` are pure append-only ledger rows, same posture as `Interview`/`Finding` — a
+// loss or recovery determination is a fact-of-record; correcting one means recording a new
+// correcting entry, never mutating history. "Reconciliation" is deliberately NOT a stored
+// entity: `RecoveryService.getSummary` computes totals from the ledger on every call (same
+// "derive, don't store a flag that can drift" posture non-negotiable #8 already established for
+// `ContainmentRequest` in the module above) — there is nothing to keep in sync because nothing
+// is cached. All amounts assume NGN (matching CD-02's `financialLossThresholdNgn`/CD-04's
+// `amountBandsNgn`, this codebase's only precedent for a currency); see `RecoveryService`'s own
+// doc comment for why mixed-currency aggregation is out of scope, not silently mishandled.
+// ---------------------------------------------------------------------------
+
+enum LossCategory {
+  PRINCIPAL
+  FEES
+  INTEREST
+  OTHER
+}
+
+enum RecoveryMethod {
+  CUSTOMER_REFUND_REVERSAL
+  INSURANCE_CLAIM
+  CHARGEBACK
+  THIRD_PARTY_RECOVERY
+  OTHER
+}
+
+/// Pure append-only — no update/delete path at all, same posture as `Interview`/`Finding`.
+model LossEntry {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  amount      Decimal      @db.Decimal(18, 2)
+  category    LossCategory
+  description String?
+
+  recordedBy String
+  recordedAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("loss_entries")
+}
+
+/// Pure append-only — no update/delete path at all, same posture as `LossEntry`.
+model RecoveryEntry {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  amount      Decimal        @db.Decimal(18, 2)
+  method      RecoveryMethod
+  description String?
+
+  recordedBy String
+  recordedAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("recovery_entries")
+}
+
+/// `approvalId` is `@unique` from the start — `ContainmentRequest`'s own doc comment explains why
+/// (a real bug found live in that module: nothing originally stopped one approval authorizing
+/// multiple actions). One `APPROVED` `LOSS_WRITE_OFF` approval (CD-04) authorizes exactly one
+/// write-off entry. Unlike `ContainmentRequest`, there is no external system to wait on a
+/// confirmation from — a write-off is an internal accounting action, final the moment it's
+/// recorded, so there's no `REQUESTED`/`CONFIRMED` status machine here, just an append-only
+/// ledger row (no update/delete path at all).
+model WriteOffEntry {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  approvalId    String  @unique
+  amount        Decimal @db.Decimal(18, 2)
+  justification String
+
+  recordedBy String
+  recordedAt DateTime @default(now())
+
+  @@index([tenantId, caseId])
+  @@map("write_off_entries")
+}
+
+// ---------------------------------------------------------------------------
+// capa module — architecture.md: "root cause, actions, validation". `RootCauseAnalysis` is
+// versioned/append-only like `InvestigationPlan` — a revised understanding of root cause is a
+// new row, never a mutation of the last one. `CapaAction` mutates in place like
+// `InvestigationIssue` (status transitions on the same row). `CapaValidation` is pure
+// append-only, same posture as `Interview`/`Finding` — a validation attempt is a fact-of-record.
+// CD-04's approval matrix names exactly four actions (Containment, Loss write-off, Regulatory
+// submission, Case closure) — CAPA isn't one of them, so no approval gate is wired here; this is
+// a deliberate absence, not an oversight (see `CapaService`'s own doc comment).
+// ---------------------------------------------------------------------------
+
+enum CapaActionType {
+  CORRECTIVE
+  PREVENTIVE
+}
+
+enum CapaActionStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  VALIDATED
+  CANCELLED
+}
+
+enum CapaValidationOutcome {
+  EFFECTIVE
+  PARTIALLY_EFFECTIVE
+  INEFFECTIVE
+}
+
+/// Versioned like `InvestigationPlan` — a new root-cause revision is a new row, never a mutation
+/// of the last one. "Current" is simply the latest version for the case.
+model RootCauseAnalysis {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  version        Int
+  summary        String
+  analysisMethod String?
+
+  identifiedBy String
+  identifiedAt DateTime @default(now())
+
+  actions CapaAction[]
+
+  @@unique([tenantId, caseId, version])
+  @@index([tenantId, caseId])
+  @@map("root_cause_analyses")
+}
+
+/// `rootCauseId` is optional — a CAPA action can stand alone (e.g. a quick preventive fix) even
+/// when no formal root-cause analysis was recorded first; not every action needs one.
+model CapaAction {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  rootCauseId String?
+  rootCause   RootCauseAnalysis? @relation(fields: [rootCauseId], references: [id])
+
+  type        CapaActionType
+  title       String
+  description String
+  status      CapaActionStatus @default(OPEN)
+
+  ownerId String
+  dueDate DateTime
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  completionNotes String?
+  completedAt     DateTime?
+
+  cancellationReason String?
+  cancelledAt        DateTime?
+
+  validations CapaValidation[]
+
+  @@index([tenantId, caseId])
+  @@index([tenantId, ownerId])
+  @@map("capa_actions")
+}
+
+/// Pure append-only — no update/delete path at all, same posture as `Interview`/`Finding`. An
+/// `EFFECTIVE` outcome moves the parent `CapaAction` to `VALIDATED` (terminal); anything else
+/// (`PARTIALLY_EFFECTIVE`/`INEFFECTIVE`) reopens it to `IN_PROGRESS` — rework needed — rather
+/// than leaving it stuck at `COMPLETED` with an outcome nobody acted on.
+model CapaValidation {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  capaActionId String
+  capaAction   CapaAction @relation(fields: [capaActionId], references: [id])
+
+  outcome CapaValidationOutcome
+  notes   String?
+
+  validatedBy String
+  validatedAt DateTime @default(now())
+
+  @@index([tenantId, capaActionId])
+  @@map("capa_validations")
+}
+
+// ---------------------------------------------------------------------------
+// regulatory module — architecture.md: "obligations register, submissions", the last module in
+// the MVP build order. `RegulatoryObligation.deadline` is what CD-03's "statutory/regulatory
+// deadlines are never paused by either calendar" actually means in this schema: unlike
+// `SlaClock`, there is no pause/resume mechanism on this field at all — a statutory deadline
+// simply cannot be paused because the model gives it no way to be. `RegulatorySubmission`
+// requires an `APPROVED` `ApprovalRequest` with `action = REGULATORY_SUBMISSION` (CD-04:
+// "Compliance/MLRO + Legal" for S1/S2, "Compliance/MLRO" for S3/S4 — already the exact matrix
+// `ApprovalService.APPROVAL_MATRIX` encodes), non-negotiable #4's "no autonomous adverse action
+// ... regulatory submission ... without a human approval step" enforced the same way
+// `containment`/`recovery` already enforce it for their own CD-04 actions. `approvalId` is
+// `@unique` from the start, same reuse-prevention `WriteOffEntry` already carries forward from
+// the bug `containment` found live.
+// ---------------------------------------------------------------------------
+
+enum ObligationType {
+  STR_SAR_FILING
+  REGULATOR_NOTIFICATION
+  OTHER
+}
+
+enum ObligationStatus {
+  PENDING
+  SUBMITTED
+  ACKNOWLEDGED
+  WAIVED
+}
+
+/// Mutates in place like `InvestigationIssue`/`CapaAction` — status transitions on the same row.
+/// `regulatorName` is free text (e.g. "NFIU", "CBN") — this codebase doesn't hardcode a fixed
+/// regulator list, the same reasoning `EvidenceItem.sourceSystem` already uses for external
+/// systems.
+model RegulatoryObligation {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  obligationType ObligationType
+  description    String
+  regulatorName  String?
+
+  /// Statutory deadline — see this block's own doc comment for why there is deliberately no
+  /// pause mechanism anywhere near this field.
+  deadline DateTime
+  status   ObligationStatus @default(PENDING)
+
+  identifiedBy String
+  identifiedAt DateTime @default(now())
+
+  acknowledgedRef String?
+  acknowledgedAt  DateTime?
+
+  waivedReason String?
+  waivedBy     String?
+  waivedAt     DateTime?
+
+  submissions RegulatorySubmission[]
+
+  @@index([tenantId, caseId])
+  @@map("regulatory_obligations")
+}
+
+/// Pure append-only — no update/delete path at all, same posture as `WriteOffEntry`. One
+/// approval authorizes exactly one submission (`approvalId` `@unique`) — an obligation can only
+/// be submitted once (`RegulatoryService.submit` only accepts a `PENDING` obligation), matching
+/// this module's deliberately simple scope: no resubmission/correction workflow is modeled.
+model RegulatorySubmission {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  obligationId String
+  obligation   RegulatoryObligation @relation(fields: [obligationId], references: [id])
+
+  approvalId      String  @unique
+  referenceNumber String?
+  notes           String?
+
+  submittedBy String
+  submittedAt DateTime @default(now())
+
+  @@index([tenantId, obligationId])
+  @@map("regulatory_submissions")
+}

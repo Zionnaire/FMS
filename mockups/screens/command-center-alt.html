@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core - Operational Command Center</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed-variant": "#005049",
+            "on-secondary-container": "#5c647a",
+            "secondary-fixed-dim": "#bec6e0",
+            "tertiary": "#0051d5",
+            "on-primary-container": "#f4fffc",
+            "surface-variant": "#d3e4fe",
+            "surface-bright": "#f8f9ff",
+            "error": "#ba1a1a",
+            "secondary": "#565e74",
+            "on-tertiary-fixed": "#00174b",
+            "primary-fixed": "#89f5e7",
+            "tertiary-fixed-dim": "#b4c5ff",
+            "surface-container-highest": "#d3e4fe",
+            "surface-container": "#e5eeff",
+            "tertiary-container": "#316bf3",
+            "on-surface": "#0b1c30",
+            "surface-dim": "#cbdbf5",
+            "background": "#f8f9ff",
+            "primary-container": "#008378",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary-fixed-variant": "#3f465c",
+            "on-surface-variant": "#3d4947",
+            "on-primary-fixed": "#00201d",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#dbe1ff",
+            "secondary-fixed": "#dae2fd",
+            "on-error": "#ffffff",
+            "outline": "#6d7a77",
+            "inverse-surface": "#213145",
+            "inverse-on-surface": "#eaf1ff",
+            "inverse-primary": "#6bd8cb",
+            "surface-container-high": "#dce9ff",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#fefcff",
+            "on-tertiary-fixed-variant": "#003ea8",
+            "on-error-container": "#93000a",
+            "surface": "#f8f9ff",
+            "surface-tint": "#006a61",
+            "secondary-container": "#dae2fd",
+            "error-container": "#ffdad6",
+            "on-secondary": "#ffffff",
+            "outline-variant": "#bcc9c6",
+            "on-background": "#0b1c30",
+            "surface-container-low": "#eff4ff",
+            "primary-fixed-dim": "#6bd8cb",
+            "on-secondary-fixed": "#131b2e",
+            "primary": "#00685f"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-2xs": "0.125rem",
+            "margin": "1.5rem",
+            "space-xl": "1.5rem",
+            "gutter": "1rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "margin-compact": "1rem",
+            "space-md": "0.75rem",
+            "gutter-dense": "0.5rem",
+            "space-lg": "1rem",
+            "space-2xl": "2rem"
+          },
+          "fontFamily": {
+            "mono-compact": ["JetBrains Mono"],
+            "mono-data": ["JetBrains Mono"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "body-sm": ["Inter"],
+            "column-header": ["Inter"],
+            "title-sm": ["Inter"],
+            "badge-label": ["Inter"],
+            "data-cell": ["Inter"]
+          },
+          "fontSize": {
+            "mono-compact": ["11px", { "lineHeight": "14px", "letterSpacing": "0em", "fontWeight": "500" }],
+            "mono-data": ["12px", { "lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-lg": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "display-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-md": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "column-header": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "600" }],
+            "badge-label": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "data-cell": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm text-body-sm min-h-screen antialiased selection:bg-primary/20">
+<!-- ================= PERSISTENT LEFT SIDEBAR NAV (Shared Component JSON Blueprint) ================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between p-space-md bg-inverse-surface border-r border-outline z-40">
+<!-- Top Brand & Escalate Section -->
+<div class="flex flex-col gap-space-md">
+<!-- Brand Anchor -->
+<div class="flex items-center gap-space-sm px-space-xs py-space-2xs">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<div class="flex flex-col">
+<span class="text-title-sm font-title-sm font-bold text-surface-container-lowest tracking-tight">EFIMS Core</span>
+<span class="text-mono-compact font-mono-compact text-outline-variant uppercase tracking-wider">PROD - NG CORE BANKING</span>
+</div>
+</div>
+<!-- Mandatory Shared Component CTA -->
+<button class="w-full flex items-center justify-center gap-space-xs bg-primary hover:bg-primary-container text-on-primary font-title-sm text-title-sm font-semibold py-2 px-space-md rounded-lg transition-colors cursor-pointer shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add_moderator</span>
+<span>New Escalation</span>
+</button>
+<!-- Primary Navigation Tabs -->
+<nav class="flex flex-col gap-1 mt-1">
+<!-- Tab 1: Incidents (Active State from Shared Components JSON) -->
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg bg-surface-container-highest text-on-surface font-title-sm font-semibold border-l-4 border-primary transition-all duration-150" href="#incidents">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary" style="font-variation-settings: 'FILL' 1;">crisis_alert</span>
+<span class="text-body-sm font-title-sm">Incidents</span>
+</div>
+<span class="text-mono-compact font-mono-compact bg-error-container text-on-error-container font-semibold px-1.5 py-0.5 rounded text-[11px]">14</span>
+</a>
+<!-- Tab 2: Cases -->
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#cases">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px]">folder_managed</span>
+<span class="text-body-sm font-body-sm">Cases</span>
+</div>
+<span class="text-mono-compact font-mono-compact text-outline-variant bg-inverse-surface border border-outline/30 px-1.5 py-0.5 rounded text-[11px]">29</span>
+</a>
+<!-- Tab 3: Investigations -->
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#investigations">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px]">manage_search</span>
+<span class="text-body-sm font-body-sm">Investigations</span>
+</div>
+<span class="text-mono-compact font-mono-compact text-outline-variant bg-inverse-surface border border-outline/30 px-1.5 py-0.5 rounded text-[11px]">8</span>
+</a>
+<!-- Tab 4: Evidence Vault -->
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#vault">
+<span class="material-symbols-outlined text-[20px]">shield</span>
+<span class="text-body-sm font-body-sm">Evidence Vault</span>
+</a>
+<!-- Tab 5: Containment & Recovery -->
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#containment">
+<span class="material-symbols-outlined text-[20px]">lock_reset</span>
+<span class="text-body-sm font-body-sm">Containment &amp; Recovery</span>
+</a>
+<!-- Tab 6: Regulatory & CAPA -->
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#regulatory">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+<span class="text-body-sm font-body-sm">Regulatory &amp; CAPA</span>
+</a>
+<!-- Tab 7: Configuration -->
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#configuration">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-body-sm font-body-sm">Configuration</span>
+</div>
+<span class="text-[9px] font-mono-compact font-semibold text-outline tracking-wider uppercase border border-outline/40 px-1 py-0.2 rounded">ADMIN</span>
+</a>
+<!-- Tab 8: Audit Trail -->
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-surface-variant hover:text-surface-container-lowest hover:bg-surface-variant/10 transition-colors" href="#audittrail">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="text-body-sm font-body-sm">Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Bottom System Metadata Compartment -->
+<div class="pt-space-md border-t border-outline/30 flex flex-col gap-space-xs">
+<!-- Operational Status -->
+<div class="flex items-center justify-between px-space-xs py-1 text-surface-variant">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse"></span>
+<span class="text-mono-compact font-mono-compact text-outline-variant">99.98% HSM Online</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px]">verified_user</span>
+</div>
+<!-- Audit Compartment & Session Lock -->
+<div class="flex items-center justify-between px-space-xs py-1 text-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline">admin_panel_settings</span>
+<span class="text-mono-compact font-mono-compact text-outline-variant">Session: 03:42:19</span>
+</div>
+<span class="text-mono-compact font-mono-compact text-outline uppercase text-[10px] bg-outline/20 px-1 rounded">SEC-L3</span>
+</div>
+</div>
+</aside>
+<!-- ================= TOP NAV BAR (Shared Component JSON Blueprint) ================= -->
+<header class="fixed top-0 left-64 right-0 h-[60px] flex items-center justify-between px-space-xl bg-surface-container-lowest border-b border-outline-variant z-30">
+<!-- Left: Global Omni-search Command Input -->
+<div class="flex items-center gap-space-md w-full max-w-lg">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-secondary text-[18px]">search</span>
+</div>
+<input class="block w-full pl-9 pr-16 py-1.5 text-body-sm font-body-sm bg-surface text-on-surface placeholder-secondary border border-outline-variant rounded-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search hashes, account numbers, incidents, or CBN circulars..." type="text"/>
+<div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+<kbd class="inline-flex items-center px-1.5 py-0.5 border border-outline-variant text-mono-compact font-mono-compact text-secondary bg-surface-container-low rounded text-[10px]">
+            Ctrl + K
+          </kbd>
+</div>
+</div>
+</div>
+<!-- Right Controls Cluster -->
+<div class="flex items-center gap-space-md">
+<!-- Live SLA Alert Badge -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container border border-error/20 text-badge-label font-badge-label">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+<span class="text-error font-semibold">3 Breached SLAs</span>
+</div>
+<!-- Sensitive Compartment Indicator -->
+<div class="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-inverse-surface text-inverse-on-surface text-badge-label font-badge-label">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>AML/MLRO Tier-1 Cleared</span>
+</div>
+<!-- Quick Action Icons -->
+<div class="flex items-center gap-1 border-l border-r border-outline-variant/60 px-2">
+<button class="relative p-1.5 rounded text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" title="System Warnings">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</button>
+<button class="relative p-1.5 rounded text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Alert Notifications">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container-lowest"></span>
+</button>
+</div>
+<!-- Profile Chip -->
+<div class="flex items-center gap-space-sm pl-1 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs">
+          AB
+        </div>
+<div class="flex flex-col text-left">
+<span class="text-body-sm font-title-sm font-semibold text-on-surface leading-tight group-hover:text-primary transition-colors">Adewale Balogun</span>
+<span class="text-mono-compact font-mono-compact text-secondary text-[10px]">Lead Fraud Analyst L3</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[16px]">expand_more</span>
+</div>
+</div>
+</header>
+<!-- ================= MAIN FORENSIC CANVAS ================= -->
+<main class="ml-64 pt-[60px] p-space-xl min-h-screen flex flex-col gap-space-xl">
+<!-- Header Greeting & Date Range Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md border-b border-outline-variant/40 pb-space-md">
+<div>
+<div class="flex items-center gap-2">
+<h1 class="text-headline-lg font-headline-lg text-on-surface">Operational Command Center</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-badge-label font-badge-label bg-surface-container-high text-on-secondary-container">LIVE TRIAGE STREAM</span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary mt-0.5">High-velocity incident queue, active wire holds, and regulatory compliance status.</p>
+</div>
+<!-- Operational Controls & Actions -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<!-- Date Range Filter Pill -->
+<div class="inline-flex items-center gap-2 bg-surface-container-lowest border border-outline-variant px-3 py-1.5 rounded-md text-mono-compact font-mono-compact text-on-surface shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">calendar_today</span>
+<span>Today: 14 Oct 2024</span>
+<span class="text-outline text-xs">|</span>
+<span class="text-primary font-semibold">WAT UTC+1</span>
+</div>
+<!-- Secondary Batch Export -->
+<button class="inline-flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface border border-outline-variant px-3 py-1.5 rounded-md font-title-sm text-body-sm font-medium shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+<span>Export Dossier</span>
+</button>
+<!-- Primary CTA Button -->
+<button class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-on-primary px-3.5 py-1.5 rounded-md font-title-sm text-body-sm font-semibold shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">add_alert</span>
+<span>Report New Incident</span>
+</button>
+</div>
+</div>
+<!-- ================= KPI METRIC ROW (4 Elevated Bento Cards) ================= -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg">
+<!-- Card 1: Active Incidents -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between text-secondary">
+<span class="text-column-header font-column-header uppercase">Active Incidents</span>
+<span class="material-symbols-outlined text-[18px] text-primary">crisis_alert</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-display-lg font-display-lg text-on-surface">42</span>
+<span class="inline-flex items-center text-mono-compact font-mono-compact text-error text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +8% vs yday
+            </span>
+</div>
+</div>
+<!-- Severity Distribution Breakdown Bar -->
+<div class="mt-4 pt-3 border-t border-outline-variant/30">
+<div class="flex justify-between text-mono-compact font-mono-compact text-[10px] text-secondary mb-1">
+<span>S1: 4</span>
+<span>S2: 11</span>
+<span>S3: 19</span>
+<span>S4: 8</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container flex overflow-hidden">
+<div class="bg-error h-full" style="width: 9.5%" title="S1 Critical (4)"></div>
+<div class="bg-[#F97316] h-full" style="width: 26.2%" title="S2 High (11)"></div>
+<div class="bg-[#F59E0B] h-full" style="width: 45.2%" title="S3 Medium (19)"></div>
+<div class="bg-[#64748B] h-full" style="width: 19.1%" title="S4 Low (8)"></div>
+</div>
+</div>
+</div>
+<!-- Card 2: SLA Breaches This Week -->
+<div class="bg-surface-container-lowest border-2 border-error/30 rounded-lg p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-error/5 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between text-error">
+<span class="text-column-header font-column-header uppercase flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+              SLA Breaches This Week
+            </span>
+<span class="material-symbols-outlined text-[18px] text-error">notification_important</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-display-lg font-display-lg text-error">3</span>
+<span class="text-body-sm font-title-sm text-error font-semibold">Critical Breaches</span>
+</div>
+</div>
+<!-- Granular Breakdown -->
+<div class="mt-4 pt-3 border-t border-outline-variant/30 text-mono-compact font-mono-compact text-[11px] text-on-surface-variant flex flex-col gap-0.5">
+<div class="flex justify-between">
+<span class="text-secondary">• Tier-1 Wire Fraud:</span>
+<span class="font-bold text-error">2 cases</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary">• SWIFT Sanction Check:</span>
+<span class="font-bold text-error">1 case</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Pending Approvals for Me -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between text-secondary">
+<span class="text-column-header font-column-header uppercase">Pending Approvals for Me</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">assignment_turned_in</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-display-lg font-display-lg text-on-surface">6</span>
+<span class="text-body-sm font-title-sm text-secondary">Action Items</span>
+</div>
+</div>
+<!-- Approval Item Badges -->
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex flex-wrap gap-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-mono-compact font-mono-compact bg-surface-container text-on-surface text-[10px]">
+            3 Account Freezes
+          </span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-mono-compact font-mono-compact bg-surface-container text-on-surface text-[10px]">
+            2 Write-offs
+          </span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-mono-compact font-mono-compact bg-secondary-container text-on-secondary-fixed text-[10px] font-semibold">
+            1 STR Regulatory
+          </span>
+</div>
+</div>
+<!-- Card 4: Total Prevented Exposure (MTD) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md flex flex-col justify-between shadow-sm">
+<div>
+<div class="flex items-center justify-between text-secondary">
+<span class="text-column-header font-column-header uppercase">Total Prevented Exposure (MTD)</span>
+<span class="material-symbols-outlined text-[18px] text-primary">payments</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-headline-lg font-display-lg text-on-surface font-mono-data tracking-tight">₦482,500,000</span>
+</div>
+</div>
+<!-- Recovery & Rate Trend -->
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-mono-compact font-mono-compact text-[11px]">
+<span class="text-secondary">94.2% Recovery Rate</span>
+<span class="inline-flex items-center text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +12.4%
+          </span>
+</div>
+</div>
+</section>
+<!-- ================= LOWER SPLIT SECTION (65% Priority Table | 35% Live Orchestration Feed) ================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- ================= LEFT: PRIORITY TRIAGING QUEUE (12 cols on mobile, 8 cols on desktop: ~66%) ================= -->
+<section class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col overflow-hidden">
+<!-- Panel Header -->
+<div class="p-space-md border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary">rule</span>
+<h2 class="text-headline-md font-headline-md text-on-surface">Priority Triaging &amp; Escalation Queue</h2>
+<span class="text-mono-compact font-mono-compact bg-surface-container text-on-surface px-2 py-0.5 rounded text-[11px] font-semibold">5 Active Focus</span>
+</div>
+<!-- Quick filters for table -->
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 text-mono-compact font-mono-compact text-secondary hover:text-on-surface hover:bg-surface-container rounded transition-colors text-[11px]">Filter: S1/S2</button>
+<button class="px-2 py-1 text-mono-compact font-mono-compact text-primary font-semibold bg-surface-container rounded transition-colors text-[11px]">Sort: SLA Expiring</button>
+</div>
+</div>
+<!-- Tabular Data Grid -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="h-9 bg-surface-container-low border-b border-outline-variant text-column-header font-column-header text-secondary uppercase text-[11px]">
+<th class="px-space-md py-2">Incident ID</th>
+<th class="px-space-md py-2">Category</th>
+<th class="px-space-md py-2">Severity</th>
+<th class="px-space-md py-2">Compartment</th>
+<th class="px-space-md py-2">SLA Countdown</th>
+<th class="px-space-md py-2">Assigned Analyst</th>
+<th class="px-space-md py-2 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/40 text-body-sm font-body-sm">
+<!-- Row 1 (S1 Urgent SLA Breach Imminent) -->
+<tr class="hover:bg-surface-container-low transition-colors h-11 bg-error/5">
+<td class="px-space-md py-2 font-mono-data text-mono-data text-primary font-bold">
+                  INC-2024-8902
+                </td>
+<td class="px-space-md py-2 font-medium text-on-surface">
+                  Unauthorized NIBSS Instant Payment
+                </td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></span>
+                    S1
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-inverse-surface text-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px]">lock</span>
+                    AML/MLRO
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="font-mono-data text-mono-data text-error font-bold flex items-center gap-1 animate-pulse">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+                    00:18:42
+                  </span>
+</td>
+<td class="px-space-md py-2 text-on-surface-variant flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container text-[10px] flex items-center justify-center font-bold">AB</span>
+<span>A. Balogun</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant hover:border-primary text-primary font-title-sm text-xs font-semibold">Review</button>
+<button class="px-2 py-1 rounded bg-error hover:bg-[#DC2626] text-surface-container-lowest font-title-sm text-xs font-semibold">Freeze</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 (S2 High Priority) -->
+<tr class="hover:bg-surface-container-low transition-colors h-11">
+<td class="px-space-md py-2 font-mono-data text-mono-data text-on-surface font-semibold">
+                  INC-2024-8894
+                </td>
+<td class="px-space-md py-2 font-medium text-on-surface">
+                  ATM Fleet Card Skimming Cluster
+                </td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-[#FFF7ED] border border-[#FFEDD5] text-[#9A3412]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
+                    S2
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined text-[12px]">security</span>
+                    Fraud Ops
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="font-mono-data text-mono-data text-[#9A3412] font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                    01:42:10
+                  </span>
+</td>
+<td class="px-space-md py-2 text-on-surface-variant flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-surface-container text-on-surface text-[10px] flex items-center justify-center font-bold">FE</span>
+<span>F. Eze</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant hover:border-primary text-on-surface font-title-sm text-xs">Review</button>
+<button class="px-2 py-1 rounded bg-surface-container-low border border-outline-variant text-secondary hover:text-on-surface font-title-sm text-xs">Escalate</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 (S1 Insider Threat) -->
+<tr class="hover:bg-surface-container-low transition-colors h-11">
+<td class="px-space-md py-2 font-mono-data text-mono-data text-primary font-bold">
+                  INC-2024-8889
+                </td>
+<td class="px-space-md py-2 font-medium text-on-surface">
+                  Insider Staff Impersonation (Ops Portal)
+                </td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></span>
+                    S1
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-inverse-surface text-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px]">lock</span>
+                    Internal Affairs
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="font-mono-data text-mono-data text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+                    00:45:00
+                  </span>
+</td>
+<td class="px-space-md py-2 text-on-surface-variant flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container text-[10px] flex items-center justify-center font-bold">AB</span>
+<span>A. Balogun</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant hover:border-primary text-primary font-title-sm text-xs font-semibold">Review</button>
+<button class="px-2 py-1 rounded bg-surface-container-low border border-outline-variant text-secondary hover:text-on-surface font-title-sm text-xs">Escalate</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 (S3 Medium Priority) -->
+<tr class="hover:bg-surface-container-low transition-colors h-11">
+<td class="px-space-md py-2 font-mono-data text-mono-data text-on-surface font-semibold">
+                  INC-2024-8871
+                </td>
+<td class="px-space-md py-2 font-medium text-on-surface">
+                  Structured Cash Deposit Smurfing
+                </td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-[#FFFBEB] border border-[#FEF3C7] text-[#92400E]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
+                    S3
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-inverse-surface text-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px]">lock</span>
+                    AML/MLRO
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="font-mono-data text-mono-data text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                    04:19:30
+                  </span>
+</td>
+<td class="px-space-md py-2 text-on-surface-variant flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-surface-container text-on-surface text-[10px] flex items-center justify-center font-bold">KA</span>
+<span>K. Adeleke</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant hover:border-primary text-on-surface font-title-sm text-xs">Review</button>
+<button class="px-2 py-1 rounded bg-surface-container-low border border-outline-variant text-secondary hover:text-on-surface font-title-sm text-xs">Escalate</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 (S2 High Priority) -->
+<tr class="hover:bg-surface-container-low transition-colors h-11">
+<td class="px-space-md py-2 font-mono-data text-mono-data text-on-surface font-semibold">
+                  INC-2024-8865
+                </td>
+<td class="px-space-md py-2 font-medium text-on-surface">
+                  SWIFT GPI MT103 Inbound Tampering
+                </td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-[#FFF7ED] border border-[#FFEDD5] text-[#9A3412]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
+                    S2
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-badge-label font-badge-label bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined text-[12px]">security</span>
+                    Wire Ops
+                  </span>
+</td>
+<td class="px-space-md py-2">
+<span class="font-mono-data text-mono-data text-[#9A3412] font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                    01:12:45
+                  </span>
+</td>
+<td class="px-space-md py-2 text-on-surface-variant flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container text-[10px] flex items-center justify-center font-bold">AB</span>
+<span>A. Balogun</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant hover:border-primary text-on-surface font-title-sm text-xs">Review</button>
+<button class="px-2 py-1 rounded bg-surface-container-low border border-outline-variant text-secondary hover:text-on-surface font-title-sm text-xs">Escalate</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Bulk Status Footer -->
+<div class="px-space-md py-2.5 bg-surface-container-low border-t border-outline-variant flex items-center justify-between text-mono-compact font-mono-compact text-secondary text-[11px]">
+<div class="flex items-center gap-2">
+<span>Showing 1 to 5 of 42 Incidents</span>
+<span>•</span>
+<span class="text-primary font-semibold">Live Socket: Polling (2s)</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50" disabled="">Previous</button>
+<button class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container transition-colors">Next</button>
+</div>
+</div>
+</section>
+<!-- ================= RIGHT: LIVE ORCHESTRATION FEED (12 cols on mobile, 4 cols on desktop: ~34%) ================= -->
+<section class="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col overflow-hidden">
+<!-- Feed Header -->
+<div class="p-space-md border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+<h2 class="text-headline-md font-headline-md text-on-surface">Live Orchestration Feed</h2>
+</div>
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">IMMUTABLE LOG</span>
+</div>
+<!-- Chronological Stream List -->
+<div class="p-space-md flex flex-col gap-space-md max-h-[520px] overflow-y-auto">
+<!-- Event 1: Account Freeze Confirmed -->
+<div class="flex gap-space-sm border-l-2 border-primary pl-space-md py-1 relative">
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between">
+<span class="text-badge-label font-badge-label text-primary font-bold uppercase tracking-wider text-[10px]">CORE BANKING API</span>
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">10:48:12 WAT</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface font-medium leading-snug">
+                Automated Post-No-Debit (PND) containment executed successfully.
+              </p>
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant/60 mt-1 flex flex-col gap-0.5">
+<div class="text-mono-compact font-mono-compact text-secondary text-[11px] flex justify-between">
+<span>Target:</span>
+<span class="text-on-surface font-bold">ACC# 0148892110</span>
+</div>
+<div class="text-mono-compact font-mono-compact text-secondary text-[10px] truncate">
+                  TX Hash: 0x8f2d91b...c914e
+                </div>
+</div>
+</div>
+</div>
+<!-- Event 2: AI Duplicate Signal Flagged -->
+<div class="flex gap-space-sm border-l-2 border-tertiary pl-space-md py-1 relative">
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between">
+<span class="text-badge-label font-badge-label text-tertiary font-bold uppercase tracking-wider text-[10px]">FRAUD INTELLIGENCE AI</span>
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">10:44:05 WAT</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface leading-snug">
+                Velocity anomaly detected: High-frequency card replay detected across 14 merchant terminals.
+              </p>
+<div class="flex items-center justify-between text-mono-compact font-mono-compact bg-surface-container px-2 py-1 rounded text-[11px] mt-1">
+<span>POS Batch Cluster:</span>
+<span class="font-bold text-on-surface">#9921 (Victoria Island)</span>
+</div>
+</div>
+</div>
+<!-- Event 3: Regulatory Report Filed -->
+<div class="flex gap-space-sm border-l-2 border-[#92400E] pl-space-md py-1 relative">
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between">
+<span class="text-badge-label font-badge-label text-[#92400E] font-bold uppercase tracking-wider text-[10px]">CBN MANDATORY CAPA</span>
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">10:31:50 WAT</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface leading-snug">
+                Suspicious Transaction Report (STR Form 04-B) drafted and routed for MLRO sign-off.
+              </p>
+<div class="text-mono-compact font-mono-compact text-secondary text-[11px] flex items-center gap-1.5 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>Initiated by: K. Adeleke (Compliance L2)</span>
+</div>
+</div>
+</div>
+<!-- Event 4: Wire Hold Released -->
+<div class="flex gap-space-sm border-l-2 border-outline pl-space-md py-1 relative">
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between">
+<span class="text-badge-label font-badge-label text-secondary font-bold uppercase tracking-wider text-[10px]">SWIFT AUDIT GATE</span>
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">10:15:22 WAT</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface leading-snug">
+                False Positive Sanctions Match cleared for beneficiary: Dangote Sugar Refinery Plc.
+              </p>
+<span class="text-mono-compact font-mono-compact text-secondary text-[10px]">Reference: SWIFT-GPI-908122-OK</span>
+</div>
+</div>
+</div>
+<!-- Orchestration System Control Footer -->
+<div class="p-space-md border-t border-outline-variant bg-surface-container-low flex items-center justify-between">
+<span class="text-mono-compact font-mono-compact text-secondary text-[11px]">Node: Lagos-DC2-Primary</span>
+<button class="inline-flex items-center gap-1 text-mono-compact font-mono-compact text-primary font-semibold hover:underline text-[11px]">
+<span>Audit Vault Stream</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+</body></html>

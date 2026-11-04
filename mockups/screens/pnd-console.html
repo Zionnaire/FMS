@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Sentinel - Containment &amp; Recovery | Multi-Bank PND Console</title>
+<!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with custom theme config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-primary": "#b0ccc8",
+            "on-primary-container": "#86a19d",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-surface": "#1b1c1b",
+            "primary-container": "#1e3835",
+            "primary-fixed": "#cbe8e4",
+            "outline-variant": "#c1c8c6",
+            "on-tertiary-fixed": "#002116",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "surface-bright": "#fcf9f7",
+            "secondary-fixed": "#ffdad4",
+            "on-secondary": "#ffffff",
+            "surface-dim": "#dcd9d8",
+            "surface-container-low": "#f6f3f1",
+            "on-tertiary-container": "#7fa494",
+            "primary": "#072320",
+            "on-error-container": "#93000a",
+            "error": "#ba1a1a",
+            "inverse-surface": "#30302f",
+            "tertiary-fixed": "#c4ebd9",
+            "tertiary-container": "#163a2d",
+            "on-error": "#ffffff",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-background": "#1b1c1b",
+            "surface-container-high": "#eae8e6",
+            "on-tertiary": "#ffffff",
+            "outline": "#727877",
+            "surface-tint": "#496360",
+            "secondary": "#735854",
+            "primary-fixed-dim": "#b0ccc8",
+            "background": "#fcf9f7",
+            "on-primary-fixed-variant": "#314c48",
+            "secondary-fixed-dim": "#e1bfb9",
+            "surface": "#fcf9f7",
+            "on-surface-variant": "#414847",
+            "inverse-on-surface": "#f3f0ee",
+            "on-primary": "#ffffff",
+            "surface-container-highest": "#e5e2e0",
+            "on-primary-fixed": "#04201d",
+            "surface-variant": "#e5e2e0",
+            "secondary-container": "#ffdad4",
+            "on-secondary-fixed": "#2a1713",
+            "tertiary": "#002419",
+            "error-container": "#ffdad6",
+            "surface-container": "#f0edeb"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.75rem",
+            "space-xs": "0.375rem",
+            "space-md": "1.25rem",
+            "space-xl": "2.5rem",
+            "margin-mobile": "1rem",
+            "gutter": "1.25rem",
+            "margin": "2rem",
+            "space-lg": "1.75rem",
+            "gutter-mobile": "0.75rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Playfair Display"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col font-body-md text-body-md selection:bg-secondary-container selection:text-primary">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT: SideNavBar (Anchored Desktop Navigation)                -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between bg-primary-container text-secondary-fixed border-r border-outline/20 shadow-2xl z-40 select-none px-space-md py-space-lg">
+<!-- Header / Brand Emblem -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary-container/30 to-primary flex items-center justify-center border border-secondary-fixed-dim/30 shadow-inner">
+<span class="material-symbols-outlined text-secondary-container" data-icon="security">security</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-surface-container-lowest tracking-tight leading-tight">EFIMS Sentinel</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container tracking-wider">Regulatory Crime Console</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-1.5 mt-2">
+<!-- 1. Incident Cockpit -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="security">security</span>
+<span>Incident Cockpit</span>
+</a>
+<!-- 2. Containment & Recovery (ACTIVE STATE LOCKED) -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-container text-primary font-title-md text-title-md transition-all shadow-sm active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="lock_reset" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock_reset</span>
+<span class="font-semibold">Containment &amp; Recovery</span>
+</a>
+<!-- 3. Intelligence Graph -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="hub">hub</span>
+<span>Intelligence Graph</span>
+</a>
+<!-- 4. Regulatory Reporting -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="gavel">gavel</span>
+<span>Regulatory Reporting</span>
+</a>
+<!-- 5. Audit & Forensics -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="policy">policy</span>
+<span>Audit &amp; Forensics</span>
+</a>
+</nav>
+</div>
+<!-- Bottom Actions / Hardware Token Status & CTAs -->
+<div class="flex flex-col gap-4 border-t border-outline/20 pt-4 px-2">
+<!-- Statutory MLAT & System Logs Sub-links -->
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-2 px-2 py-1.5 text-on-primary-container hover:text-surface-container-lowest text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield_person">shield_person</span>
+<span>Statutory MLAT</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-on-primary-container hover:text-surface-container-lowest text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="terminal">terminal</span>
+<span>System Logs</span>
+</a>
+</div>
+<!-- Hardware Token Active Card -->
+<div class="p-3 rounded-xl bg-tertiary-container/60 border border-tertiary-fixed-dim/20 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed animate-pulse"></span>
+<div>
+<div class="font-label-sm text-label-sm text-surface-bright leading-none">YubiKey HSM v5.4</div>
+<div class="font-label-sm text-[10px] text-tertiary-fixed-dim mt-0.5">Dual-Signature Active</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary-fixed text-[18px]" data-icon="verified_user">verified_user</span>
+</div>
+<!-- Emergency Primary CTA Button -->
+<button class="w-full py-2.5 px-4 rounded-full bg-secondary-container hover:bg-secondary-fixed text-primary font-title-md text-title-md flex items-center justify-center gap-2 shadow-md transition-all active:scale-95">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="bolt">bolt</span>
+<span>Execute Kill-Switch</span>
+</button>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE WRAPPER (Offset for 64w Sidebar)                           -->
+<!-- ========================================================================= -->
+<div class="pl-64 flex flex-col flex-1 min-w-0">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT: TopNavBar                                               -->
+<!-- ========================================================================= -->
+<header class="sticky top-0 z-30 flex justify-between items-center w-full px-space-lg py-space-sm bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<!-- Left: Breadcrumbs & Product Title -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>EFIMS</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-semibold">Containment &amp; Asset Recovery</span>
+<span class="text-outline-variant">/</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-medium text-on-surface">Emergency Freezes</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-bold">Multi-Bank PND Console</span>
+</div>
+</div>
+<!-- Center-Right: Containment Timer & Navigation Links -->
+<div class="hidden xl:flex items-center gap-6">
+<!-- Statutory Countdown Clock Indicator -->
+<div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-error-container/40 border border-error/20 text-on-error-container">
+<span class="material-symbols-outlined text-error text-[18px] animate-pulse" data-icon="timer">timer</span>
+<span class="font-label-sm text-label-sm font-semibold tracking-wide">
+<span class="font-mono text-[13px] text-error font-extrabold" id="countdown-timer">00:14:32</span> Remaining - Statutory S1 Window
+          </span>
+</div>
+<!-- Navigation Links Cluster -->
+<nav class="flex items-center gap-5">
+<a class="text-primary font-title-md text-title-md border-b-2 border-secondary pb-1" href="#">PND Console</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">Gateway Kill-Switch</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">Mareva Orders</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">Ledger Recovery</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">LE Liaison</a>
+</nav>
+</div>
+<!-- Trailing Action Cluster -->
+<div class="flex items-center gap-3">
+<!-- Quick Action Pill: Emergency Broadcast -->
+<button class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-primary/20 hover:bg-surface-container text-primary font-label-md text-label-md transition-all active:scale-95">
+<span class="material-symbols-outlined text-[16px]" data-icon="cell_tower">cell_tower</span>
+<span>Emergency Broadcast</span>
+</button>
+<!-- Trailing Primary Action Pill -->
+<button class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary hover:bg-primary-container text-surface-container-lowest font-label-md text-label-md shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-secondary-container text-[16px]" data-icon="gavel">gavel</span>
+<span>Tier-1 Freeze Order</span>
+</button>
+<!-- Icon Actions & Badges -->
+<div class="flex items-center gap-1 border-l border-outline-variant/30 pl-2">
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant relative transition-colors" title="Notifications">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications_active">notifications_active</span>
+<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Verified Authority">
+<span class="material-symbols-outlined text-[20px]" data-icon="verified_user">verified_user</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="System Settings">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+</button>
+</div>
+<!-- Investigator Profile Avatar -->
+<div class="flex items-center gap-2 pl-2">
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="Official photographic identification avatar of a Lead Financial Crime Investigator, clad in deep spruce professional executive uniform with polished bronze heraldic badge, soft porcelain daylight studio portrait." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Y29z3qgJRnoJa7nVRkvGUzi8j12LcsE6uKZCPXUtDApesqXKuxL1xmtSvfcpMrFkd7IbVziyde0ouj5QaErDcW59Estargc4ktl9eAmvgCmOHQBcbyvOD5bbjxOY70MS8aJMb4yac7z57f2BEXNiITV2P5EH5b4e788AZbZ6FneVLRm8lPzb1G30e03xJQKLGEcdHkdhdA-3ab_X8V594OQKoP7ffHGvdtHJ0DVliOEeoKnQPyJdzw"/>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- CONTENT CANVAS: Executive Analytics & Incident Workbench                  -->
+<!-- ========================================================================= -->
+<main class="p-space-lg flex flex-col gap-6 max-w-[1720px] mx-auto w-full">
+<!-- Executive Header Title Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-outline-variant/20">
+<div>
+<div class="flex items-center gap-2 text-secondary font-label-md text-label-md mb-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="gavel">gavel</span>
+<span>CBN Mandate: 60-Minute Interbank Freeze Window Active</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-primary leading-tight">
+            Emergency Freeze Enactment &amp; Post-No-Debit (PND)
+          </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+            Immediate statutory freeze execution across NIBSS Instant Payment (NIP) rails, interbank switches, and fintech tier-1 endpoints.
+          </p>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1.5 font-semibold">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+            Direct NIBSS Direct-Tap v4.2 Connected
+          </span>
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm border border-outline-variant/30">
+            Case Ref: <strong class="text-primary font-semibold">CR-2025-0982-FX</strong>
+</span>
+</div>
+</div>
+<!-- ======================================================================= -->
+<!-- SECTION 1: Top KPI Metric Cards (4 Cards)                              -->
+<!-- ======================================================================= -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1: Total Value Under Active PND (Level 2 Inverted Spruce Hero Surface) -->
+<div class="bg-primary-container text-surface-bright rounded-xl p-space-md border border-primary/40 shadow-[0_12px_32px_-8px_rgba(22,43,40,0.22)] relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-secondary-container/10 blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-primary-container tracking-wider">TOTAL VALUE UNDER ACTIVE PND</span>
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="font-kpi-metric text-kpi-metric text-surface-bright mt-2 font-bold tracking-tight">
+              ₦38,200,000<span class="text-secondary-fixed text-[20px]">.00</span>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-primary/60 flex items-center justify-between text-label-sm">
+<span class="text-secondary-fixed flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span>
+              84.88% Preserved
+            </span>
+<span class="text-on-primary-container">of ₦45,000,000 disputed</span>
+</div>
+</div>
+<!-- Card 2: Accounts Under Freeze Order (Warm porcelain crisp container) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider">ACCOUNTS UNDER FREEZE ORDER</span>
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="person_cancel">person_cancel</span>
+</div>
+<div class="font-kpi-metric text-kpi-metric text-primary mt-2 font-bold tracking-tight flex items-baseline gap-1.5">
+              11 <span class="text-[18px] text-on-surface-variant font-normal">/ 14 Mule Targets</span>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-label-sm">
+<span class="text-tertiary flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[15px]" data-icon="shield">shield</span>
+              3 Intercepted in-flight
+            </span>
+<span class="text-error font-medium">3 Pending Handshake</span>
+</div>
+</div>
+<!-- Card 3: Average Freeze Execution Latency -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider">AVERAGE FREEZE EXECUTION LATENCY</span>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="speed">speed</span>
+</div>
+<div class="font-kpi-metric text-kpi-metric text-primary mt-2 font-bold tracking-tight flex items-baseline gap-1">
+              420<span class="text-title-lg text-secondary font-normal">ms</span>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-label-sm">
+<span class="text-on-surface flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+              CBN Direct API Tap
+            </span>
+<span class="text-on-surface-variant font-mono">ISO 8583: OK</span>
+</div>
+</div>
+<!-- Card 4: Statutory Legal Authority -->
+<div class="bg-surface-container-low rounded-xl p-space-md border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider">STATUTORY LEGAL AUTHORITY</span>
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="balance">balance</span>
+</div>
+<div class="font-title-md text-title-md text-primary mt-2 font-semibold leading-snug">
+              Circular BSD/DIR/GEN/LAB/11/021
+            </div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-label-sm">
+<span class="text-on-surface-variant font-medium">Sec 14 AML Act 2022</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-primary font-bold text-[10px]">PRE-COURT BINDING</span>
+</div>
+</div>
+</div>
+<!-- ======================================================================= -->
+<!-- SECTION 2: Main Workspace (Two-Column Layout: Left 2/3 + Right 1/3)     -->
+<!-- ======================================================================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- ===================================================================== -->
+<!-- LEFT COLUMN (8 cols / ~2/3 width)                                     -->
+<!-- ===================================================================== -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- 1. Quick Execution PND Enforcement Panel -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md sm:p-space-lg border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)]">
+<div class="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2.5">
+<span class="w-8 h-8 rounded-lg bg-secondary-container/50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="flash_on">flash_on</span>
+</span>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Quick Execution PND Enforcement Panel</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Execute synchronized Post-No-Debit broadcast directly into participating settlement nodes.</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+                Tier-1 Direct Broadcast
+              </span>
+</div>
+<!-- Form Grid -->
+<form class="space-y-4" onsubmit="event.preventDefault();">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- NUBAN / BVN Input -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                    Target NUBAN / BVN Identity
+                  </label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="badge">badge</span>
+</span>
+<input class="w-full pl-10 pr-4 py-2 rounded-full border border-outline-variant/60 bg-surface-container-low text-on-surface font-body-md text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" type="text" value="0148920194 (BVN: 22194829103)"/>
+</div>
+<span class="text-[11px] text-on-surface-variant">Validated: Beneficiary matches tagged syndicate account</span>
+</div>
+<!-- Tier-1 Freeze Type -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                    Tier-1 Restriction Type
+                  </label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="lock">lock</span>
+</span>
+<select class="w-full pl-10 pr-8 py-2 rounded-full border border-outline-variant/60 bg-surface-container-low text-on-surface font-body-md text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
+<option selected="">Total Inflow/Outflow Block (Full PND Lien)</option>
+<option>PND Inward-Only (Prevent Laundering Inflow)</option>
+<option>Escrow Sweep &amp; Regulatory Holding Vault</option>
+</select>
+<span class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</span>
+</div>
+<span class="text-[11px] text-secondary">Immediate cessation of all clearing switch settle credits</span>
+</div>
+</div>
+<!-- Target Banks Selector (Pill Badges) -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                  Select Target Settlement Gateways &amp; FinTechs
+                </label>
+<div class="flex flex-wrap gap-2 pt-1">
+<!-- Selected Banks -->
+<button class="px-3 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                    GTBank PLC
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                    Access Bank
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                    Kuda MFB
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                    Moniepoint MFB
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                    PalmPay
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="add">add</span>
+                    Zenith Bank
+                  </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="add">add</span>
+                    OPay Digital
+                  </button>
+</div>
+</div>
+<!-- Statutory Reason Selector -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                  Statutory Enactment Ground (CBN / NFIU Compliance)
+                </label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="assignment">assignment</span>
+</span>
+<select class="w-full pl-10 pr-8 py-2 rounded-full border border-outline-variant/60 bg-surface-container-low text-on-surface font-body-md text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
+<option selected="">High-Velocity Corporate Dispersion Ring (Multiple sub-account smurfing in &lt;180s)</option>
+<option>Sanctioned PEP Beneficial Ownership Concealment</option>
+<option>Ransomware Layering &amp; Crypto Rail Off-Ramp</option>
+<option>Unauthorized Wholesale Correspondent Discrepancy</option>
+</select>
+<span class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</span>
+</div>
+</div>
+<!-- Emergency Attestation Checkbox & Action Button -->
+<div class="pt-3 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<label class="flex items-start gap-2.5 cursor-pointer max-w-lg">
+<input checked="" class="mt-0.5 rounded text-primary focus:ring-primary h-4 w-4 border-outline-variant" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface leading-tight">
+                    I attest under penalty of criminal perjury that this PND order complies with Section 14 AMLA 2022 and EFCC emergency preservation directives.
+                  </span>
+</label>
+<!-- Primary Action Button -->
+<button class="px-6 py-2.5 rounded-full bg-primary hover:bg-primary-container text-surface-container-lowest font-title-md text-title-md flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 shrink-0">
+<span class="material-symbols-outlined text-secondary-container text-[18px]" data-icon="send">send</span>
+<span>Execute Instant Multi-Bank PND</span>
+</button>
+</div>
+</form>
+</div>
+<!-- 2. Live Enforced PND Registry Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] overflow-hidden">
+<div class="px-space-md py- space-sm border-b border-outline-variant/20 flex flex-wrap items-center justify-between gap-3 bg-surface-bright">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="table_chart">table_chart</span>
+<h3 class="font-headline-md text-[18px] text-primary">Live Enforced PND Registry</h3>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-primary font-label-sm text-[10px] font-bold">11 ACTIVE LIENS</span>
+</div>
+<!-- Quick Table Actions -->
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 rounded-full border border-outline-variant/50 text-on-surface-variant hover:bg-surface-container text-label-sm flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]" data-icon="filter_list">filter_list</span>
+                  Filter
+                </button>
+<button class="px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high text-primary text-label-sm flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]" data-icon="download">download</span>
+                  Export Audit Hash
+                </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/60 border-b border-outline-variant/20 text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider">
+<th class="py-3 px-4">Target Entity &amp; NUBAN</th>
+<th class="py-3 px-4">Settlement Bank</th>
+<th class="py-3 px-4 text-right">Lien Value</th>
+<th class="py-3 px-4">Freeze Timestamp</th>
+<th class="py-3 px-4">Protocol</th>
+<th class="py-3 px-4 text-center">Ledger Status</th>
+<th class="py-3 px-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/15 font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: GTBank Enforced -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4">
+<div class="font-semibold text-primary">Quantum Horizon Logistics Ltd</div>
+<div class="text-[11px] text-on-surface-variant font-mono">0148920194 • BVN: 22194829103</div>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5 font-medium">
+<span class="w-2 h-2 rounded-full bg-orange-600"></span>
+                        GTBank PLC
+                      </div>
+</td>
+<td class="py-3 px-4 text-right font-mono font-bold text-primary">
+                      ₦14,500,000.00
+                    </td>
+<td class="py-3 px-4">
+<div class="text-[12px] font-mono">11:42:08.192 WAT</div>
+<div class="text-[10px] text-on-surface-variant">Order #CBN-2025-881</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[10px] text-primary border border-outline-variant/30">NIBSS API v4</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                        Enforced &amp; Frozen
+                      </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant" title="View Proof of Lien">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-secondary" title="Cryptographic SHA-256 Audit Hash">
+<span class="material-symbols-outlined text-[16px]" data-icon="fingerprint">fingerprint</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Kuda MFB Enforced -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4">
+<div class="font-semibold text-primary">Chukwuemeka D. Okafor (Agent)</div>
+<div class="text-[11px] text-on-surface-variant font-mono">2001948102 • BVN: 22894102941</div>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5 font-medium">
+<span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                        Kuda MFB
+                      </div>
+</td>
+<td class="py-3 px-4 text-right font-mono font-bold text-primary">
+                      ₦8,700,000.00
+                    </td>
+<td class="py-3 px-4">
+<div class="text-[12px] font-mono">11:42:08.410 WAT</div>
+<div class="text-[10px] text-on-surface-variant">Order #CBN-2025-882</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[10px] text-primary border border-outline-variant/30">Direct ISO8583</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                        Enforced &amp; Frozen
+                      </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant" title="View Proof of Lien">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-secondary" title="Cryptographic SHA-256 Audit Hash">
+<span class="material-symbols-outlined text-[16px]" data-icon="fingerprint">fingerprint</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Moniepoint MFB Enforced -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4">
+<div class="font-semibold text-primary">Bello Multi-Services Enterprise</div>
+<div class="text-[11px] text-on-surface-variant font-mono">6048192044 • BVN: 22401829104</div>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5 font-medium">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                        Moniepoint MFB
+                      </div>
+</td>
+<td class="py-3 px-4 text-right font-mono font-bold text-primary">
+                      ₦10,000,000.00
+                    </td>
+<td class="py-3 px-4">
+<div class="text-[12px] font-mono">11:42:08.522 WAT</div>
+<div class="text-[10px] text-on-surface-variant">Order #CBN-2025-883</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[10px] text-primary border border-outline-variant/30">NIBSS API v4</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                        Enforced &amp; Frozen
+                      </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant" title="View Proof of Lien">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-secondary" title="Cryptographic SHA-256 Audit Hash">
+<span class="material-symbols-outlined text-[16px]" data-icon="fingerprint">fingerprint</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: PalmPay Liened in Transit -->
+<tr class="hover:bg-surface-container-low/40 transition-colors bg-secondary-container/10">
+<td class="py-3 px-4">
+<div class="font-semibold text-primary">Al-Hassan Global Trading MFB</div>
+<div class="text-[11px] text-on-surface-variant font-mono">8104829103 • BVN: 22910482918</div>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5 font-medium">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        PalmPay
+                      </div>
+</td>
+<td class="py-3 px-4 text-right font-mono font-bold text-primary">
+                      ₦5,000,000.00
+                    </td>
+<td class="py-3 px-4">
+<div class="text-[12px] font-mono">11:42:08.980 WAT</div>
+<div class="text-[10px] text-on-surface-variant">Order #CBN-2025-884</div>
+</td>
+<td class="py-3 px-4">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[10px] text-primary border border-outline-variant/30">Direct ISO8583</span>
+</td>
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container text-primary font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                        Liened in Transit
+                      </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded hover:bg-surface-container text-error" title="Force Switch Intercept">
+<span class="material-symbols-outlined text-[16px]" data-icon="sync_problem">sync_problem</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-secondary" title="Audit Hash">
+<span class="material-symbols-outlined text-[16px]" data-icon="fingerprint">fingerprint</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer Pagination / Summary -->
+<div class="px-space-md py-2.5 bg-surface-bright border-t border-outline-variant/20 flex items-center justify-between text-label-sm text-on-surface-variant">
+<span>Displaying 4 of 11 Registered Liens (₦38.2M Total Preserved)</span>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container border border-outline-variant/30 text-primary font-semibold">1</button>
+<button class="px-2 py-1 rounded hover:bg-surface-container text-on-surface-variant">2</button>
+<button class="px-2 py-1 rounded hover:bg-surface-container text-on-surface-variant">3</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ===================================================================== -->
+<!-- RIGHT COLUMN (4 cols / ~1/3 width)                                    -->
+<!-- ===================================================================== -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- 1. Statutory Attestation & Dual-Signoff Block -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md border border-[rgba(220,212,206,0.6)] shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)]">
+<div class="flex items-center justify-between mb-3 pb-2 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="draw">draw</span>
+<h3 class="font-headline-md text-[18px] text-primary">Dual-Signoff Attestation</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[10px] font-bold">2/2 SIGNED</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">
+              Cryptographic verification required to satisfy Federal High Court practice directives on Mareva asset injunctions.
+            </p>
+<div class="space-y-3">
+<!-- Signer 1: Lead MLRO -->
+<div class="p-3 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-surface-container-lowest shrink-0 text-[12px] font-bold">
+                  AB
+                </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-[14px] text-primary font-bold">Adewale Balogun</span>
+<span class="text-tertiary font-label-sm text-[11px] font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified">verified</span> Verified
+                    </span>
+</div>
+<div class="text-label-sm text-on-surface-variant">Lead MLRO &amp; Chief Investigator</div>
+<div class="mt-1 font-mono text-[10px] text-outline truncate">
+                    HASH: 0x82f1...c992d · 11:41:50 WAT
+                  </div>
+</div>
+</div>
+<!-- Signer 2: Legal Counsel -->
+<div class="p-3 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-surface-container-lowest shrink-0 text-[12px] font-bold">
+                  AC
+                </div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-[14px] text-primary font-bold">Adeola Cole, SAN</span>
+<span class="text-tertiary font-label-sm text-[11px] font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="key">key</span> YubiKey #8832
+                    </span>
+</div>
+<div class="text-label-sm text-on-surface-variant">Senior Legal Counsel (Financial Crimes)</div>
+<div class="mt-1 font-mono text-[10px] text-outline truncate">
+                    HASH: 0xe41b...a078f · 11:42:01 WAT
+                  </div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Automated Interbank Notification Broadcast Stream (Terminal Log) -->
+<div class="bg-primary-container rounded-xl p-space-md border border-primary/60 shadow-[0_12px_32px_-8px_rgba(22,43,40,0.22)] text-surface-bright flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-2 border-b border-primary/60 mb-3">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed animate-ping"></span>
+<span class="font-title-md text-[14px] text-surface-bright font-bold">Interbank Broadcast Stream</span>
+</div>
+<span class="font-mono text-[10px] text-on-primary-container">ISO-8583 / NIP</span>
+</div>
+<!-- Terminal Lines -->
+<div class="space-y-2 font-mono text-[11px] leading-relaxed">
+<div class="flex items-start gap-2">
+<span class="text-secondary-fixed shrink-0">[11:42:08.192]</span>
+<span class="text-surface-dim">GTBANK_NIP_GW: ACK 200 - Post-No-Debit flag activated on 0148920194.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-secondary-fixed shrink-0">[11:42:08.310]</span>
+<span class="text-surface-dim">KUDA_MFB: Settlement hook dispatched. Total balance ₦8.7M sequestered.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-secondary-fixed shrink-0">[11:42:08.490]</span>
+<span class="text-surface-dim">MONIEPOINT_CORE: PND Enforced. Inward routing queued for audit review.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-secondary-container shrink-0 font-bold">[11:42:08.980]</span>
+<span class="text-secondary-fixed font-medium">PALMPAY_CLEARING: In-flight transit detected. Auto-Lien applied at NIBSS clearing gateway.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-tertiary-fixed shrink-0 font-bold">[11:42:09.102]</span>
+<span class="text-tertiary-fixed">NIBSS_SWITCH_V4: Interbank routing freeze complete across 6 correspondent rails.</span>
+</div>
+</div>
+</div>
+<!-- Terminal Status Subtext -->
+<div class="mt-4 pt-3 border-t border-primary/60 flex items-center justify-between text-[11px] text-on-primary-container">
+<span>Telemetry: 100% Delivery</span>
+<span class="text-secondary-fixed flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="cloud_sync">cloud_sync</span>
+                Auto-Refreshing Live
+              </span>
+</div>
+</div>
+<!-- 3. Emergency Protocol Checklist (Campaign Gradient Style Card) -->
+<div class="bg-gradient-to-br from-[#FFF5F2] to-[#FEE5E0] rounded-xl p-space-md border border-secondary-fixed-dim/40 shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between mb-3 pb-2 border-b border-secondary/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="checklist">checklist</span>
+<h3 class="font-headline-md text-[18px] text-primary">Emergency Protocol Checklist</h3>
+</div>
+<span class="text-label-sm text-secondary font-bold">STAGE 1</span>
+</div>
+<div class="space-y-3">
+<!-- Step 1: PND Broadcast (Done) -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest/80 border border-secondary/10">
+<div class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-primary text-surface-container-lowest flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<div>
+<div class="font-title-md text-[13px] text-primary font-bold">Step 1: PND Broadcast</div>
+<div class="text-[10px] text-on-surface-variant">Multi-bank switch dispatch</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[10px] font-bold">DONE</span>
+</div>
+<!-- Step 2: Evidence Vault Sealing (Done) -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest/80 border border-secondary/10">
+<div class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full bg-primary text-surface-container-lowest flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</span>
+<div>
+<div class="font-title-md text-[13px] text-primary font-bold">Step 2: Evidence Vault Sealing</div>
+<div class="text-[10px] text-on-surface-variant">Immutable block hash locked</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-[10px] font-bold">DONE</span>
+</div>
+<!-- Step 3: Court Injunction Motion (Pending) -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest/80 border border-secondary/10">
+<div class="flex items-center gap-2.5">
+<span class="w-5 h-5 rounded-full border-2 border-secondary text-secondary flex items-center justify-center text-[11px] font-bold">
+                    3
+                  </span>
+<div>
+<div class="font-title-md text-[13px] text-primary font-bold">Step 3: Court Injunction Motion</div>
+<div class="text-[10px] text-secondary font-semibold">Ex-parte filing before 14:00 WAT</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-primary font-label-sm text-[10px] font-bold animate-pulse">PENDING</span>
+</div>
+</div>
+<!-- Expedite Motion Action Button -->
+<button class="w-full mt-4 py-2 px-3 rounded-full bg-primary hover:bg-primary-container text-surface-bright font-label-md text-label-md flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-symbols-outlined text-secondary-container text-[16px]" data-icon="forward_to_inbox">forward_to_inbox</span>
+<span>Transmit Legal Motion to High Court</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Inline Vanilla JS for Live Countdown and Micro-Interactions -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Countdown Timer Simulation (Statutory 60-minute window)
+      let secondsRemaining = 14 * 60 + 32; // 00:14:32
+      const timerElement = document.getElementById('countdown-timer');
+
+      if (timerElement) {
+        setInterval(() => {
+          if (secondsRemaining > 0) {
+            secondsRemaining--;
+            const mins = Math.floor(secondsRemaining / 60);
+            const secs = secondsRemaining % 60;
+            timerElement.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          }
+        }, 1000);
+      }
+    });
+  </script>
+</body></html>

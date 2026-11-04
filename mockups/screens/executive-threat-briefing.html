@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Executive Governance Suite - Executive Threat Briefing</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#1b1c1b",
+            "inverse-on-surface": "#f3f0ee",
+            "primary-fixed": "#cbe8e4",
+            "on-secondary": "#ffffff",
+            "surface": "#fcf9f7",
+            "surface-bright": "#fcf9f7",
+            "surface-container-highest": "#e5e2e0",
+            "on-error": "#ffffff",
+            "tertiary": "#002419",
+            "secondary": "#735854",
+            "surface-container": "#f0edeb",
+            "surface-dim": "#dcd9d8",
+            "on-tertiary": "#ffffff",
+            "on-surface-variant": "#414847",
+            "outline-variant": "#c1c8c6",
+            "secondary-fixed-dim": "#e1bfb9",
+            "background": "#fcf9f7",
+            "on-primary": "#ffffff",
+            "inverse-primary": "#b0ccc8",
+            "tertiary-fixed": "#c4ebd9",
+            "error": "#ba1a1a",
+            "outline": "#727877",
+            "on-secondary-container": "#795e59",
+            "surface-container-low": "#f6f3f1",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "on-secondary-fixed": "#2a1713",
+            "inverse-surface": "#30302f",
+            "primary-container": "#1e3835",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed": "#ffdad4",
+            "on-tertiary-fixed": "#002116",
+            "on-primary-container": "#86a19d",
+            "surface-tint": "#496360",
+            "on-background": "#1b1c1b",
+            "on-primary-fixed": "#04201d",
+            "on-primary-fixed-variant": "#314c48",
+            "tertiary-container": "#163a2d",
+            "primary-fixed-dim": "#b0ccc8",
+            "on-tertiary-container": "#7fa494",
+            "on-error-container": "#93000a",
+            "primary": "#072320",
+            "surface-container-high": "#eae8e6",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#59413d",
+            "surface-variant": "#e5e2e0",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "secondary-container": "#ffdad4"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.75rem",
+            "space-xl": "2.5rem",
+            "space-lg": "1.75rem",
+            "margin-mobile": "1rem",
+            "space-xs": "0.375rem",
+            "margin": "2rem",
+            "space-md": "1.25rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "headline-xl": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "label-md": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(220, 212, 206, 0.2);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(30, 56, 53, 0.2);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-secondary-fixed selection:text-primary">
+<!-- ========================================================================= -->
+<!-- 1. SHARED COMPONENT: SideNavBar (Botanical Executive Inverted Evergreen) -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col z-40 bg-primary-container shadow-xl border-r border-outline-variant/20 select-none">
+<div class="w-64 h-full flex flex-col justify-between p-4 bg-primary-container">
+<!-- Top Brand Header Block -->
+<div class="space-y-6">
+<div class="flex items-center gap-3 px-2 pt-2">
+<!-- Sovereign Seal Emblem -->
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center border border-outline-variant/30 text-secondary-fixed shadow-inner">
+<span class="material-symbols-outlined text-title-lg">shield_with_heart</span>
+</div>
+<div>
+<span class="text-headline-md font-headline-md font-semibold text-surface tracking-tight block leading-tight">EFIMS Executive</span>
+<span class="text-label-sm font-label-sm text-on-primary-container tracking-wider uppercase">Board &amp; Risk Orchestration</span>
+</div>
+</div>
+<div class="h-px bg-outline-variant/15 w-full"></div>
+<!-- Navigation Tabs Cluster -->
+<nav aria-label="Primary Navigation" class="space-y-1.5">
+<!-- ACTIVE: Executive Briefing -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full bg-secondary-fixed text-primary font-semibold shadow-sm transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-primary text-title-md" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-label-md font-label-md font-semibold">Executive Briefing</span>
+</a>
+<!-- Loss & Recovery -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150 transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-surface/70 text-title-md">account_balance</span>
+<span class="text-label-md font-label-md">Loss &amp; Recovery</span>
+</a>
+<!-- Board Governance -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150 transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-surface/70 text-title-md">assignment_turned_in</span>
+<span class="text-label-md font-label-md">Board Governance</span>
+</a>
+<!-- Regulatory Scorecard -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150 transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-surface/70 text-title-md">policy</span>
+<span class="text-label-md font-label-md">Regulatory Scorecard</span>
+</a>
+</nav>
+</div>
+<!-- Center Botanical Cardlet -->
+<div class="my-4 p-3.5 rounded-xl bg-tertiary-container/60 border border-outline-variant/15 text-surface">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-ping"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed -ml-3.5"></span>
+<span class="text-label-sm font-label-sm text-tertiary-fixed uppercase font-semibold">Sovereign Link</span>
+</div>
+<span class="text-label-sm font-label-sm text-surface/80">99.98%</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-primary-container leading-relaxed">
+          NIBSS, RTGS &amp; Core HSM channels synchronized under Zero-Trust HSM.
+        </p>
+</div>
+<!-- Footer Anchor Block -->
+<div class="space-y-3 pt-2">
+<!-- CTA: Generate Board Pack -->
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-secondary-fixed text-primary text-label-md font-label-md font-bold shadow-md hover:bg-secondary-fixed-dim transition-all duration-200 active:scale-[0.98]">
+<span class="material-symbols-outlined text-base">picture_as_pdf</span>
+<span>Generate Board Pack</span>
+</button>
+<div class="h-px bg-outline-variant/15 w-full"></div>
+<!-- Footer Utilities -->
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-surface/60 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-title-md">history</span>
+<span class="text-label-md font-label-md">Audit Trail</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-surface/60 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-title-md">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</div>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- 2. SHARED COMPONENT: TopNavBar (Desktop Executive Header)                -->
+<!-- ========================================================================= -->
+<header class="sticky top-0 right-0 z-30 w-full pl-64 bg-surface border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-8 py-3.5 w-full bg-surface">
+<!-- Left: Breadcrumb / Identity & Universal Search -->
+<div class="flex items-center gap-6 flex-1 max-w-2xl">
+<div class="hidden lg:flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+<span class="text-primary font-bold">EFIMS Executive</span>
+<span class="text-outline-variant">/</span>
+<span>Threat Posture &amp; Analytics</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-bold bg-surface-container px-2 py-0.5 rounded-full">Q4 Briefing</span>
+</div>
+<!-- Search Bar -->
+<div class="relative w-full max-w-xs xl:max-w-md">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-title-md pointer-events-none">search</span>
+<input class="w-full pl-10 pr-4 py-2 text-body-md font-body-md bg-surface-container-low border border-outline-variant/30 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-outline" placeholder="Search case dockets, loss amounts, regulators..." type="text"/>
+</div>
+</div>
+<!-- Right: Trailing Actions & Director Persona -->
+<div class="flex items-center gap-3">
+<!-- Quick Action: Emergency Alert (Secondary) -->
+<button class="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-error/30 text-error bg-error-container/40 hover:bg-error-container text-label-md font-label-md font-semibold transition-all duration-150">
+<span class="material-symbols-outlined text-base">emergency</span>
+<span>Emergency Alert</span>
+</button>
+<!-- Quick Action: Export Dossier (Primary) -->
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-container text-on-primary hover:bg-primary text-label-md font-label-md font-semibold shadow-sm transition-all duration-150 active:scale-[0.98]">
+<span class="material-symbols-outlined text-base text-secondary-fixed">download</span>
+<span>Export Dossier</span>
+</button>
+<!-- Icon Actions Cluster -->
+<div class="flex items-center border-l border-outline-variant/40 pl-3 ml-1 gap-1">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-title-md">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors" title="HSM Shield Status">
+<span class="material-symbols-outlined text-title-md">shield</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors" title="Executive Helpdesk">
+<span class="material-symbols-outlined text-title-md">help</span>
+</button>
+</div>
+<!-- Director Avatar Tile -->
+<div class="flex items-center gap-3 pl-2 border-l border-outline-variant/40">
+<img alt="Executive Board Director Profile Portrait" class="w-9 h-9 rounded-full object-cover border border-outline-variant" data-alt="Distinguished executive board risk liaison portrait, African male in tailored charcoal suit with crisp white collar, warm ambient architectural lighting, dignified boardroom backdrop in soft focus, editorial magazine style with high fidelity skin tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeGtQFhE3Iwl-7zgrlrMM88sgaJqM52N67_4fF7cnx0DmFVo_iDR0QoKGdI5x7NOdgRqqSC4dECvJ9rNY0ZMEHyC7s6eoRxpYd2efVhbZ3ewmKvjuEMnsodL40J7qHTxX4dhDu2GdsA_AbQtvb8ABOwLTouT9S9oEul-spFjECEX9cmWq7s67tWKCDfwHvvwN0Z9-st4bHlWuQUheItdyMCYPOTsX4zPyIBTVlj-2sF_7FQ8I6Rv0Msw"/>
+<div class="hidden 2xl:block text-left">
+<span class="text-label-md font-label-md text-on-surface font-bold block leading-tight">Cpt. K. Sterling</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant block">Board Risk Liaison</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- 3. MAIN COCKPIT WORKBENCH (Data-Dense Executive Area)                     -->
+<!-- ========================================================================= -->
+<main class="flex-1 pl-64 pb-12 overflow-x-hidden">
+<div class="px-8 py-6 space-y-6 max-w-7xl mx-auto">
+<!-- Page Header: Strategic Title & Filter Controls -->
+<section class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-2 border-b border-outline-variant/20">
+<div>
+<div class="flex items-center gap-2 mb-1.5">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-primary text-label-sm font-label-sm font-bold tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              QUORUM CERTIFIED
+            </span>
+<span class="text-label-sm font-label-sm text-outline">Batch 9 • Screen 1 of 4</span>
+</div>
+<h1 class="text-headline-lg font-headline-lg text-primary tracking-tight">Executive Threat Briefing &amp; Master Analytics</h1>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-3xl mt-1">
+            Consolidated financial crime posture, systemic risk vectors, and multi-rail incident telemetry for C-Suite &amp; Board Risk Committee review.
+          </p>
+</div>
+<!-- Controls: Timeframe Pills & Attestation Action -->
+<div class="flex flex-wrap items-center gap-3">
+<!-- Timeframe Segmented Control -->
+<div class="inline-flex p-1 rounded-full bg-surface-container border border-outline-variant/40 text-label-sm font-label-sm">
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-colors">Last 24 Hours</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-colors">Last 7 Days</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface transition-colors">Q4 2024 to Date</button>
+<button class="px-3 py-1 rounded-full bg-primary-container text-surface font-semibold shadow-xs">Full Fiscal Year</button>
+</div>
+<!-- Board Attest Trigger -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-primary/20 bg-surface-container-lowest hover:bg-surface-container text-primary font-label-md text-label-md font-semibold transition-all">
+<span class="material-symbols-outlined text-base text-tertiary">verified_user</span>
+<span>Attest Risk Position</span>
+</button>
+</div>
+</section>
+<!-- 4 Headline KPI Metric Cards (Bento Style with Botanical Warmth) -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Metric 1: Net Disputed Defalcation (Hero Spruce Card) -->
+<div class="rounded-xl p-5 bg-primary-container text-surface shadow-md relative overflow-hidden flex flex-col justify-between border border-outline-variant/20">
+<div class="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-secondary-fixed/10 pointer-events-none blur-xl"></div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm text-secondary-fixed font-bold uppercase tracking-wider">Defalcation Telemetry</span>
+<span class="material-symbols-outlined text-secondary-fixed text-title-md">account_balance_wallet</span>
+</div>
+<h3 class="text-headline-md font-headline-md font-semibold text-surface">₦45,000,000</h3>
+<span class="text-body-sm font-body-sm text-surface/70">Gross Exposure Triaged</span>
+</div>
+<div class="mt-4 pt-3 border-t border-surface/10 space-y-2">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-surface/80">Preserved in Escrow:</span>
+<span class="font-bold text-secondary-fixed">₦38.2M (84.9%)</span>
+</div>
+<div class="w-full bg-surface/15 rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary-fixed h-full rounded-full" style="width: 84.9%"></div>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm text-surface/60 pt-0.5">
+<span>Net Residue: ₦6.8M</span>
+<span class="text-tertiary-fixed font-medium">+4.2% preservation</span>
+</div>
+</div>
+</div>
+<!-- Metric 2: S1/S2 Severe Incidents -->
+<div class="rounded-xl p-5 bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:border-outline-variant transition-colors">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Critical Threat Queue</span>
+<span class="p-1 rounded bg-error-container text-error material-symbols-outlined text-base">crisis_alert</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h3 class="text-kpi-metric font-kpi-metric text-on-surface">4</h3>
+<span class="text-label-md font-label-md text-error font-bold">Active S1/S2</span>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant">0 Breached SLA (100% In-Grace)</span>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-outline block">Mean Resolution</span>
+<span class="text-title-md font-title-md text-primary font-bold">18.4 hrs</span>
+</div>
+<span class="inline-flex items-center gap-0.5 text-label-sm font-label-sm font-bold text-tertiary bg-tertiary-fixed/40 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-xs">arrow_downward</span>
+              -17.8h vs Q3
+            </span>
+</div>
+</div>
+<!-- Metric 3: Enterprise SLA Compliance -->
+<div class="rounded-xl p-5 bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:border-outline-variant transition-colors">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Orchestration Index</span>
+<span class="p-1 rounded bg-surface-container text-primary material-symbols-outlined text-base">timer</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h3 class="text-kpi-metric font-kpi-metric text-on-surface">98.4%</h3>
+<span class="text-label-sm font-label-sm text-outline">Floor: 95.0%</span>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant">142 total telemetry alerts triaged</span>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Statutory Disclosures:</span>
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-bold text-tertiary">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+              Zero Defaults
+            </span>
+</div>
+</div>
+<!-- Metric 4: Composite Regulatory Posture -->
+<div class="rounded-xl p-5 bg-surface-container-lowest border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:border-outline-variant transition-colors">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Regulatory Posture</span>
+<span class="p-1 rounded bg-secondary-fixed/50 text-secondary material-symbols-outlined text-base">gavel</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h3 class="text-kpi-metric font-kpi-metric text-on-surface">98.6%</h3>
+<span class="text-label-sm font-label-sm font-semibold text-tertiary bg-tertiary-fixed/30 px-1.5 py-0.5 rounded">Tier 1 Rating</span>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant">CBN, NFIU, SEC Combined Flawless Index</span>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 grid grid-cols-3 gap-1 text-center">
+<div class="p-1 rounded bg-surface-container-low">
+<span class="text-label-sm font-label-sm font-bold text-primary block">CBN</span>
+<span class="text-label-sm font-label-sm text-tertiary font-semibold">Clean</span>
+</div>
+<div class="p-1 rounded bg-surface-container-low">
+<span class="text-label-sm font-label-sm font-bold text-primary block">NFIU</span>
+<span class="text-label-sm font-label-sm text-tertiary font-semibold">100%</span>
+</div>
+<div class="p-1 rounded bg-surface-container-low">
+<span class="text-label-sm font-label-sm font-bold text-primary block">SEC</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant font-semibold">Remed.</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Two-Column Middle Analytics Cockpit (7/12 vs 5/12 Grid) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Primary Telemetry Visuals (7 Cols) -->
+<div class="lg:col-span-7 space-y-6">
+<!-- Card: Attack Severity Distribution Over Time -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+<div>
+<h2 class="text-title-lg font-title-lg text-primary">Incidents &amp; Attacks by Severity Over Time</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Q4 weekly telemetry distribution across core financial settlement rails</p>
+</div>
+<!-- Visual Legend -->
+<div class="flex items-center gap-3 text-label-sm font-label-sm">
+<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-error"></span>S1 Critical</span>
+<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>S2 High</span>
+<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-outline"></span>S3 Med</span>
+<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-surface-container-highest"></span>S4 Low</span>
+</div>
+</div>
+<!-- Custom Data Stacked Visualization -->
+<div class="space-y-3">
+<!-- Timeline Bars -->
+<div class="grid grid-cols-6 gap-3 items-end h-44 pb-2 border-b border-outline-variant/20 pt-4">
+<!-- Oct W1 -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden">
+<div class="h-3 bg-surface-container-highest w-full" title="S4: 3"></div>
+<div class="h-5 bg-outline w-full" title="S3: 5"></div>
+<div class="h-6 bg-secondary w-full" title="S2: 6"></div>
+<div class="h-4 bg-error w-full" title="S1: 4"></div>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Oct W1</span>
+</div>
+<!-- Oct W2 -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden">
+<div class="h-2 bg-surface-container-highest w-full"></div>
+<div class="h-4 bg-outline w-full"></div>
+<div class="h-8 bg-secondary w-full"></div>
+<div class="h-3 bg-error w-full"></div>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Oct W2</span>
+</div>
+<!-- Oct W3 -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden">
+<div class="h-4 bg-surface-container-highest w-full"></div>
+<div class="h-7 bg-outline w-full"></div>
+<div class="h-10 bg-secondary w-full"></div>
+<div class="h-6 bg-error w-full"></div>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Oct W3</span>
+</div>
+<!-- Oct W4 (Spike Event - Highlighted) -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end relative group">
+<div class="absolute -top-7 px-2 py-0.5 rounded bg-error text-surface text-label-sm font-bold tracking-tight shadow-sm whitespace-nowrap">
+                    ₦45M Ingress Spike
+                  </div>
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden ring-2 ring-error/40">
+<div class="h-6 bg-surface-container-highest w-full"></div>
+<div class="h-10 bg-outline w-full"></div>
+<div class="h-14 bg-secondary w-full"></div>
+<div class="h-16 bg-error w-full"></div>
+</div>
+<span class="text-label-sm font-label-sm text-error font-bold">Oct W4</span>
+</div>
+<!-- Nov W1 -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden">
+<div class="h-3 bg-surface-container-highest w-full"></div>
+<div class="h-5 bg-outline w-full"></div>
+<div class="h-6 bg-secondary w-full"></div>
+<div class="h-3 bg-error w-full"></div>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Nov W1</span>
+</div>
+<!-- Nov W2 (Current) -->
+<div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+<div class="w-full max-w-[42px] flex flex-col gap-0.5 rounded-t overflow-hidden">
+<div class="h-2 bg-surface-container-highest w-full"></div>
+<div class="h-3 bg-outline w-full"></div>
+<div class="h-4 bg-secondary w-full"></div>
+<div class="h-2 bg-error w-full"></div>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-bold">Nov W2</span>
+</div>
+</div>
+</div>
+<!-- Incident Category Distribution Badges -->
+<div class="mt-4 pt-2">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider block mb-2 font-semibold">Primary Attack Topography</span>
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed text-primary text-label-sm font-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Clearing Rail Hijack (34%)
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface text-label-sm font-label-sm">
+                  Synthetic Identity Rings (28%)
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface text-label-sm font-label-sm">
+                  Corporate Smurfing (22%)
+                </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface text-label-sm font-label-sm">
+                  Dormant Takeover (16%)
+                </span>
+</div>
+</div>
+</div>
+<!-- Card: Executive Risk Sentiment & Threat Horizon Matrix -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="text-title-lg font-title-lg text-primary">Executive Risk Horizon Matrix</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Continuous cross-vector risk grading by AI Surveillance Engine</p>
+</div>
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm text-primary bg-primary-fixed/40 px-2.5 py-1 rounded-full font-bold">
+<span class="material-symbols-outlined text-xs">radar</span>
+                Active Sweep
+              </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<!-- Vector 1 -->
+<div class="p-3.5 rounded-lg border border-outline-variant/30 bg-surface flex items-start gap-3">
+<div class="p-2 rounded-md bg-secondary-fixed text-secondary mt-0.5">
+<span class="material-symbols-outlined text-title-md">swap_horiz</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-title-md font-title-md text-primary font-semibold truncate">Interbank Ingress</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-bold">Medium</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">NIP clearing queue latency buffered via Redis sentinel fallback.</p>
+</div>
+</div>
+<!-- Vector 2 -->
+<div class="p-3.5 rounded-lg border border-error/20 bg-error-container/20 flex items-start gap-3">
+<div class="p-2 rounded-md bg-error-container text-error mt-0.5">
+<span class="material-symbols-outlined text-title-md">account_balance</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-title-md font-title-md text-primary font-semibold truncate">Neo-Bank Settlement</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-error text-surface font-bold">Elevated</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">T+0 synthetic settlement lag exploited by second-tier fintechs.</p>
+</div>
+</div>
+<!-- Vector 3 -->
+<div class="p-3.5 rounded-lg border border-outline-variant/30 bg-surface flex items-start gap-3">
+<div class="p-2 rounded-md bg-surface-container-high text-on-surface-variant mt-0.5">
+<span class="material-symbols-outlined text-title-md">currency_exchange</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-title-md font-title-md text-primary font-semibold truncate">Crypto P2P Spillover</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-tertiary-fixed/60 text-tertiary font-bold">Controlled</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Heuristic tagging identifies 99.1% of pseudo-personal escrow sweeps.</p>
+</div>
+</div>
+<!-- Vector 4 -->
+<div class="p-3.5 rounded-lg border border-outline-variant/30 bg-surface flex items-start gap-3">
+<div class="p-2 rounded-md bg-tertiary-fixed text-tertiary mt-0.5">
+<span class="material-symbols-outlined text-title-md">lock</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-title-md font-title-md text-primary font-semibold truncate">Internal Privilege</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-tertiary-fixed text-tertiary font-bold">Low (HSM)</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Dual-custody hardware key rotation active across clearing pods.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Governance Sign-offs & Narrative (5 Cols) -->
+<div class="lg:col-span-5 space-y-6">
+<!-- Card: Executive Action Items Awaiting Sign-off -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h2 class="text-title-lg font-title-lg text-primary">Executive Action Items</h2>
+</div>
+<span class="text-label-sm font-label-sm font-bold text-outline uppercase tracking-wider">3 Pending Board Review</span>
+</div>
+<div class="space-y-3">
+<!-- Item 1 -->
+<div class="p-4 rounded-xl bg-surface border border-outline-variant/30 hover:border-outline-variant transition-all">
+<div class="flex items-start justify-between gap-2">
+<div>
+<span class="inline-block px-2 py-0.5 rounded bg-error-container text-error text-label-sm font-label-sm font-bold mb-1">Due in 4h 12m</span>
+<h4 class="text-title-md font-title-md text-primary font-semibold leading-tight">CBN Circular S1 Formal Response Sign-off</h4>
+</div>
+<span class="material-symbols-outlined text-outline">pending_actions</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1.5">
+                  Signatories Required: Chief CRO, MLRO. Dossier exhibits 1-4 pre-validated.
+                </p>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<span class="text-label-sm font-label-sm text-outline">Mandatory Statutory</span>
+<button class="px-3.5 py-1.5 rounded-full bg-primary-container hover:bg-primary text-surface text-label-sm font-label-sm font-semibold transition-all">
+                    Review &amp; Sign
+                  </button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-4 rounded-xl bg-surface border border-outline-variant/30 hover:border-outline-variant transition-all">
+<div class="flex items-start justify-between gap-2">
+<div>
+<span class="inline-block px-2 py-0.5 rounded bg-secondary-fixed text-primary text-label-sm font-label-sm font-bold mb-1">Settlement Interlock</span>
+<h4 class="text-title-md font-title-md text-primary font-semibold leading-tight">₦22.5M Interbank Escrow Sweep Authorization</h4>
+</div>
+<span class="material-symbols-outlined text-outline">lock_clock</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1.5">
+                  Target: NIBSS Central Clearing. Release frozen syndicate inflow into recovery pool.
+                </p>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<span class="text-label-sm font-label-sm text-outline">Dual Token Quorum</span>
+<button class="px-3.5 py-1.5 rounded-full bg-secondary-fixed hover:bg-secondary-fixed-dim text-primary text-label-sm font-label-sm font-bold transition-all">
+                    Authorize Sweep
+                  </button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-4 rounded-xl bg-surface border border-outline-variant/30 hover:border-outline-variant transition-all">
+<div class="flex items-start justify-between gap-2">
+<div>
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm font-bold mb-1">Litigation Asset</span>
+<h4 class="text-title-md font-title-md text-primary font-semibold leading-tight">Statutory Section 84 Court Affidavit Release</h4>
+</div>
+<span class="material-symbols-outlined text-outline">description</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1.5">
+                  Jurisdiction: Federal High Court. Status: Ready for Sovereign Seal cryptographic signing.
+                </p>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<span class="text-label-sm font-label-sm text-tertiary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">check</span>
+                    Ready for Seal
+                  </span>
+<button class="px-3.5 py-1.5 rounded-full border border-primary/30 hover:bg-surface-container text-primary text-label-sm font-label-sm font-semibold transition-all">
+                    Examine Docket
+                  </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Executive Summary Narrative (Automated Synthesis Editorial) -->
+<div class="p-6 rounded-xl bg-gradient-to-br from-[#FFF5F2] to-[#FEE5E0] border border-secondary-fixed/50 shadow-sm relative overflow-hidden">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-secondary text-title-md">auto_awesome</span>
+<span class="text-label-sm font-label-sm text-secondary font-bold uppercase tracking-wider">Automated Executive Synthesis</span>
+</div>
+<div class="relative pl-6">
+<span class="font-headline-xl text-secondary/30 text-5xl absolute -top-4 left-0 leading-none select-none">"</span>
+<p class="font-headline-md italic text-primary leading-relaxed text-body-lg">
+                During Q4 2024, containment response times improved by 48.2% across NIBSS clearing rails, preserving ₦38.2M of an attempted ₦45M syndicate defalcation with zero secondary ledger dissipation.
+              </p>
+</div>
+<div class="mt-4 pt-3 border-t border-secondary-fixed/40 flex items-center justify-between text-body-sm font-body-sm text-secondary">
+<span>EFIMS Neural Ingress Kernel v4.8</span>
+<span class="font-semibold">Confidence: 99.4%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- Bottom Section: High-Impact Incident Ledger (Board Visibility Tier)       -->
+<!-- ========================================================================= -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden">
+<!-- Table Control Header -->
+<div class="px-6 py-4 border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="text-title-lg font-title-lg text-primary">High-Impact Incident Ledger</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-label-sm font-label-sm font-bold">Board Visibility Tier</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Live cross-institutional audit log with immutable hash chains</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant text-label-sm font-label-sm transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+              Filter Columns
+            </button>
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container text-primary hover:bg-surface-container-high text-label-sm font-label-sm font-semibold transition-colors">
+<span class="material-symbols-outlined text-sm">table_view</span>
+              Full Ledger View
+            </button>
+</div>
+</div>
+<!-- Data Dense Table -->
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/20 text-label-sm font-label-sm text-outline uppercase tracking-wider">
+<th class="py-3 px-4 font-semibold">Incident Ref</th>
+<th class="py-3 px-4 font-semibold">Classification</th>
+<th class="py-3 px-4 font-semibold">Severity</th>
+<th class="py-3 px-4 font-semibold text-right">Gross Exposure</th>
+<th class="py-3 px-4 font-semibold text-right">Preserved / Recovered</th>
+<th class="py-3 px-4 font-semibold">Primary Rail</th>
+<th class="py-3 px-4 font-semibold">Lead Dept</th>
+<th class="py-3 px-4 font-semibold">Board Status</th>
+<th class="py-3 px-4 font-semibold text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/15 text-body-md font-body-md text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-4 font-semibold text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>INC-2024-8821</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-medium text-on-surface">Clearing Ingress &amp; Rapid Dispersion</span>
+<span class="block text-label-sm font-label-sm text-outline">Multi-account hop pattern</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error text-surface text-label-sm font-label-sm font-bold">
+                    S1 Critical
+                  </span>
+</td>
+<td class="py-3 px-4 text-right font-bold text-primary font-kpi-metric text-body-lg">
+                  ₦45,000,000
+                </td>
+<td class="py-3 px-4 text-right font-medium text-tertiary">
+                  ₦38,200,000 <span class="text-label-sm text-outline">(84.9%)</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container font-medium text-label-sm">NIBSS NIP</span>
+</td>
+<td class="py-3 px-4 text-on-surface-variant text-body-sm">
+                  AML / Forensic Ops
+                </td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-bold text-error">
+<span class="material-symbols-outlined text-xs">gavel</span>
+                    High Court Injunction
+                  </span>
+</td>
+<td class="py-3 px-4 text-center">
+<button class="p-1 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-colors" title="View Docket">
+<span class="material-symbols-outlined text-title-md">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-4 font-semibold text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>INC-2024-7914</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-medium text-on-surface">Synthetic BVN Batch Creation</span>
+<span class="block text-label-sm font-label-sm text-outline">Algorithmic identity forgery</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary text-surface text-label-sm font-label-sm font-bold">
+                    S2 High
+                  </span>
+</td>
+<td class="py-3 px-4 text-right font-bold text-primary">
+                  ₦18,400,000
+                </td>
+<td class="py-3 px-4 text-right font-medium text-tertiary">
+                  ₦18,400,000 <span class="text-label-sm text-tertiary">(100%)</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container font-medium text-label-sm">Core Banking API</span>
+</td>
+<td class="py-3 px-4 text-on-surface-variant text-body-sm">
+                  Fraud Analytics
+                </td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-bold text-tertiary">
+<span class="material-symbols-outlined text-xs">verified</span>
+                    Remediated &amp; Filed
+                  </span>
+</td>
+<td class="py-3 px-4 text-center">
+<button class="p-1 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-colors" title="View Docket">
+<span class="material-symbols-outlined text-title-md">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-4 font-semibold text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>INC-2024-7540</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-medium text-on-surface">Dormant Commercial Egress</span>
+<span class="block text-label-sm font-label-sm text-outline">Reactivated dormant corporate ledger</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary text-surface text-label-sm font-label-sm font-bold">
+                    S2 High
+                  </span>
+</td>
+<td class="py-3 px-4 text-right font-bold text-primary">
+                  ₦12,800,000
+                </td>
+<td class="py-3 px-4 text-right font-medium text-tertiary">
+                  ₦10,500,000 <span class="text-label-sm text-outline">(82.0%)</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container font-medium text-label-sm">RTGS Wire</span>
+</td>
+<td class="py-3 px-4 text-on-surface-variant text-body-sm">
+                  Corporate Compliance
+                </td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-bold text-secondary">
+<span class="material-symbols-outlined text-xs">hourglass_top</span>
+                    In Recovery Escrow
+                  </span>
+</td>
+<td class="py-3 px-4 text-center">
+<button class="p-1 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-colors" title="View Docket">
+<span class="material-symbols-outlined text-title-md">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3 px-4 font-semibold text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span>INC-2024-6902</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-medium text-on-surface">Ingress TLS Latency Flap</span>
+<span class="block text-label-sm font-label-sm text-outline">Transient handshake packet degradation</span>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface text-label-sm font-label-sm font-bold">
+                    S3 Medium
+                  </span>
+</td>
+<td class="py-3 px-4 text-right font-bold text-on-surface-variant">
+                  ₦0.00
+                </td>
+<td class="py-3 px-4 text-right text-outline text-body-sm">
+                  N/A (Technical)
+                </td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-0.5 rounded bg-surface-container font-medium text-label-sm">Ingress Switch</span>
+</td>
+<td class="py-3 px-4 text-on-surface-variant text-body-sm">
+                  InfoSec &amp; Cyber
+                </td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-semibold text-outline">
+<span class="material-symbols-outlined text-xs">lock</span>
+                    Closed
+                  </span>
+</td>
+<td class="py-3 px-4 text-center">
+<button class="p-1 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-colors" title="View Docket">
+<span class="material-symbols-outlined text-title-md">chevron_right</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Ledger Footer Summary Pagination -->
+<div class="px-6 py-3 bg-surface-container-low border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between text-body-sm font-body-sm text-on-surface-variant gap-2">
+<span>Showing 4 high-severity incidents triaged in current governance cycle</span>
+<div class="flex items-center gap-2 text-label-sm font-label-sm">
+<span class="text-outline">Immutable Ledgers Verified: 142 total</span>
+<span class="text-outline-variant">|</span>
+<a class="text-primary font-bold hover:underline" href="#">Download Audit Manifest (SHA-256)</a>
+</div>
+</div>
+</section>
+<!-- Sovereign Compliance Seal Strip -->
+<footer class="pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-label-sm font-label-sm text-outline">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-base">verified</span>
+<span class="text-on-surface-variant font-medium">Cryptographic Attestation Seal Active</span>
+<span class="text-outline-variant">•</span>
+<span>ISO 27001 / ISO 27037 Digital Forensics Compliant</span>
+</div>
+<div class="flex items-center gap-3">
+<span>EFIMS Sovereign Engine v8.4.12</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Session Quorum ID: 0x9F4C..3E11</span>
+</div>
+</footer>
+</div>
+</main>
+<script>
+    // Lightweight interactive feedback for executive presentation mode
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('EFIMS Executive Cockpit Initialized. Quorum Verified.');
+    });
+  </script>
+</body></html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Sentinel - Law Enforcement Liaison &amp; Warrant Tracking</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-primary": "#b0ccc8",
+            "on-primary-container": "#86a19d",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-surface": "#1b1c1b",
+            "primary-container": "#1e3835",
+            "primary-fixed": "#cbe8e4",
+            "outline-variant": "#c1c8c6",
+            "on-tertiary-fixed": "#002116",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "surface-bright": "#fcf9f7",
+            "secondary-fixed": "#ffdad4",
+            "on-secondary": "#ffffff",
+            "surface-dim": "#dcd9d8",
+            "surface-container-low": "#f6f3f1",
+            "on-tertiary-container": "#7fa494",
+            "primary": "#072320",
+            "on-error-container": "#93000a",
+            "error": "#ba1a1a",
+            "inverse-surface": "#30302f",
+            "tertiary-fixed": "#c4ebd9",
+            "tertiary-container": "#163a2d",
+            "on-error": "#ffffff",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-background": "#1b1c1b",
+            "surface-container-high": "#eae8e6",
+            "on-tertiary": "#ffffff",
+            "outline": "#727877",
+            "surface-tint": "#496360",
+            "secondary": "#735854",
+            "primary-fixed-dim": "#b0ccc8",
+            "background": "#fcf9f7",
+            "on-primary-fixed-variant": "#314c48",
+            "secondary-fixed-dim": "#e1bfb9",
+            "surface": "#fcf9f7",
+            "on-surface-variant": "#414847",
+            "inverse-on-surface": "#f3f0ee",
+            "on-primary": "#ffffff",
+            "surface-container-highest": "#e5e2e0",
+            "on-primary-fixed": "#04201d",
+            "surface-variant": "#e5e2e0",
+            "secondary-container": "#ffdad4",
+            "on-secondary-fixed": "#2a1713",
+            "tertiary": "#002419",
+            "error-container": "#ffdad6",
+            "surface-container": "#f0edeb"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.75rem",
+            "space-xs": "0.375rem",
+            "space-md": "1.25rem",
+            "space-xl": "2.5rem",
+            "margin-mobile": "1rem",
+            "gutter": "1.25rem",
+            "margin": "2rem",
+            "space-lg": "1.75rem",
+            "gutter-mobile": "0.75rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Playfair Display"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(114, 120, 119, 0.25);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex antialiased selection:bg-secondary-container selection:text-primary">
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between bg-primary-container text-secondary-fixed border-r border-outline/20 shadow-2xl z-40 select-none px-space-md py-space-lg">
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3 px-1">
+<div class="w-10 h-10 rounded-full bg-tertiary-container border border-outline/20 flex items-center justify-center text-secondary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[22px]" data-icon="policy">policy</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-surface-container-lowest tracking-tight">EFIMS Sentinel</span>
+<span class="font-label-sm text-label-sm text-on-primary-container tracking-wider uppercase">Regulatory Crime Console</span>
+</div>
+</div>
+<nav class="flex flex-col gap-1.5 mt-2">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="security">security</span>
+<span>Incident Cockpit</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-container text-primary font-title-md text-title-md transition-all shadow-sm active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock_reset" style="font-variation-settings: 'FILL' 1;">lock_reset</span>
+<span class="font-bold">Containment &amp; Recovery</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="hub">hub</span>
+<span>Intelligence Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="gavel">gavel</span>
+<span>Regulatory Reporting</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-surface-dim hover:text-surface-container-lowest hover:bg-surface-container-highest/10 transition-colors font-body-md text-body-md active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="policy">policy</span>
+<span>Audit &amp; Forensics</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-4">
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-error text-on-error font-title-md text-title-md shadow-md hover:bg-error/90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="bolt">bolt</span>
+<span>Execute Kill-Switch</span>
+</button>
+<div class="p-3.5 rounded-xl bg-tertiary-container/40 border border-outline-variant/10 text-on-tertiary-container flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest/10 flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]" data-icon="shield_with_house">shield_with_house</span>
+</div>
+<div class="flex flex-col text-left">
+<span class="font-label-sm text-label-sm font-semibold text-surface-container-lowest">FIU Enclave Tier-4</span>
+<span class="font-body-sm text-body-sm text-on-primary-container text-[10px]">Secured Inter-Agency Node</span>
+</div>
+</div>
+<div class="pt-2 border-t border-outline/20 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-surface-dim hover:text-surface-container-lowest font-body-sm text-body-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="shield_person">shield_person</span>
+<span>Statutory MLAT</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-surface-dim hover:text-surface-container-lowest font-body-sm text-body-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="terminal">terminal</span>
+<span>System Logs</span>
+</a>
+</div>
+</div>
+</aside>
+<div class="flex-1 min-w-0 pl-64 flex flex-col bg-surface">
+<header class="sticky top-0 z-30 w-full bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 px-space-lg py-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>Containment &amp; Recovery</span>
+<span class="material-symbols-outlined text-[12px]" data-icon="chevron_right">chevron_right</span>
+<span>Statutory Liaison</span>
+<span class="material-symbols-outlined text-[12px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-semibold">Law Enforcement &amp; Warrant Tracking</span>
+</div>
+<span class="font-title-lg text-title-lg text-primary tracking-tight mt-0.5">EFIMS / Containment &amp; Asset Recovery</span>
+</div>
+<nav class="hidden xl:flex items-center gap-5 ml-4">
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors py-1" href="#">PND Console</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors py-1" href="#">Gateway Kill-Switch</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors py-1" href="#">Mareva Orders</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors py-1" href="#">Ledger Recovery</a>
+<a class="text-primary font-title-md border-b-2 border-secondary pb-1 font-semibold" href="#">LE Liaison</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<button class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-surface-bright font-label-md text-label-md hover:bg-primary/90 active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock">lock</span>
+<span>Tier-1 Freeze Order</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container text-primary font-label-md text-label-md hover:bg-secondary-container/80 active:scale-95 transition-all border border-secondary/20">
+<span class="material-symbols-outlined text-[16px]" data-icon="campaign">campaign</span>
+<span>Emergency Broadcast</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/40 mx-1"></div>
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Notifications">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications_active">notifications_active</span>
+</button>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Statutory Verification">
+<span class="material-symbols-outlined text-[20px]" data-icon="verified_user">verified_user</span>
+</button>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Tune Parameters">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+</button>
+</div>
+<div class="flex items-center gap-2.5 pl-2">
+<img alt="Chief Financial Crimes Investigator Badge Avatar" class="w-8 h-8 rounded-full border border-primary/20 object-cover" data-alt="A portrait badge of a high-ranking Chief Financial Crimes Investigator with solemn authority, wearing bespoke dark spruce executive attire against a warm porcelain editorial background, sharp professional lighting, hyper-realistic detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBImpEMV8IsWmRbAUpNVA9AC0VgXprYYw1V5wvVu6hBDYAnWwlJEk8UsqB7jW9Is8w3Opx5KcyABdh6hEi_1D6du7OEGZvk6RfcXwNu3I_kfqO7tBztrJk70NXXptDDr-xGXM6vqakDWVRxVxRaf0StnIQJqKaCVpN5qNIhnYBwpuyximOro454cUSCKKlLNwOKrE4VmYKib-wqDrvsR0MRIuTSY_ayi5thQsW1UK4mggFiw74udeLM1A"/>
+<div class="hidden 2xl:flex flex-col">
+<span class="font-label-md text-label-md text-primary leading-tight">Cmdr. N. Al-Mansoor</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[10px]">Liaison Lead (Interpol/EFCC)</span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 p-space-lg flex flex-col gap-6 max-w-[1600px] w-full mx-auto">
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col">
+<div class="flex items-center gap-2.5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+              Inter-Agency Mandate Active
+            </span>
+<span class="font-label-sm text-label-sm text-outline">Ref: FHC-CR-2024-991A</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight mt-2">
+            Inter-Agency Taskforce Coordination <span class="font-title-lg text-title-lg text-on-surface-variant font-normal tracking-normal">(EFCC / NFIU / INTERPOL)</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-3xl">
+            Live regulatory liaison suite executing statutory arrest warrants, asset seizing orders, and sovereign mutual legal assistance treaties across jurisdictional financial transit corridors.
+          </p>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-surface-bright font-title-md text-title-md hover:bg-primary/90 transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]" data-icon="send">send</span>
+<span>Transmit Intelligence Package</span>
+</button>
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-primary font-title-md text-title-md hover:bg-secondary-container/40 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]" data-icon="assignment_late">assignment_late</span>
+<span>Issue Inter-Agency Notice</span>
+</button>
+</div>
+</div>
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Warrants Issued</span>
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" data-icon="gavel">gavel</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-2">
+<span class="font-kpi-metric text-kpi-metric text-primary">04</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Endorsed</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Arrest &amp; Search Warrants (Federal High Court Endorsed).
+            </p>
+</div>
+<div class="mt-3 pt-3 border-t border-surface-container flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm">
+<span>Jurisdiction: Lagos Judicial Div.</span>
+<span class="text-primary font-semibold">100% Valid</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Subpoenas Served</span>
+<div class="w-8 h-8 rounded-full bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" data-icon="account_balance">account_balance</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-2">
+<span class="font-kpi-metric text-kpi-metric text-primary">07</span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">Acknowledged</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Interbank Subpoenas (100% Compliance Acknowledged).
+            </p>
+</div>
+<div class="mt-3 pt-3 border-t border-surface-container flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm">
+<span>KYC / IP Ledgers Ingested</span>
+<span class="text-tertiary-container font-semibold">Ready for Review</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-primary-container text-surface-bright shadow-[0_12px_32px_-8px_rgba(22,43,40,0.22)] flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-surface-tint/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-start justify-between relative z-10">
+<span class="font-label-md text-label-md text-secondary-fixed uppercase tracking-wider">Lead Coordinating Agency</span>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" data-icon="badge">badge</span>
+</div>
+</div>
+<div class="mt-4 relative z-10">
+<span class="font-title-lg text-title-lg text-surface-container-lowest font-bold">EFCC Cybercrime Section</span>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim mt-1">
+              Enclave B, Lagos Zonal Directorate.
+            </p>
+</div>
+<div class="mt-3 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-[11px] text-primary-fixed relative z-10">
+<span>Desk: DSP C. Okonkwo</span>
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>Encrypted Line</span>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Red Notice / MLAT Status</span>
+<div class="w-8 h-8 rounded-full bg-error-container text-error flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" data-icon="public">public</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-2">
+<span class="font-kpi-metric text-kpi-metric text-primary">01</span>
+<span class="font-label-sm text-label-sm text-error font-semibold">Active Dispatch</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Mutual Legal Assistance Treaty (MLAT) Request to UK NCA (Nostro relay).
+            </p>
+</div>
+<div class="mt-3 pt-3 border-t border-surface-container flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm">
+<span>INTERPOL I-24/7 Transmitted</span>
+<span class="text-error font-semibold">Priority Red</span>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<div class="lg:col-span-8 flex flex-col gap-6">
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)]">
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant/20">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-secondary-container/50 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]" data-icon="balance">balance</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Active Warrants &amp; Legal Orders Tracker</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Judicially ratified instruments executing across enforcement branches</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-3 py-1 rounded-full bg-surface-container text-primary font-semibold border border-outline-variant/30">
+                4 Endorsements Logged
+              </span>
+</div>
+<div class="divide-y divide-outline-variant/20 mt-2">
+<div class="py-4.5 flex flex-col sm:flex-row items-start justify-between gap-4 group">
+<div class="flex items-start gap-3.5">
+<div class="w-8 h-8 rounded-full bg-error-container text-error flex items-center justify-center mt-0.5 shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="person_cancel">person_cancel</span>
+</div>
+<div>
+<div class="flex items-center gap-2.5 flex-wrap">
+<span class="font-title-md text-title-md text-primary font-bold">Warrant FHC/L/WAR/2024/104</span>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-label-sm bg-error/10 text-error font-semibold">Bench Warrant (Arrest)</span>
+<span class="text-outline font-label-sm text-label-sm">Signed: Hon. Justice A. M. Bello</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1">
+                      Arrest of <strong class="font-semibold text-primary">Tanimu Usman Garba</strong> (Ultimate Beneficial Owner, Apex Synergy).
+                    </p>
+<div class="flex items-center gap-4 mt-2 font-body-sm text-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="location_on">location_on</span>
+                        Target: Victoria Island, Lagos
+                      </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="share">share</span>
+                        EFCC Tactical Operations Unit
+                      </span>
+</div>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 w-full sm:w-auto">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    Transmitted
+                  </span>
+<button class="text-xs font-label-sm text-primary hover:underline flex items-center gap-1">
+                    View Endorsement <span class="material-symbols-outlined text-[14px]" data-icon="north_east">north_east</span>
+</button>
+</div>
+</div>
+<div class="py-4.5 flex flex-col sm:flex-row items-start justify-between gap-4 group">
+<div class="flex items-start gap-3.5">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center mt-0.5 shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="search_insights">search_insights</span>
+</div>
+<div>
+<div class="flex items-center gap-2.5 flex-wrap">
+<span class="font-title-md text-title-md text-primary font-bold">Search Warrant SW-2024-88</span>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-label-sm bg-secondary text-surface-bright font-semibold">Device Seizure</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1">
+                      Physical Search &amp; Device Seizure of <strong class="font-semibold text-primary">Apex Synergy Logistics HQ</strong>.
+                    </p>
+<div class="mt-2 p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 text-xs font-body-sm text-on-surface-variant">
+<span class="font-semibold text-primary">Custody Logs:</span> 3 Laptops, 6 YubiKeys, 14 SIM cards seized &amp; tagged under Docket #ED-2024-0419.
+                    </div>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 w-full sm:w-auto">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+                    Executed
+                  </span>
+<span class="text-[11px] text-outline">08:14 GMT+1</span>
+</div>
+</div>
+<div class="py-4.5 flex flex-col sm:flex-row items-start justify-between gap-4 group">
+<div class="flex items-start gap-3.5">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center mt-0.5 shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="menu_book">menu_book</span>
+</div>
+<div>
+<div class="flex items-center gap-2.5 flex-wrap">
+<span class="font-title-md text-title-md text-primary font-bold">Banker's Book Evidence Subpoena</span>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-label-sm bg-outline-variant/30 text-on-surface-variant font-semibold">Statutory S.7</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1">
+                      Order compelling 6 beneficiary financial institutions to disclose KYC, IP egress, and SWIFT nostr/vostr telemetry.
+                    </p>
+<div class="flex items-center gap-3 mt-2 font-body-sm text-body-sm text-on-surface-variant">
+<span class="text-tertiary-container font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]" data-icon="verified">verified</span>
+                        6 of 6 Disclosures Delivered
+                      </span>
+</div>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 w-full sm:w-auto">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]" data-icon="task_alt">task_alt</span>
+                    Completed
+                  </span>
+<span class="text-[11px] text-outline">Archive #SUB-902</span>
+</div>
+</div>
+<div class="pt-4 flex flex-col sm:flex-row items-start justify-between gap-4 group">
+<div class="flex items-start gap-3.5">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center mt-0.5 shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="flight_takeoff">flight_takeoff</span>
+</div>
+<div>
+<div class="flex items-center gap-2.5 flex-wrap">
+<span class="font-title-md text-title-md text-primary font-bold">Watchlist Red Flag Notice</span>
+<span class="px-2.5 py-0.5 rounded-full text-[11px] font-label-sm bg-error/15 text-error font-semibold">Border Stoppage Alert</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1">
+                      Nigeria Immigration Service (NIS) Airport Border Alert for 2 lead signatories on flight manifests.
+                    </p>
+<div class="flex items-center gap-3 mt-2 font-body-sm text-body-sm text-on-surface-variant">
+<span class="inline-flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded text-xs font-mono">
+<span class="material-symbols-outlined text-[14px]" data-icon="flight">flight</span> LOS (Murtala Muhammed)
+                      </span>
+<span class="inline-flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded text-xs font-mono">
+<span class="material-symbols-outlined text-[14px]" data-icon="flight">flight</span> ABV (Nnamdi Azikiwe)
+                      </span>
+</div>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 w-full sm:w-auto">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+                    Active Watch
+                  </span>
+<span class="text-[11px] text-outline">NIS E-Gate Linked</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)]">
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant/20">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-primary text-surface-bright flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]" data-icon="key">key</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Encrypted Communications &amp; Handshake Vault</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cryptographic dispatch logs with verified inter-agency counterparts</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 text-xs text-primary font-mono bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="lock">lock</span> TLS 1.3 / E2EE
+                </span>
+</div>
+</div>
+<div class="space-y-3.5 mt-4">
+<div class="p-4 rounded-xl bg-surface-bright border border-outline-variant/30 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span class="font-title-md text-title-md text-primary font-bold">DSP C. Okonkwo</span>
+<span class="text-xs text-on-surface-variant font-label-sm">(EFCC Lead Case Officer, Cybercrime Enclave B)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Today, 09:22:15 GMT+1</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface pl-4 border-l-2 border-primary">
+                  "Physical raid completed at Apex Synergy Logistics HQ. Hardware tagged and sealed in anti-static tamper envelopes. Submitting forensic chain-of-custody dispatch into the EFIMS ledger."
+                </p>
+<div class="mt-1 pl-4 flex items-center justify-between flex-wrap gap-2 text-[11px] font-mono text-outline">
+<span class="truncate">SHA-256: 8f440b8a21d10e5bb9473fa58a43de908c69741e9742a12...</span>
+<span class="text-tertiary-container font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="done_all">done_all</span> Counter-signed
+                  </span>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-bright border border-outline-variant/30 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-title-md text-title-md text-primary font-bold">NFIU Special Operations Directorate</span>
+<span class="text-xs text-on-surface-variant font-label-sm">(Statutory Intelligence Unit)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Today, 08:50:04 GMT+1</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface pl-4 border-l-2 border-secondary">
+                  "Nostro reconciliation data from offshore counterpart indicates secondary routing via Isle of Man entity. Inter-Agency STR bundle #STR-9943 forwarded to INTERPOL NCB desk."
+                </p>
+<div class="mt-1 pl-4 flex items-center justify-between flex-wrap gap-2 text-[11px] font-mono text-outline">
+<span class="truncate">SHA-256: 12c8e31a89bb6621f834ec40081d64380f772ba6f73003...</span>
+<span class="text-tertiary-container font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="done_all">done_all</span> Verified by NFIU Root
+                  </span>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-bright border border-outline-variant/30 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="font-title-md text-title-md text-primary font-bold">INTERPOL NCB Lagos</span>
+<span class="text-xs text-on-surface-variant font-label-sm">(Statutory Liaison Desk)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Today, 07:11:42 GMT+1</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface pl-4 border-l-2 border-error">
+                  "Red Notice relay formally acknowledged by UK National Crime Agency (NCA) Financial Intelligence Liaison in London. Mutual Legal Assistance treaty channel established."
+                </p>
+<div class="mt-1 pl-4 flex items-center justify-between flex-wrap gap-2 text-[11px] font-mono text-outline">
+<span class="truncate">SHA-256: e597b4c91f03d1685a4980753d08f7aa67c8be03a58e1c...</span>
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="mark_email_read">mark_email_read</span> Transmitted to Lyon Desk
+                  </span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/20 flex gap-2">
+<input class="flex-1 rounded-full bg-surface-container-low border border-outline-variant/40 px-4 py-2 text-xs font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Draft encrypted transmission to Lead Case Officer (DSP Okonkwo)..." type="text"/>
+<button class="px-5 py-2 rounded-full bg-primary text-surface-bright font-label-md text-label-md flex items-center gap-1.5 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-[16px]" data-icon="send">send</span>
+<span>Dispatch</span>
+</button>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] relative overflow-hidden">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-primary flex items-center justify-center font-headline-md font-bold shrink-0">
+<span class="material-symbols-outlined text-[20px]" data-icon="verified_user">verified_user</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-primary leading-tight">Statutory Hand-off</span>
+<span class="font-label-sm text-label-sm text-secondary font-mono">Form EFCC/EZ/AML/102-24</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-3">
+              Formal judicial certification transferring forensic chain-of-custody from the internal institutional AML recovery unit to federal prosecutors.
+            </p>
+<div class="mt-4 p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-2.5">
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant font-label-sm">Certifying Officer:</span>
+<span class="font-title-md text-title-md text-primary font-bold text-xs">Barr. Fatima Al-Hassan</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant font-label-sm">Directorate:</span>
+<span class="font-body-md text-body-md text-xs font-semibold">Special Prosecution Dept.</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant font-label-sm">Evidentiary Seal:</span>
+<span class="font-mono text-tertiary-container font-bold text-[11px]">SEAL# 2024-NGA-9912</span>
+</div>
+<div class="flex items-center justify-between text-xs pt-1 border-t border-outline-variant/20">
+<span class="text-on-surface-variant font-label-sm">Integrity Digest:</span>
+<span class="font-mono text-[10px] text-outline">verified_valid_256</span>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary-container font-bold">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_box">check_box</span>
+                Chain of Custody Bound
+              </span>
+<button class="px-3 py-1.5 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm font-semibold hover:bg-secondary-container/80 transition-colors">
+                Export Certificate
+              </button>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)]">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary" data-icon="inventory_2">inventory_2</span>
+<h3 class="font-title-lg text-title-lg text-primary">Seized Asset Custody</h3>
+</div>
+<span class="text-xs font-mono font-bold text-secondary">Docket #ED-2024-0419</span>
+</div>
+<div class="mt-3 space-y-2.5">
+<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="laptop_mac">laptop_mac</span>
+<div>
+<span class="font-title-md text-title-md text-primary text-xs font-bold block">3x MacBook Pro (M2 Max)</span>
+<span class="text-[10px] font-mono text-outline">SN: C02G998LMD6 • Forensic Image Taken</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">Imaged</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="usb">usb</span>
+<div>
+<span class="font-title-md text-title-md text-primary text-xs font-bold block">6x YubiKey Hardware Tokens</span>
+<span class="text-[10px] font-mono text-outline">Series 5 NFC • Stored in Faraday Bag</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-label-sm bg-secondary-container text-primary font-bold">Secured</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="sim_card">sim_card</span>
+<div>
+<span class="font-title-md text-title-md text-primary text-xs font-bold block">14x SIM Cards (Foreign &amp; Local)</span>
+<span class="text-[10px] font-mono text-outline">IMSI Dump Completed • NFIU Handover</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">Analyzed</span>
+</div>
+</div>
+<a class="mt-4 flex items-center justify-center gap-1.5 py-2 rounded-full border border-primary/20 text-xs font-title-md text-primary hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="folder_open">folder_open</span>
+<span>Open Evidence Vault Docket</span>
+</a>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-col flex-1">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+<h3 class="font-title-lg text-title-lg text-primary">Live Taskforce Feed</h3>
+</div>
+<span class="text-[11px] font-label-sm text-outline">Auto-sync 15s</span>
+</div>
+<div class="space-y-3 mt-3 custom-scrollbar overflow-y-auto max-h-[260px] pr-1">
+<div class="flex items-start gap-2.5">
+<div class="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-primary">Court Appearance Docket Issued</span>
+<span class="text-[11px] font-body-sm text-on-surface-variant">Preliminary arraignment set for Friday, 10:00 AM at Federal High Court 4, Ikoyi.</span>
+<span class="text-[10px] text-outline font-mono mt-0.5">10m ago • Judicial Registrar</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5">
+<div class="w-2 h-2 rounded-full bg-tertiary mt-1.5 shrink-0"></div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-primary">NFIU Asset Ledger Update</span>
+<span class="text-[11px] font-body-sm text-on-surface-variant">Secondary real-estate holdings identified in Banana Island under nominee shell entity.</span>
+<span class="text-[10px] text-outline font-mono mt-0.5">28m ago • Liaison Officer Suleiman</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5">
+<div class="w-2 h-2 rounded-full bg-secondary mt-1.5 shrink-0"></div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-primary">Border Control (LOS) Manifest Scan</span>
+<span class="text-[11px] font-body-sm text-on-surface-variant">No boarding match recorded on outgoing European passenger listings for Garba, T.</span>
+<span class="text-[10px] text-outline font-mono mt-0.5">44m ago • NIS Watch Desk</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">Court Session: <strong class="text-primary font-semibold">In 48 Hours</strong></span>
+<button class="font-label-sm text-secondary hover:underline font-bold">Full Calendar</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-auto px-space-lg py-4 border-t border-outline-variant/30 text-center text-xs font-body-sm text-outline flex items-center justify-between flex-wrap gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container" data-icon="lock">lock</span>
+<span>Court-Grade Inter-Agency Telemetry System • EFIMS Act 2023 Compliant</span>
+</div>
+<span>Cryptographically Authenticated Session: <strong class="font-mono text-on-surface-variant">0x7F994...E8A1</strong></span>
+</footer>
+</div>
+</body></html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Executive - Loss &amp; Recovery Dashboard &amp; Reconciliation Matrix</title>
+<!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#1b1c1b",
+            "inverse-on-surface": "#f3f0ee",
+            "primary-fixed": "#cbe8e4",
+            "on-secondary": "#ffffff",
+            "surface": "#fcf9f7",
+            "surface-bright": "#fcf9f7",
+            "surface-container-highest": "#e5e2e0",
+            "on-error": "#ffffff",
+            "tertiary": "#002419",
+            "secondary": "#735854",
+            "surface-container": "#f0edeb",
+            "surface-dim": "#dcd9d8",
+            "on-tertiary": "#ffffff",
+            "on-surface-variant": "#414847",
+            "outline-variant": "#c1c8c6",
+            "secondary-fixed-dim": "#e1bfb9",
+            "background": "#fcf9f7",
+            "on-primary": "#ffffff",
+            "inverse-primary": "#b0ccc8",
+            "tertiary-fixed": "#c4ebd9",
+            "error": "#ba1a1a",
+            "outline": "#727877",
+            "on-secondary-container": "#795e59",
+            "surface-container-low": "#f6f3f1",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "on-secondary-fixed": "#2a1713",
+            "inverse-surface": "#30302f",
+            "primary-container": "#1e3835",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed": "#ffdad4",
+            "on-tertiary-fixed": "#002116",
+            "on-primary-container": "#86a19d",
+            "surface-tint": "#496360",
+            "on-background": "#1b1c1b",
+            "on-primary-fixed": "#04201d",
+            "on-primary-fixed-variant": "#314c48",
+            "tertiary-container": "#163a2d",
+            "primary-fixed-dim": "#b0ccc8",
+            "on-tertiary-container": "#7fa494",
+            "on-error-container": "#93000a",
+            "primary": "#072320",
+            "surface-container-high": "#eae8e6",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#59413d",
+            "surface-variant": "#e5e2e0",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "secondary-container": "#ffdad4"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.75rem",
+            "space-xl": "2.5rem",
+            "space-lg": "1.75rem",
+            "margin-mobile": "1rem",
+            "space-xs": "0.375rem",
+            "margin": "2rem",
+            "space-md": "1.25rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "headline-xl": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "label-md": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen selection:bg-secondary-fixed selection:text-primary">
+<!-- SideNavBar Anchor (Shared Component Execution) -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col z-40 border-r border-outline-variant/20 shadow-xl bg-primary-container">
+<div class="w-64 h-full flex flex-col justify-between p-4 bg-primary-container">
+<!-- Top Branding Section -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3 px-2 pt-2">
+<div class="w-10 h-10 rounded-xl bg-surface-container-lowest/10 flex items-center justify-center border border-outline-variant/30 text-surface shadow-inner">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="shield">shield</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md font-semibold text-surface tracking-tight leading-tight">EFIMS Executive</h1>
+<p class="text-label-sm font-label-sm text-on-primary-container">Board &amp; Risk Orchestration</p>
+</div>
+</div>
+<!-- Primary Navigation Tabs -->
+<nav class="flex flex-col gap-1.5 mt-2">
+<!-- Inactive Tab 1: Executive Briefing -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Executive Briefing</span>
+</a>
+<!-- Active Tab: Loss & Recovery (Active Key Match from JSON) -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full bg-secondary-fixed text-primary font-semibold shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="text-label-md font-label-md">Loss &amp; Recovery</span>
+</a>
+<!-- Inactive Tab 3: Board Governance -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+<span class="text-label-md font-label-md">Board Governance</span>
+</a>
+<!-- Inactive Tab 4: Regulatory Scorecard -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-full text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+<span class="text-label-md font-label-md">Regulatory Scorecard</span>
+</a>
+</nav>
+</div>
+<!-- Footer & Botanical Executive Badge Widget -->
+<div class="flex flex-col gap-4 border-t border-outline-variant/15 pt-4">
+<!-- CTA: Generate Board Pack -->
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-surface-container-lowest/10 text-surface hover:bg-surface-container-lowest/20 transition-all duration-150 border border-outline-variant/20 shadow-sm text-label-md font-label-md">
+<span class="material-symbols-outlined text-base" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span>Generate Board Pack</span>
+</button>
+<!-- Auxiliary Footer Links -->
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="history">history</span>
+<span class="text-label-sm font-label-sm">Audit Trail</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-surface/70 hover:text-surface hover:bg-surface-container-lowest/10 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span class="text-label-sm font-label-sm">Settings</span>
+</a>
+</div>
+<!-- Biophilic Regulatory Micro-Badge -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest/5 border border-outline-variant/10 flex items-center gap-2.5">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></div>
+<div class="flex-1">
+<p class="text-label-sm font-label-sm text-surface font-medium leading-none">Central Bank Enclave</p>
+<p class="text-[10px] text-on-primary-container tracking-wider mt-0.5">TR-NACS-2024-SYNCED</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Sticky Top Navigation Bar (Shared Component Execution) -->
+<header class="sticky top-0 right-0 z-30 w-full pl-64 border-b border-outline-variant/30 shadow-sm bg-surface">
+<div class="flex justify-between items-center px-8 py-3.5 w-full bg-surface">
+<!-- Breadcrumb Hierarchy & Global Search -->
+<div class="flex items-center gap-6 flex-1 max-w-2xl">
+<div class="flex items-center gap-2 text-label-sm font-label-sm text-on-surface-variant shrink-0">
+<span class="hover:text-primary transition-colors cursor-pointer">EFIMS Executive</span>
+<span class="text-outline-variant">/</span>
+<span class="hover:text-primary transition-colors cursor-pointer">Financial Governance</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-bold">Loss &amp; Recovery Waterfall</span>
+</div>
+<!-- Search input -->
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/30 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-outline transition-all duration-150" placeholder="Search transaction tranches, accounts, banks, Mareva files..." type="text"/>
+</div>
+</div>
+<!-- Trailing Action Cluster & Avatar -->
+<div class="flex items-center gap-3">
+<!-- Notification Icons -->
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors duration-150 relative text-on-surface-variant" title="Alerts">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary"></span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors duration-150 text-on-surface-variant" title="Security Posture">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors duration-150 text-on-surface-variant" title="Help &amp; Compliance">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+</div>
+<div class="h-6 w-px bg-outline-variant/40 mx-1"></div>
+<!-- Secondary Action: Interbank Clearing Sweep -->
+<button class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 text-primary hover:bg-surface-container transition-all duration-150 text-label-md font-label-md">
+<span class="material-symbols-outlined text-base" data-icon="swap_horiz">swap_horiz</span>
+<span>Execute Interbank Clearing Sweep</span>
+</button>
+<!-- Primary Action: Export Dossier (Reconciliation Certificate) -->
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-container text-on-primary hover:bg-primary-container/90 transition-all duration-150 shadow-sm text-label-md font-label-md">
+<span class="material-symbols-outlined text-base" data-icon="description">description</span>
+<span>Download Reconciliation Certificate (PDF)</span>
+</button>
+<!-- Executive Avatar Portrait -->
+<div class="flex items-center gap-2.5 ml-2 pl-2 border-l border-outline-variant/30">
+<img class="w-8 h-8 rounded-full object-cover ring-2 ring-secondary-fixed" data-alt="High-resolution professional executive board director portrait wearing tailored modern formal attire in warm studio lighting with botanical muted background tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2gpECIm0coVI5xnVe-_Vv52IcJ0WRPSjaL7puv4EcPHdMimsmypXk6yudRyyrAaKkzk4NpJoowYqC8Tp_h5k4YOrXqj9_h4_WlNKfYtpjGjY7g650Cv-PsYeASdocJZFIA9LGZ5zUVGzFTQZylStaYyb2jDwqVVziVcz0lfZnHwYIW2yYr6yjfJ0gDwKpgTjvUiie1ANg-INAG1koxlSl8-T3DRjAYkfwcB4eB9qZJT-2cNrlOZRGPw"/>
+<div class="text-left hidden xl:block">
+<p class="text-label-sm font-label-sm font-bold text-on-surface leading-tight">Board Director</p>
+<p class="text-[10px] text-on-surface-variant leading-none">Risk Oversight</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas Canvas -->
+<main class="pl-64 min-h-screen bg-background">
+<div class="p-8 max-w-[1720px] mx-auto space-y-6">
+<!-- Executive View Header Banner -->
+<section class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-outline-variant/25">
+<div>
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-0.5 rounded-full text-label-sm font-label-sm font-semibold bg-secondary-fixed text-on-secondary-fixed">
+              BATCH 09 • INCIDENT ORCHESTRATION
+            </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-sm font-label-sm font-semibold bg-tertiary-fixed text-on-tertiary-fixed flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+              CBN Balanced Audit Window: Active
+            </span>
+</div>
+<h2 class="text-headline-xl font-headline-xl text-primary mt-1.5 tracking-tight">
+            Loss &amp; Recovery Dashboard &amp; Reconciliation Matrix
+          </h2>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-3xl mt-1">
+            Comprehensive capital preservation, multi-bank post-no-debit recovery waterfall, and statutory double-entry reconciliation journal for legal case management.
+          </p>
+</div>
+<!-- Period Selectors & Switchers -->
+<div class="flex items-center gap-2 self-start lg:self-center bg-surface-container-low p-1.5 rounded-full border border-outline-variant/30">
+<button class="px-3.5 py-1.5 rounded-full text-label-md font-label-md font-bold bg-primary-container text-on-primary shadow-sm transition-colors">
+            Current Quarter (Q4 2024)
+          </button>
+<button class="px-3.5 py-1.5 rounded-full text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-colors">
+            Year-to-Date
+          </button>
+<button class="px-3.5 py-1.5 rounded-full text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="gavel">gavel</span>
+<span>Case FHC/L/CS/2024/912 Focus</span>
+</button>
+</div>
+</section>
+<!-- 4 Top Executive Metrics Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Metric Card 1: Gross Defalcation Disputed -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] hover:shadow-md transition-all">
+<div class="flex justify-between items-start">
+<span class="text-label-md font-label-md text-on-surface-variant">Gross Defalcation Disputed</span>
+<span class="material-symbols-outlined text-secondary" data-icon="monetization_on">monetization_on</span>
+</div>
+<div class="mt-3">
+<div class="text-kpi-metric font-kpi-metric text-primary font-mono">₦45,000,000.00</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm font-semibold bg-surface-container-high text-on-surface">100% Gross Baseline</span>
+<span class="text-label-sm font-label-sm text-outline">(4 Outbound Tranches)</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary-container h-full w-full"></div>
+</div>
+</div>
+<!-- Metric Card 2: Successfully Liened & Secured -->
+<div class="p-5 rounded-2xl bg-primary-container text-surface border border-primary-container shadow-[0_12px_32px_-8px_rgba(22,43,40,0.22)] relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-secondary-fixed/10 pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="text-label-md font-label-md text-surface/80">Successfully Liened &amp; Secured</span>
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="lock">lock</span>
+</div>
+<div class="mt-3 relative z-10">
+<div class="text-kpi-metric font-kpi-metric text-surface font-mono">₦38,200,000.00</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm font-bold bg-secondary-fixed text-primary">84.88% Preserved</span>
+<span class="text-label-sm font-label-sm text-on-primary-container">14 Mule Accounts</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-lowest/20 h-1.5 rounded-full mt-4 overflow-hidden relative z-10">
+<div class="bg-secondary-fixed h-full w-[84.88%]"></div>
+</div>
+</div>
+<!-- Metric Card 3: Repatriated to Origin Account -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] hover:shadow-md transition-all">
+<div class="flex justify-between items-start">
+<span class="text-label-md font-label-md text-on-surface-variant">Repatriated to Origin Account</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="move_to_inbox">move_to_inbox</span>
+</div>
+<div class="mt-3">
+<div class="text-kpi-metric font-kpi-metric text-primary font-mono">₦22,500,000.00</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm font-bold bg-tertiary-fixed text-tertiary">50.0% Returned</span>
+<span class="text-label-sm font-label-sm text-outline">Corporate Victim Escrow</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full w-[50%]"></div>
+</div>
+</div>
+<!-- Metric Card 4: Net Residual Defalcation -->
+<div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] hover:shadow-md transition-all">
+<div class="flex justify-between items-start">
+<span class="text-label-md font-label-md text-on-surface-variant">Net Residual Defalcation</span>
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+</div>
+<div class="mt-3">
+<div class="text-kpi-metric font-kpi-metric text-secondary font-mono">₦6,800,000.00</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm font-bold bg-secondary-fixed text-on-secondary-fixed">15.12% Residual</span>
+<span class="text-label-sm font-label-sm text-outline">Bond #FBC-881 Claim</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-secondary-fixed-dim h-full w-[15.12%]"></div>
+</div>
+</div>
+</section>
+<!-- Main Layout 2-Column: Left (Waterfall & Ledger) + Right (Indemnity & Signoff) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Section (8 Columns) -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Financial Waterfall & Interbank Recovery Flow -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div>
+<h3 class="text-title-lg font-title-lg text-primary flex items-center gap-2">
+<span>Recovery Waterfall &amp; Liquidity Cascade</span>
+<span class="material-symbols-outlined text-sm text-outline" data-icon="info">info</span>
+</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Tranche-level deconstruction from incident discovery through interbank Mareva containment.</p>
+</div>
+<span class="px-3 py-1 rounded-full bg-surface-container text-label-sm font-label-sm text-on-surface-variant font-mono">
+                PND Response Latency: 11m 42s
+              </span>
+</div>
+<!-- Visual Cascade Process Flow -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
+<!-- Step 1 -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 relative">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">Stage 01</span>
+<p class="text-title-md font-title-md text-primary mt-0.5">Automated Liens</p>
+<div class="text-lg font-bold font-mono text-primary mt-1">-₦38.2M</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Instant Post-No-Debit broadcast</p>
+<div class="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-tertiary">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+<span>14 Mules Blocked</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 relative">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">Stage 02</span>
+<p class="text-title-md font-title-md text-primary mt-0.5">Mareva Court Order</p>
+<div class="text-lg font-bold font-mono text-secondary mt-1">-₦15.7M</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Federal High Court injunction</p>
+<div class="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="gavel">gavel</span>
+<span>Judicial Freezing Enacted</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 relative">
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">Stage 03</span>
+<p class="text-title-md font-title-md text-primary mt-0.5">Escrow Repatriation</p>
+<div class="text-lg font-bold font-mono text-primary mt-1">-₦22.5M</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Direct RTGS Settlement</p>
+<div class="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-primary-container">
+<span class="material-symbols-outlined text-sm" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span>Credited to Corporate</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="p-3.5 rounded-xl bg-secondary-fixed/40 border border-secondary-fixed relative">
+<span class="text-[10px] font-bold text-secondary uppercase tracking-wider block">Stage 04</span>
+<p class="text-title-md font-title-md text-on-secondary-fixed mt-0.5">NDIC Bond Underwrite</p>
+<div class="text-lg font-bold font-mono text-on-secondary-fixed mt-1">₦6.8M</div>
+<p class="text-label-sm font-label-sm text-on-secondary-fixed-variant mt-1">Fidelity claim coverage</p>
+<div class="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
+<span>100% Final Capital Cover</span>
+</div>
+</div>
+</div>
+<!-- Interbank Recovery Rate Comparison -->
+<div class="pt-4 border-t border-outline-variant/20 space-y-3.5">
+<div class="flex items-center justify-between">
+<h4 class="text-label-md font-label-md font-bold text-primary tracking-wide uppercase">
+                  Interbank Institution Capture &amp; Attrition Breakdown
+                </h4>
+<span class="text-label-sm font-label-sm text-outline">Sorted by Ingress Tranche Size</span>
+</div>
+<!-- Bank 1: GTBank -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="font-semibold text-primary">Guaranty Trust Bank (GTBank)</span>
+<span class="font-mono text-on-surface">₦15.0M Ingress • <strong class="text-primary">₦15.0M Recovered</strong> (100% Rate)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full w-full"></div>
+</div>
+</div>
+<!-- Bank 2: Kuda Microfinance Bank -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="font-semibold text-primary">Kuda Microfinance Bank</span>
+<span class="font-mono text-on-surface">₦10.0M Ingress • <strong class="text-primary">₦8.2M Recovered</strong> (82% Rate — <span class="text-secondary">₦1.8M ATM dissipated</span>)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full w-[82%]"></div>
+<div class="bg-secondary-fixed-dim h-full w-[18%]"></div>
+</div>
+</div>
+<!-- Bank 3: PalmPay Ltd -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="font-semibold text-primary">PalmPay Ltd (Wallets)</span>
+<span class="font-mono text-on-surface">₦10.0M Ingress • <strong class="text-primary">₦10.0M Locked</strong> (100% Rate)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full w-full"></div>
+</div>
+</div>
+<!-- Bank 4: Zenith Bank -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="font-semibold text-primary">Zenith Bank Plc</span>
+<span class="font-mono text-on-surface">₦10.0M Ingress • <strong class="text-primary">₦5.0M Frozen</strong> (50% Rate — <span class="text-secondary">₦5.0M Crypto P2P Outflow</span>)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full w-[50%]"></div>
+<div class="bg-secondary-fixed-dim h-full w-[50%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Granular Recovery Tranche Ledger & Double-Entry Balance Table -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div>
+<h3 class="text-title-lg font-title-lg text-primary">Granular Recovery Tranche Ledger</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Statutory journal mapping legal status, post-no-debit enforcement, and forensic trace references.</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 rounded-full border border-outline-variant/30 text-label-sm font-label-sm text-on-surface hover:bg-surface-container transition-colors">
+                  Filter by Beneficiary
+                </button>
+<button class="px-3 py-1 rounded-full border border-outline-variant/30 text-label-sm font-label-sm text-on-surface hover:bg-surface-container transition-colors">
+                  Export CSV
+                </button>
+</div>
+</div>
+<!-- Ledger Table Container -->
+<div class="overflow-x-auto border border-outline-variant/20 rounded-xl">
+<table class="w-full text-left text-body-sm font-body-sm">
+<thead class="bg-surface-container-low text-label-sm font-label-sm text-on-surface-variant uppercase border-b border-outline-variant/20">
+<tr>
+<th class="py-3 px-4">Tranche Ref</th>
+<th class="py-3 px-4">Beneficiary Mule</th>
+<th class="py-3 px-4 text-right">Debit Tranche</th>
+<th class="py-3 px-4">PND Status</th>
+<th class="py-3 px-4">Judicial Status</th>
+<th class="py-3 px-4">Recovery Status</th>
+<th class="py-3 px-4">Repatriation Date</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/15 font-mono text-[12px]">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-bold text-primary">TR-0921-A</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="font-medium text-on-surface">GTBank Mule</span>
+<span class="text-outline block font-mono text-[11px]">#0421098452</span>
+</td>
+<td class="py-3.5 px-4 text-right font-bold text-primary">₦15,000,000.00</td>
+<td class="py-3.5 px-4">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-tertiary-fixed text-tertiary inline-flex items-center gap-1">
+<span class="w-1 h-1 rounded-full bg-primary-container"></span>
+                        Enforced
+                      </span>
+</td>
+<td class="py-3.5 px-4 font-sans text-on-surface-variant">Mareva Bound</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="text-primary font-semibold">100% Repatriated</span>
+</td>
+<td class="py-3.5 px-4 font-sans text-outline">24-Oct 09:22 WAT</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-bold text-primary">TR-0921-B</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="font-medium text-on-surface">Kuda MFB</span>
+<span class="text-outline block font-mono text-[11px]">#2004918201</span>
+</td>
+<td class="py-3.5 px-4 text-right font-bold text-primary">₦10,000,000.00</td>
+<td class="py-3.5 px-4">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-tertiary-fixed text-tertiary inline-flex items-center gap-1">
+<span class="w-1 h-1 rounded-full bg-primary-container"></span>
+                        Enforced
+                      </span>
+</td>
+<td class="py-3.5 px-4 font-sans text-on-surface-variant">Court Order #912</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="text-primary font-semibold">₦8,200,000 Liened</span>
+<span class="text-secondary block text-[11px]">(₦1.8M Cash Loss)</span>
+</td>
+<td class="py-3.5 px-4 font-sans text-outline">In Escrow</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-bold text-primary">TR-0921-C</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="font-medium text-on-surface">PalmPay Ltd</span>
+<span class="text-outline block font-mono text-[11px]">#9921004812</span>
+</td>
+<td class="py-3.5 px-4 text-right font-bold text-primary">₦10,000,000.00</td>
+<td class="py-3.5 px-4">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-tertiary-fixed text-tertiary inline-flex items-center gap-1">
+<span class="w-1 h-1 rounded-full bg-primary-container"></span>
+                        Enforced
+                      </span>
+</td>
+<td class="py-3.5 px-4 font-sans text-on-surface-variant">Mareva Bound</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="text-primary font-semibold">100% Wallet Frozen</span>
+</td>
+<td class="py-3.5 px-4 font-sans text-outline">In Escrow</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-bold text-primary">TR-0921-D</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="font-medium text-on-surface">Zenith Bank</span>
+<span class="text-outline block font-mono text-[11px]">#1029384756</span>
+</td>
+<td class="py-3.5 px-4 text-right font-bold text-primary">₦10,000,000.00</td>
+<td class="py-3.5 px-4">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-tertiary-fixed text-tertiary inline-flex items-center gap-1">
+<span class="w-1 h-1 rounded-full bg-primary-container"></span>
+                        Enforced
+                      </span>
+</td>
+<td class="py-3.5 px-4 font-sans text-on-surface-variant">Mareva Bound</td>
+<td class="py-3.5 px-4 font-sans">
+<span class="text-primary font-semibold">₦5,000,000 Frozen</span>
+<span class="text-secondary block text-[11px]">(₦5.0M NDIC Claim)</span>
+</td>
+<td class="py-3.5 px-4 font-sans text-outline">Partial Sweep</td>
+</tr>
+</tbody>
+<!-- Balanced Trial Balance Summary Row -->
+<tfoot class="bg-surface-container font-mono text-[12px] border-t-2 border-outline-variant/50">
+<tr class="text-primary font-bold">
+<td class="py-3 px-4 font-sans" colspan="2">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-primary-container" data-icon="balance">balance</span>
+<span>BALANCED TRIAL BALANCE SUMMARY</span>
+</span>
+</td>
+<td class="py-3 px-4 text-right text-sm">₦45,000,000.00</td>
+<td class="py-3 px-4 font-sans text-right text-on-surface-variant font-normal" colspan="4">
+<span class="inline-flex items-center gap-1.5 font-medium text-primary">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="verified">verified</span>
+                        Total Debits = Total Credits (Balanced &amp; Signed off by Lead Forensic Treasury Accountant)
+                      </span>
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline pt-1">
+<span>Audited under Nigerian Financial Intelligence Unit (NFIU) Real-Time Suspicious Transaction Protocol.</span>
+<span>Ledger Node: ID-WAT-882-Lagos</span>
+</div>
+</div>
+</div>
+<!-- Right Section / Ancillary Column (4 Columns) -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Fidelity Bond & Indemnity Insurance Tracker -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="security">security</span>
+<h3 class="text-title-md font-title-md text-primary">Fidelity Bond Tracker</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-secondary-fixed text-on-secondary-fixed">
+                CLAIM #FBC-881
+              </span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 space-y-3">
+<div>
+<p class="text-label-sm font-label-sm text-outline">Consortium Underwriter</p>
+<p class="text-body-md font-body-md font-bold text-on-surface">Leadway Assurance Consortium</p>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline">Statutory Policy</p>
+<p class="text-body-sm font-body-sm text-on-surface font-mono">Commercial Banking Crime Bond #BCP-2024-09</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/20 flex justify-between items-baseline">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Claimed Indemnity Loss</span>
+<span class="text-title-lg font-title-lg font-mono font-bold text-secondary">₦6,800,000.00</span>
+</div>
+<p class="text-[11px] text-outline leading-tight">Covers irrecoverable leakages across Tranches TR-0921-B (ATM) &amp; TR-0921-D (P2P).</p>
+</div>
+<!-- Claim Progress Stepper -->
+<div class="space-y-3">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="font-bold text-primary">Claim Status: Step 3 of 4</span>
+<span class="text-secondary font-semibold">Underwriter Actuarial Audit</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-3/4"></div>
+</div>
+<div class="flex justify-between text-[11px] text-outline font-mono">
+<span>1. Loss Notice</span>
+<span>2. Forensic Filing</span>
+<span class="text-primary font-bold">3. Actuarial Audit</span>
+<span>4. Payout</span>
+</div>
+</div>
+<!-- Payout SLA Notice -->
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/25 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-container text-xl" data-icon="schedule">schedule</span>
+<div>
+<p class="text-label-sm font-label-sm font-bold text-primary">Payout SLA: 14 Business Days</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+                  Estimated settlement credit: <strong class="text-on-surface">12 Nov 2024</strong> directly into Corporate Primary Reserve Account.
+                </p>
+</div>
+</div>
+</div>
+<!-- Statutory Sign-Off & Escrow Verification -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm space-y-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="draw">draw</span>
+<h3 class="text-title-md font-title-md text-primary">Statutory Sign-Off &amp; Verification</h3>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+              Required attestation under Central Bank Circular BSD/DIR/GEN/LAB/014 for fraud remediation.
+            </p>
+<!-- Signatures Stack -->
+<div class="space-y-3">
+<!-- Signature 1: MLRO -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-base" data-icon="verified_user">verified_user</span>
+</div>
+<div>
+<p class="text-label-md font-label-md font-bold text-on-surface">Fatima Eze, CAMS</p>
+<p class="text-[11px] text-on-surface-variant">Lead Anti-Money Laundering Officer</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-tertiary-fixed text-[10px] font-bold text-tertiary uppercase">Attested</span>
+</div>
+<!-- Signature 2: Head of Treasury -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-base" data-icon="lock">lock</span>
+</div>
+<div>
+<p class="text-label-md font-label-md font-bold text-on-surface">Kolapo Adeleke, FCA</p>
+<p class="text-[11px] text-on-surface-variant">Head of Statutory Treasury</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-primary-fixed text-[10px] font-bold text-on-primary-fixed uppercase">Cryptographic Seal</span>
+</div>
+</div>
+<!-- Certified Balance Sheet Export Button -->
+<button class="w-full py-2.5 px-4 rounded-full bg-primary text-surface hover:bg-primary/90 transition-all duration-150 flex items-center justify-center gap-2 text-label-md font-label-md shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="download_for_offline">download_for_offline</span>
+<span>Download Certified Balance Sheet</span>
+</button>
+<!-- Case Law Anchor Note -->
+<div class="p-3 rounded-lg bg-surface-container-low text-outline text-[11px] space-y-1">
+<p class="font-bold text-on-surface-variant">Judicial Preservation Reference:</p>
+<p>Mareva Injunction Order Suit No. FHC/L/CS/2024/912 filed at Federal High Court Lagos Judicial Division.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Compliance & Statutory Standard Footer -->
+<footer class="pt-6 pb-12 border-t border-outline-variant/25 flex flex-col md:flex-row items-center justify-between gap-4 text-label-sm font-label-sm text-outline">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>Compliance with Section 3.2 CBN Circular &amp; NDIC Deposit Insurance Enactment 2024.</span>
+</div>
+<div class="flex items-center gap-6">
+<span class="hover:text-primary transition-colors cursor-pointer">Security Telemetry Node #04</span>
+<span class="hover:text-primary transition-colors cursor-pointer">NIBSS Real-Time Settlement Bus</span>
+<span class="font-mono text-on-surface-variant font-bold">SHA-256: 9b2d8e41a...</span>
+</div>
+</footer>
+</div>
+</main>
+</body></html>

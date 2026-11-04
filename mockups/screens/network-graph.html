@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core — Forensic Link Topology Graph</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed": "#ffdad4",
+            "primary-container": "#1e3835",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#b0ccc8",
+            "on-background": "#1b1c1b",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#002116",
+            "secondary-container": "#ffdad4",
+            "on-tertiary": "#ffffff",
+            "error-container": "#ffdad6",
+            "outline": "#727877",
+            "on-surface": "#1b1c1b",
+            "on-primary-fixed-variant": "#314c48",
+            "tertiary": "#002419",
+            "surface-dim": "#dcd9d8",
+            "background": "#fcf9f7",
+            "tertiary-container": "#163a2d",
+            "surface-container": "#f0edeb",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "inverse-surface": "#30302f",
+            "primary": "#072320",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-tertiary-container": "#7fa494",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-primary-fixed": "#04201d",
+            "on-secondary": "#ffffff",
+            "inverse-on-surface": "#f3f0ee",
+            "on-surface-variant": "#414847",
+            "surface-container-low": "#f6f3f1",
+            "outline-variant": "#c1c8c6",
+            "secondary": "#735854",
+            "tertiary-fixed": "#c4ebd9",
+            "surface-variant": "#e5e2e0",
+            "surface-bright": "#fcf9f7",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed": "#2a1713",
+            "on-primary-container": "#86a19d",
+            "primary-fixed": "#cbe8e4",
+            "surface": "#fcf9f7",
+            "surface-container-highest": "#e5e2e0",
+            "inverse-primary": "#b0ccc8",
+            "surface-tint": "#496360",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-error-container": "#93000a",
+            "surface-container-high": "#eae8e6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2.5rem",
+            "space-xs": "0.375rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem",
+            "space-sm": "0.75rem",
+            "space-lg": "1.75rem",
+            "margin": "2rem",
+            "space-md": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 19px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes ping-slow {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      50% { transform: scale(1.35); opacity: 0; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+    .pulse-target {
+      animation: ping-slow 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes flow-dash {
+      to { stroke-dashoffset: -32; }
+    }
+    .flow-active {
+      stroke-dasharray: 6 4;
+      animation: flow-dash 1.4s linear infinite;
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(193, 200, 198, 0.4); border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden min-h-screen flex selection:bg-secondary-fixed selection:text-primary">
+<!-- ========================================================================= -->
+<!-- SIDE NAVIGATION (Shared Component: SideNavBar)                            -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 z-40 flex flex-col justify-between bg-primary-container text-on-primary shadow-md border-r border-outline-variant/30">
+<div class="w-64 h-full flex flex-col justify-between p-space-md">
+<!-- Top Brand Anchor & Case CTA -->
+<div class="space-y-6">
+<div class="flex items-center gap-3 px-1">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center border border-primary-fixed-dim/30 shadow-inner">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="shield">shield</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-surface-container-lowest tracking-tight">EFIMS Core</span>
+<span class="font-label-sm text-label-sm text-on-primary-container tracking-wider">Financial Crime Intelligence</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-secondary-fixed text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-lowest transition-all duration-150 ease-in-out active:scale-[0.99]">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>New Case File</span>
+</button>
+<!-- Primary Destination Tabs -->
+<nav class="space-y-1.5 pt-2">
+<!-- Overview -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<!-- Network Graph -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span>Network Graph</span>
+</a>
+<!-- Entity Resolution -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+<span>Entity Resolution</span>
+</a>
+<!-- Investigations (ACTIVE DESTINATION TAB) -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-fixed text-primary font-label-md text-label-md transition-all shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder_shared</span>
+<span>Investigations</span>
+</a>
+<!-- Audit Trail -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+<span>Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Footer Anchor Block with Rules & Settings -->
+<div class="space-y-4 pt-6 border-t border-outline-variant/20">
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Compliance Rules</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>System Settings</span>
+</a>
+</div>
+<!-- Biophilic Leaf Motifs & Lead Investigator Profile -->
+<div class="p-3.5 rounded-2xl bg-primary/60 border border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-secondary-fixed flex items-center justify-center text-primary font-bold text-xs border border-surface-container-lowest/30">
+              EA
+            </div>
+<div class="flex flex-col">
+<span class="font-title-md text-label-md text-surface-container-lowest leading-tight">E. Adebayo, CAMS</span>
+<span class="font-label-sm text-[10px] text-tertiary-fixed-dim">Lead Forensic Examiner</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-primary-container hover:text-surface-container-lowest cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE                                                             -->
+<!-- ========================================================================= -->
+<div class="flex-1 ml-64 flex flex-col min-w-0 min-h-screen">
+<!-- TOP NAV BAR (Shared Component: TopNavBar) -->
+<header class="sticky top-0 right-0 h-16 z-30 bg-surface/90 backdrop-blur-md border-b border-outline-variant/40 shadow-sm flex items-center justify-between px-space-lg">
+<!-- Left: Breadcrumb & Brand Identity -->
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="schema">schema</span>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Investigations</span>
+<span class="text-outline text-xs">/</span>
+<span class="font-label-md text-label-md text-primary bg-surface-container-high px-2 py-0.5 rounded-md">CS-2024-0419</span>
+<span class="text-outline text-xs">/</span>
+<h1 class="font-title-md text-title-md text-primary tracking-tight">Forensic Link Topology Graph</h1>
+</div>
+</div>
+<!-- Center Links from Shared Component JSON -->
+<nav class="hidden xl:flex items-center gap-6">
+<a class="text-primary font-title-md text-title-md border-b-2 border-primary pb-1" href="#">Cluster View</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1 transition-colors" href="#">Synapse Matrix</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1 transition-colors" href="#">Sanctions List</a>
+</nav>
+<!-- Right Trailing Forensic Actions -->
+<div class="flex items-center gap-3">
+<!-- Action Buttons -->
+<button class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_alt">filter_alt</span>
+<span>Filter Graph</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md hover:bg-primary-container transition-all shadow-sm">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="file_download">file_download</span>
+<span>Export Telemetry</span>
+</button>
+<div class="h-5 w-px bg-outline-variant/60 mx-1"></div>
+<!-- Icon Actions -->
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Notifications">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Investigation History">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Help &amp; Documentation">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
+<!-- TELEMETRY BADGES BAR & HIGH-DENSITY INVESTIGATION CONTROLS -->
+<div class="bg-surface-container-low px-space-lg py-3 border-b border-outline-variant/30 flex flex-wrap items-center justify-between gap-4">
+<!-- Telemetry metric capsules -->
+<div class="flex items-center gap-2 flex-wrap">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Topology Nodes:</span>
+<span class="font-title-md text-title-md text-primary font-bold">14 Nodes</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Traced Edges:</span>
+<span class="font-title-md text-title-md text-primary font-bold">28 Edges</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 shadow-sm">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="alt_route">alt_route</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Hop Depth:</span>
+<span class="font-title-md text-title-md text-primary font-bold">3 Hop Depth</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary-fixed/50 border border-secondary-fixed shadow-sm">
+<span class="material-symbols-outlined text-error text-sm" data-icon="monetization_on">monetization_on</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider font-bold">Total Flow Tracked:</span>
+<span class="font-title-md text-title-md text-error font-extrabold">₦45.0M Flow Tracked</span>
+</div>
+</div>
+<!-- Graph View Layout, Depth & Time Horizon Controls -->
+<div class="flex items-center gap-3 flex-wrap">
+<!-- Layout Selector Pill Group -->
+<div class="flex items-center bg-surface-container p-1 rounded-full border border-outline-variant/50 text-xs">
+<button class="px-3 py-1 rounded-full bg-primary text-surface-container-lowest font-label-sm text-label-sm shadow-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-xs" data-icon="bubble_chart">bubble_chart</span>
+<span>Force-Directed</span>
+</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors">
+<span>Hierarchical Tree</span>
+</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors">
+<span>Radial Flow</span>
+</button>
+</div>
+<!-- Hop Depth Segment -->
+<div class="flex items-center bg-surface-container-lowest px-2.5 py-1 rounded-full border border-outline-variant/40">
+<span class="text-xs font-label-sm text-on-surface-variant mr-2">Depth:</span>
+<div class="flex items-center gap-1 text-xs">
+<button class="w-6 h-6 rounded-full text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-bold">1</button>
+<button class="w-6 h-6 rounded-full text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-bold">2</button>
+<button class="w-6 h-6 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center font-bold shadow-xs">3</button>
+<button class="w-6 h-6 rounded-full text-on-surface-variant hover:bg-surface-container flex items-center justify-center font-bold">4</button>
+</div>
+</div>
+<!-- Time Horizon Quick Slider Label -->
+<div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1 rounded-full border border-outline-variant/40">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="schedule">schedule</span>
+<span class="font-label-sm text-label-sm text-on-surface">02:00 UTC – 05:00 UTC</span>
+<span class="text-[10px] px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold tracking-tight">Window: 3h</span>
+</div>
+</div>
+</div>
+<!-- NODE TYPE TOGGLE FILTER BAR -->
+<div class="bg-surface px-space-lg py-2 border-b border-outline-variant/20 flex items-center justify-between text-xs">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-label-sm text-label-sm text-outline mr-1 uppercase">Filter Entities:</span>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/50 text-primary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span>Corporate Entity (2)</span>
+</button>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/50 text-primary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Mule Personal (4)</span>
+</button>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/50 text-primary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span>Microfinance Wallet (6)</span>
+</button>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/50 text-primary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-[#E07A5F]"></span>
+<span>Crypto On-Ramp (1)</span>
+</button>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/60 border border-outline-variant/30 text-outline font-label-sm text-label-sm opacity-80">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span>Foreign Nostro (0)</span>
+</button>
+</div>
+<div class="flex items-center gap-3 text-outline">
+<span class="flex items-center gap-1 text-[11px]"><span class="w-2 h-0.5 bg-error"></span> High Velocity Split</span>
+<span class="flex items-center gap-1 text-[11px]"><span class="w-2 h-0.5 bg-primary border-t border-dashed"></span> Inter-Bank NIP</span>
+<span class="flex items-center gap-1 text-[11px]"><span class="w-2 h-0.5 bg-[#E07A5F]"></span> P2P Liquid Bridge</span>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- INTERACTIVE FORENSIC CANVAS (Dark Velvety Spruce for Max Clarity)         -->
+<!-- ========================================================================= -->
+<main class="relative flex-1 bg-[#102220] overflow-hidden min-h-[720px] select-none">
+<!-- Subtle background grid matrix -->
+<div class="absolute inset-0 opacity-[0.07] pointer-events-none" style="background-image: radial-gradient(#cbe8e4 1px, transparent 1px); background-size: 28px 28px;"></div>
+<!-- SVG Topology Overlay: Flow vectors, curves & animated transaction packets -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" fill="none" viewbox="0 0 1180 720" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="edgeGradRed" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#ba1a1a" stop-opacity="0.8"></stop>
+<stop offset="100%" stop-color="#ffdad4" stop-opacity="0.7"></stop>
+</lineargradient>
+<lineargradient id="edgeGradSpruce" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#7fa494" stop-opacity="0.9"></stop>
+<stop offset="100%" stop-color="#cbe8e4" stop-opacity="0.4"></stop>
+</lineargradient>
+<lineargradient id="cryptoGrad" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ffdad4"></stop>
+<stop offset="100%" stop-color="#E07A5F"></stop>
+</lineargradient>
+<!-- Arrow Markers -->
+<marker id="arrowRed" markerheight="7" markerwidth="7" orient="auto" refx="6" refy="3.5">
+<polygon fill="#ffdad4" points="0 0, 7 3.5, 0 7"></polygon>
+</marker>
+<marker id="arrowSage" markerheight="7" markerwidth="7" orient="auto" refx="6" refy="3.5">
+<polygon fill="#7fa494" points="0 0, 7 3.5, 0 7"></polygon>
+</marker>
+<marker id="arrowAmber" markerheight="7" markerwidth="7" orient="auto" refx="6" refy="3.5">
+<polygon fill="#E07A5F" points="0 0, 7 3.5, 0 7"></polygon>
+</marker>
+</defs>
+<!-- Edges: Origin (150, 360) -> 1st Hop Primary Mule Hub (380, 360) -->
+<path class="flow-active" d="M 195 360 L 335 360" marker-end="url(#arrowRed)" stroke="url(#edgeGradRed)" stroke-width="3.5"></path>
+<!-- 1st Hop (380, 360) -> 2nd Hop Nodes: (590, 160), (590, 290), (590, 430), (590, 560) -->
+<!-- To Tanimu Usman Garba (590, 160) -->
+<path class="flow-active" d="M 425 340 C 490 310, 510 180, 555 170" marker-end="url(#arrowRed)" stroke="url(#edgeGradRed)" stroke-width="2.5"></path>
+<!-- To Oluwaseun Trans-Logistics (590, 290) -->
+<path class="flow-active" d="M 430 355 C 490 340, 510 300, 550 295" marker-end="url(#arrowSage)" stroke="#7fa494" stroke-width="2"></path>
+<!-- To Kano Logistics Ltd (590, 430) -->
+<path class="flow-active" d="M 430 370 C 490 380, 510 420, 550 428" marker-end="url(#arrowSage)" stroke="#7fa494" stroke-width="2"></path>
+<!-- To Suleiman Fast-Cash (590, 560) -->
+<path class="flow-active" d="M 420 380 C 480 430, 510 540, 555 555" marker-end="url(#arrowRed)" stroke="url(#edgeGradRed)" stroke-width="2.2"></path>
+<!-- 2nd Hop Tanimu (590, 160) -> Micro-Mules: (820, 110), (820, 180), (820, 250) -->
+<path class="flow-active" d="M 640 150 C 700 130, 740 120, 785 115" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<path class="flow-active" d="M 640 160 C 700 160, 740 175, 785 180" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<path class="flow-active" d="M 635 175 C 690 190, 735 235, 785 245" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<!-- 2nd Hop Suleiman Fast-Cash (590, 560) -> 3 Micro-Mules (820, 480), (820, 560), (820, 630) -->
+<path class="flow-active" d="M 635 545 C 690 520, 735 490, 785 485" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<path class="flow-active" d="M 640 560 L 785 560" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<path class="flow-active" d="M 635 575 C 690 600, 735 625, 785 630" marker-end="url(#arrowSage)" stroke="url(#edgeGradSpruce)" stroke-width="1.8"></path>
+<!-- 2nd Hop Oluwaseun (590, 290) -> Crypto OTC Bridge Lagos (820, 360) -->
+<path class="flow-active" d="M 635 305 C 700 325, 740 345, 785 355" marker-end="url(#arrowAmber)" stroke="url(#cryptoGrad)" stroke-width="2.5"></path>
+<!-- Edge Telemetry Text Badges in Dark Canvas -->
+<!-- Origin to 1st Hop -->
+<rect fill="#1e3835" height="20" rx="10" stroke="#ba1a1a" stroke-width="1" width="86" x="220" y="338"></rect>
+<text fill="#ffdad4" font-family="Plus Jakarta Sans" font-size="9.5" font-weight="700" text-anchor="middle" x="263" y="352">₦45,000,000 RTGS</text>
+<!-- To Tanimu -->
+<rect fill="#163a2d" height="20" rx="10" stroke="#7fa494" stroke-width="1" width="88" x="460" y="225"></rect>
+<text fill="#c4ebd9" font-family="Plus Jakarta Sans" font-size="9" font-weight="600" text-anchor="middle" x="504" y="239">₦15.0M (42s) NIP</text>
+<!-- To Kano Logistics -->
+<rect fill="#163a2d" height="18" rx="9" stroke="#7fa494" stroke-width="0.8" width="84" x="460" y="405"></rect>
+<text fill="#c4ebd9" font-family="Plus Jakarta Sans" font-size="8.5" text-anchor="middle" x="502" y="418">₦8.5M RTGS</text>
+<!-- To Crypto Bridge -->
+<rect fill="#2a1713" height="20" rx="10" stroke="#E07A5F" stroke-width="1" width="94" x="670" y="325"></rect>
+<text fill="#ffdad4" font-family="Plus Jakarta Sans" font-size="9" font-weight="700" text-anchor="middle" x="717" y="339">₦10.0M OTC P2P</text>
+</svg>
+<!-- ===================================================================== -->
+<!-- FORENSIC GRAPH NODES                                                  -->
+<!-- ===================================================================== -->
+<!-- [NODE 0: CENTRAL TARGET / ORIGIN ACCOUNT] -->
+<div class="absolute left-[105px] top-[305px] flex flex-col items-center group cursor-pointer" style="width: 100px;">
+<!-- Pulsing compromise halo -->
+<div class="relative flex items-center justify-center">
+<div class="absolute w-20 h-20 rounded-full bg-error/30 pulse-target pointer-events-none"></div>
+<div class="w-14 h-14 rounded-2xl bg-[#280c0d] border-2 border-error flex items-center justify-center shadow-[0_0_25px_rgba(186,26,26,0.6)] z-10 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-error text-2xl" data-icon="domain_disabled">domain_disabled</span>
+</div>
+<span class="absolute -top-2 -right-1 px-1.5 py-0.5 bg-error text-white font-label-sm text-[9px] rounded-full uppercase tracking-tighter z-20 font-bold">SOURCE</span>
+</div>
+<!-- Node Label Box -->
+<div class="mt-2 text-center bg-[#072320]/90 px-2 py-1 rounded-md border border-error/50 shadow-md">
+<p class="font-title-md text-[11px] text-surface-container-lowest leading-tight font-bold">Dangote Cement</p>
+<p class="font-body-sm text-[9px] text-[#ffdad4]">Corporate Clearing</p>
+<span class="inline-block mt-0.5 text-[8.5px] font-mono text-error font-bold tracking-tight">Acct: ...9021</span>
+</div>
+</div>
+<!-- [NODE 1: 1ST HOP PRIMARY MULE HUB] -->
+<div class="absolute left-[340px] top-[305px] flex flex-col items-center group cursor-pointer" style="width: 105px;">
+<div class="relative flex items-center justify-center">
+<div class="w-13 h-13 w-[52px] h-[52px] rounded-2xl bg-[#1e3835] border-2 border-secondary-fixed flex items-center justify-center shadow-[0_0_20px_rgba(255,218,212,0.3)] z-10 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-secondary-fixed text-2xl" data-icon="hub">hub</span>
+</div>
+<span class="absolute -top-2 -right-2 px-1.5 py-0.2 bg-secondary-fixed text-primary font-label-sm text-[9px] rounded-full font-bold">1st Hop</span>
+</div>
+<div class="mt-2 text-center bg-[#072320]/90 px-2 py-1 rounded-md border border-secondary-fixed/40 shadow-md">
+<p class="font-title-md text-[11px] text-surface-container-lowest leading-tight font-bold">Apex Synergy</p>
+<p class="font-body-sm text-[9px] text-secondary-fixed-dim">Primary Mule Hub</p>
+<span class="inline-block text-[8.5px] font-bold text-tertiary-fixed">₦45M Total Split</span>
+</div>
+</div>
+<!-- [2ND HOP NODES (4 PRIMARY MULE INTERMEDIARIES)] -->
+<!-- 2A: Selected Node 'Tanimu Usman Garba' -->
+<div class="absolute left-[545px] top-[110px] flex flex-col items-center group cursor-pointer" style="width: 105px;">
+<div class="relative flex items-center justify-center">
+<div class="w-11 h-11 rounded-full bg-[#163a2d] border-2 border-secondary-fixed ring-4 ring-secondary-fixed/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,218,212,0.5)] z-10 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-secondary-fixed text-xl" data-icon="person_alert">person_alert</span>
+</div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-error flex items-center justify-center text-white text-[9px] font-bold">!</span>
+</div>
+<div class="mt-1.5 text-center bg-[#163a2d] px-2.5 py-1 rounded-md border border-secondary-fixed shadow-lg">
+<p class="font-title-md text-[11px] text-surface-container-lowest leading-tight font-bold">Tanimu Usman Garba</p>
+<p class="font-body-sm text-[8.5px] text-secondary-fixed-dim">High Risk Individual</p>
+<span class="inline-block text-[8.5px] font-mono text-tertiary-fixed font-bold">₦15.0M (34%)</span>
+</div>
+</div>
+<!-- 2B: Oluwaseun Trans-Logistics -->
+<div class="absolute left-[545px] top-[245px] flex flex-col items-center group cursor-pointer" style="width: 105px;">
+<div class="w-10 h-10 rounded-full bg-[#1e3835] border border-outline-variant flex items-center justify-center shadow-md z-10 transition-transform group-hover:scale-105">
+<span class="material-symbols-outlined text-primary-fixed text-lg" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="mt-1 text-center bg-[#072320]/80 px-2 py-0.5 rounded border border-outline-variant/30">
+<p class="font-title-md text-[10px] text-surface-container-lowest font-medium">Oluwaseun Trans</p>
+<span class="text-[8px] text-on-primary-container">₦10.0M OTC Exit</span>
+</div>
+</div>
+<!-- 2C: Kano Logistics Ltd -->
+<div class="absolute left-[545px] top-[395px] flex flex-col items-center group cursor-pointer" style="width: 105px;">
+<div class="w-10 h-10 rounded-full bg-[#1e3835] border border-outline-variant flex items-center justify-center shadow-md z-10 transition-transform group-hover:scale-105">
+<span class="material-symbols-outlined text-primary-fixed text-lg" data-icon="storefront">storefront</span>
+</div>
+<div class="mt-1 text-center bg-[#072320]/80 px-2 py-0.5 rounded border border-outline-variant/30">
+<p class="font-title-md text-[10px] text-surface-container-lowest font-medium">Kano Logistics</p>
+<span class="text-[8px] text-on-primary-container">₦8.5M Intermediary</span>
+</div>
+</div>
+<!-- 2D: Suleiman Fast-Cash -->
+<div class="absolute left-[545px] top-[525px] flex flex-col items-center group cursor-pointer" style="width: 105px;">
+<div class="w-10 h-10 rounded-full bg-[#163a2d] border border-secondary-fixed/80 flex items-center justify-center shadow-md z-10 transition-transform group-hover:scale-105">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="credit_card">credit_card</span>
+</div>
+<div class="mt-1 text-center bg-[#072320]/80 px-2 py-0.5 rounded border border-outline-variant/30">
+<p class="font-title-md text-[10px] text-surface-container-lowest font-medium">Suleiman Fast-Cash</p>
+<span class="text-[8px] text-secondary-fixed font-bold">₦11.5M Dispersal</span>
+</div>
+</div>
+<!-- [3RD HOP NODES (6 MICRO-MULES + 1 CRYPTO OTC BRIDGE)] -->
+<!-- 3A: Neo-Bank Wallet 1 (Kuda MFB) -->
+<div class="absolute left-[785px] top-[95px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">Kuda MFB #8920</p>
+<p class="text-[8px] text-tertiary-fixed">₦4,200,000</p>
+</div>
+</div>
+<!-- 3B: Neo-Bank Wallet 2 (OPay) -->
+<div class="absolute left-[785px] top-[165px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">OPay Wallet #3312</p>
+<p class="text-[8px] text-tertiary-fixed">₦5,800,000</p>
+</div>
+</div>
+<!-- 3C: Neo-Bank Wallet 3 (PalmPay) -->
+<div class="absolute left-[785px] top-[230px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">PalmPay #7190</p>
+<p class="text-[8px] text-tertiary-fixed">₦5,000,000</p>
+</div>
+</div>
+<!-- 3D: Crypto OTC Bridge Lagos -->
+<div class="absolute left-[785px] top-[340px] flex items-center gap-2.5 group cursor-pointer">
+<div class="w-10 h-10 rounded-xl bg-[#351a14] border-2 border-[#E07A5F] flex items-center justify-center shadow-[0_0_15px_rgba(224,122,95,0.4)]">
+<span class="material-symbols-outlined text-[#ffdad4] text-xl" data-icon="currency_bitcoin">currency_bitcoin</span>
+</div>
+<div class="bg-[#1b1c1b] px-2.5 py-1 rounded border border-[#E07A5F]/70 shadow-md">
+<span class="text-[8px] uppercase tracking-wider text-[#ffdad4] font-bold block">OTC Liquidity Bridge</span>
+<p class="text-[11px] text-surface-container-lowest font-bold">YellowCard Desk Lagos</p>
+<p class="text-[8.5px] text-[#ffdad4] font-mono">USDT P2P: ₦10.0M</p>
+</div>
+</div>
+<!-- 3E: Neo-Bank Wallet 4 (Kuda MFB) -->
+<div class="absolute left-[785px] top-[465px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">Kuda MFB #1104</p>
+<p class="text-[8px] text-tertiary-fixed">₦3,500,000</p>
+</div>
+</div>
+<!-- 3F: Neo-Bank Wallet 5 (PalmPay) -->
+<div class="absolute left-[785px] top-[540px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">PalmPay #4092</p>
+<p class="text-[8px] text-tertiary-fixed">₦4,200,000</p>
+</div>
+</div>
+<!-- 3G: Neo-Bank Wallet 6 (OPay) -->
+<div class="absolute left-[785px] top-[610px] flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-lg bg-[#163a2d] border border-tertiary-fixed-dim/60 flex items-center justify-center shadow">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="bg-[#072320]/80 px-2 py-0.5 rounded border border-outline/30">
+<p class="text-[9.5px] text-surface-container-lowest font-semibold">OPay Wallet #9048</p>
+<p class="text-[8px] text-tertiary-fixed">₦3,800,000</p>
+</div>
+</div>
+<!-- ===================================================================== -->
+<!-- FLOATING OVERLAY 1: GRAPH LEGEND & SUSPICION SCORE (Top-Left)         -->
+<!-- ===================================================================== -->
+<div class="absolute top-5 left-5 w-64 bg-primary-container/95 border border-outline-variant/30 backdrop-blur-md rounded-2xl p-4 text-on-primary shadow-xl z-20">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="radar">radar</span>
+<span class="font-title-md text-label-md text-surface-container-lowest font-bold tracking-tight">Topology Telemetry</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+</div>
+<!-- Critical Probability Metric Hero Card -->
+<div class="my-3 p-3 rounded-xl bg-primary/70 border border-error/40">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-secondary-fixed-dim uppercase tracking-wider">Fraud Ring Score</span>
+<span class="px-1.5 py-0.2 rounded bg-error text-white font-bold text-[10px]">CRITICAL</span>
+</div>
+<div class="mt-1 flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-surface-container-lowest font-bold">96.4%</span>
+<span class="font-body-sm text-[11px] text-secondary-fixed">Probability</span>
+</div>
+<div class="w-full bg-surface-container/20 h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-gradient-to-r from-secondary to-error h-full rounded-full" style="width: 96.4%;"></div>
+</div>
+</div>
+<!-- Legend Items -->
+<div class="space-y-2 text-xs pt-1">
+<div class="flex items-center justify-between text-on-primary-container">
+<span class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-error"></span>
+<span class="font-body-sm text-body-sm text-surface-container-lowest">Compromised Target</span>
+</span>
+<span class="font-mono text-[10px]">1 Source</span>
+</div>
+<div class="flex items-center justify-between text-on-primary-container">
+<span class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-secondary-fixed"></span>
+<span class="font-body-sm text-body-sm text-surface-container-lowest">Primary Hub Layer</span>
+</span>
+<span class="font-mono text-[10px]">1 Hub</span>
+</div>
+<div class="flex items-center justify-between text-on-primary-container">
+<span class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-tertiary-fixed-dim"></span>
+<span class="font-body-sm text-body-sm text-surface-container-lowest">Dispersal Neo-Wallets</span>
+</span>
+<span class="font-mono text-[10px]">6 Mules</span>
+</div>
+<div class="flex items-center justify-between text-on-primary-container">
+<span class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-[#E07A5F]"></span>
+<span class="font-body-sm text-body-sm text-surface-container-lowest">Crypto Off-Ramp</span>
+</span>
+<span class="font-mono text-[10px]">1 Bridge</span>
+</div>
+</div>
+</div>
+<!-- ===================================================================== -->
+<!-- FLOATING OVERLAY 2: SELECTED NODE INSPECTOR DRAWER (Top-Right)         -->
+<!-- ===================================================================== -->
+<div class="absolute top-5 right-5 w-84 w-[340px] bg-surface-container-lowest/95 backdrop-blur-md rounded-2xl border border-outline-variant/60 p-4 shadow-2xl z-20 text-on-surface">
+<!-- Header & Close -->
+<div class="flex items-start justify-between pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-primary font-bold border border-secondary-container">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.2 rounded bg-error-container text-on-error-container text-[9px] font-bold uppercase">Mule Intermediary</span>
+<span class="font-mono text-[10px] text-outline">Tier-2</span>
+</div>
+<h2 class="font-title-md text-title-md text-primary font-bold mt-0.5">Tanimu Usman Garba</h2>
+</div>
+</div>
+<button class="text-outline hover:text-primary p-1 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+<!-- Node Meta Details (BVN, KYC, Status) -->
+<div class="grid grid-cols-2 gap-2 my-3 text-xs">
+<div class="bg-surface-container-low p-2 rounded-xl border border-outline-variant/20">
+<span class="font-label-sm text-[10px] text-outline block">BVN ID</span>
+<span class="font-mono font-bold text-primary text-[11px]">22189043219</span>
+</div>
+<div class="bg-surface-container-low p-2 rounded-xl border border-outline-variant/20">
+<span class="font-label-sm text-[10px] text-outline block">KYC Verification</span>
+<span class="font-bold text-error text-[11px] flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="gpp_bad">gpp_bad</span> Tier 1 (Fake Doc)
+            </span>
+</div>
+<div class="bg-surface-container-low p-2 rounded-xl border border-outline-variant/20">
+<span class="font-label-sm text-[10px] text-outline block">Total Inflow</span>
+<span class="font-bold text-primary text-[11px]">₦15,000,000</span>
+</div>
+<div class="bg-surface-container-low p-2 rounded-xl border border-outline-variant/20">
+<span class="font-label-sm text-[10px] text-outline block">Dispersal Velocity</span>
+<span class="font-bold text-error text-[11px]">42 Seconds</span>
+</div>
+</div>
+<!-- Inflow / Outflow Rapid Velocity Micro Bar Chart -->
+<div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between text-xs">
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Fund Absorption &amp; Splitting</span>
+<span class="font-mono text-[10px] text-secondary font-bold">100% Cleared</span>
+</div>
+<!-- Visual Split Bars -->
+<div class="space-y-1.5">
+<div>
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-0.5">
+<span>Direct Inflow (Apex Synergy)</span>
+<span class="font-mono font-bold text-primary">₦15.0M</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 100%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-0.5">
+<span>Split 1: Kuda Wallet #8920</span>
+<span class="font-mono font-semibold">₦4.2M (28%)</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 28%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-0.5">
+<span>Split 2: OPay Wallet #3312</span>
+<span class="font-mono font-semibold">₦5.8M (38.6%)</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 38.6%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-0.5">
+<span>Split 3: PalmPay Wallet #7190</span>
+<span class="font-mono font-semibold">₦5.0M (33.4%)</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 33.4%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Associated Case Dossiers -->
+<div class="my-3 space-y-1">
+<span class="font-label-sm text-[10px] text-outline uppercase tracking-wider font-bold">Associated Case Files</span>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface border border-outline-variant/30 text-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="description">description</span>
+<span class="font-label-md text-[11px] text-primary">NFIU-STR-2024-881</span>
+</div>
+<span class="text-[10px] text-outline">Linked 2d ago</span>
+</div>
+</div>
+<!-- Freeze & Enforcement Button -->
+<div class="pt-2">
+<button class="w-full py-2.5 px-4 rounded-xl bg-error hover:bg-on-error-container text-white font-label-md text-label-md flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-lg" data-icon="lock_clock">lock_clock</span>
+<span>Isolate &amp; Freeze Entire Sub-Cluster</span>
+</button>
+<div class="flex justify-between mt-2 px-1 text-[10px] text-outline">
+<span class="hover:text-primary cursor-pointer underline flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs" data-icon="assignment">assignment</span> Generate SAR Memo
+            </span>
+<span class="hover:text-primary cursor-pointer underline flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs" data-icon="download">download</span> Packet Telemetry
+            </span>
+</div>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- FLOATING OVERLAY 3: TIMELINE PLAYBACK SCRUBBER & DOCKET ACTIONS (Bottom)  -->
+<!-- ========================================================================= -->
+<div class="absolute bottom-5 left-5 right-5 h-20 bg-surface/95 backdrop-blur-md rounded-2xl border border-outline-variant/60 px-6 py-3 flex items-center justify-between shadow-2xl z-20">
+<!-- Playback Engine & Timestamps -->
+<div class="flex items-center gap-4">
+<!-- Play / Pause Action Button -->
+<button class="w-11 h-11 rounded-full bg-primary hover:bg-primary-container text-secondary-fixed flex items-center justify-center shadow-md transition-transform active:scale-95">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<!-- Speed Controls -->
+<div class="flex items-center bg-surface-container p-1 rounded-full border border-outline-variant/30 text-xs">
+<button class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest text-primary font-bold shadow-xs">1x</button>
+<button class="px-2.5 py-0.5 rounded-full text-on-surface-variant hover:text-primary font-bold transition-colors">2x</button>
+<button class="px-2.5 py-0.5 rounded-full text-on-surface-variant hover:text-primary font-bold transition-colors">5x</button>
+</div>
+<!-- Step Indicators -->
+<div class="flex flex-col">
+<span class="font-label-sm text-[10px] text-outline uppercase font-bold tracking-wider">Timeline Velocity</span>
+<span class="font-mono text-xs font-bold text-primary">02:14:08 UTC / 04:58:30 UTC</span>
+</div>
+</div>
+<!-- Interactive Scrubber Timeline Track -->
+<div class="flex-1 mx-8 flex flex-col justify-center">
+<div class="relative w-full h-3 bg-surface-container rounded-full cursor-pointer flex items-center">
+<!-- Progress Bar -->
+<div class="h-full bg-primary rounded-full relative" style="width: 62%;">
+<!-- Scrubber Thumb Anchor -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-secondary-fixed border-2 border-primary shadow-md flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+</div>
+<!-- Transaction Event Markers -->
+<div class="absolute left-[10%] w-1.5 h-3 bg-error rounded-sm" title="Compromise Drain ₦45M"></div>
+<div class="absolute left-[28%] w-1.5 h-3 bg-secondary rounded-sm" title="Apex Split"></div>
+<div class="absolute left-[45%] w-1.5 h-3 bg-tertiary-container rounded-sm" title="Tanimu Rapid Inflow"></div>
+<div class="absolute left-[62%] w-1.5 h-3 bg-error rounded-sm" title="Current: Micro-Mule Dispersal"></div>
+<div class="absolute left-[88%] w-1.5 h-3 bg-[#E07A5F] rounded-sm" title="Crypto OTC Conversion"></div>
+</div>
+<!-- Milestone Labels -->
+<div class="flex justify-between text-[9px] text-outline font-mono mt-1">
+<span>T-00:00 (Drain ₦45M)</span>
+<span>T+18m (Hub Split)</span>
+<span>T+42s (Velocity Burst)</span>
+<span>T+2h (Neo-Dispersal)</span>
+<span>T+3h (OTC Settlement)</span>
+</div>
+</div>
+<!-- Forensic Evidentiary Controls & Export Options -->
+<div class="flex items-center gap-2.5">
+<!-- Court Evidentiary Docket Pill -->
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-tertiary text-tertiary-fixed font-label-md text-label-md hover:bg-tertiary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="gavel">gavel</span>
+<span>Add to Court Evidentiary Docket</span>
+</button>
+<!-- Export Dropdown / Buttons -->
+<button class="p-2 rounded-full border border-outline-variant hover:bg-surface-container text-primary transition-colors" title="Export SVG/PNG Vector Map">
+<span class="material-symbols-outlined text-lg" data-icon="image">image</span>
+</button>
+<button class="p-2 rounded-full border border-outline-variant hover:bg-surface-container text-primary transition-colors" title="Export Gephi / CSV Telemetry">
+<span class="material-symbols-outlined text-lg" data-icon="data_table">data_table</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

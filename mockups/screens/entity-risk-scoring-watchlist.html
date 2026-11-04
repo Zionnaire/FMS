@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core - Entity Risk Scoring &amp; Watchlist Screening</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed": "#ffdad4",
+            "primary-container": "#1e3835",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#b0ccc8",
+            "on-background": "#1b1c1b",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#002116",
+            "secondary-container": "#ffdad4",
+            "on-tertiary": "#ffffff",
+            "error-container": "#ffdad6",
+            "outline": "#727877",
+            "on-surface": "#1b1c1b",
+            "on-primary-fixed-variant": "#314c48",
+            "tertiary": "#002419",
+            "surface-dim": "#dcd9d8",
+            "background": "#fcf9f7",
+            "tertiary-container": "#163a2d",
+            "surface-container": "#f0edeb",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "inverse-surface": "#30302f",
+            "primary": "#072320",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-tertiary-container": "#7fa494",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-primary-fixed": "#04201d",
+            "on-secondary": "#ffffff",
+            "inverse-on-surface": "#f3f0ee",
+            "on-surface-variant": "#414847",
+            "surface-container-low": "#f6f3f1",
+            "outline-variant": "#c1c8c6",
+            "secondary": "#735854",
+            "tertiary-fixed": "#c4ebd9",
+            "surface-variant": "#e5e2e0",
+            "surface-bright": "#fcf9f7",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed": "#2a1713",
+            "on-primary-container": "#86a19d",
+            "primary-fixed": "#cbe8e4",
+            "surface": "#fcf9f7",
+            "surface-container-highest": "#e5e2e0",
+            "inverse-primary": "#b0ccc8",
+            "surface-tint": "#496360",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-error-container": "#93000a",
+            "surface-container-high": "#eae8e6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2.5rem",
+            "space-xs": "0.375rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem",
+            "space-sm": "0.75rem",
+            "space-lg": "1.75rem",
+            "margin": "2rem",
+            "space-md": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md min-h-screen antialiased selection:bg-secondary-fixed selection:text-primary">
+<aside class="fixed top-0 left-0 h-screen w-64 z-40 flex flex-col justify-between bg-primary-container dark:bg-primary shadow-md dark:shadow-none border-r border-outline-variant/30 dark:border-outline/20">
+<div class="p-space-md flex flex-col gap-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-primary font-bold shadow-sm">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-surface-container-lowest dark:text-primary-fixed tracking-tight">EFIMS Core</div>
+<div class="font-label-sm text-label-sm text-on-primary-container">Financial Crime Intelligence</div>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-secondary-fixed text-primary font-label-md text-label-md hover:bg-secondary-fixed-dim transition-all duration-150 ease-in-out active:scale-[0.99] shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="folder_shared">folder_shared</span>
+<span>New Case File</span>
+</button>
+<nav class="flex flex-col gap-1.5">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container dark:text-on-primary-fixed-variant hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container dark:text-on-primary-fixed-variant hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="hub">hub</span>
+<span>Network Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container dark:text-on-primary-fixed-variant hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="fingerprint">fingerprint</span>
+<span>Entity Resolution</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-fixed text-primary font-label-md text-label-md transition-all shadow-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="folder_shared" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder_shared</span>
+<span>Investigations</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container dark:text-on-primary-fixed-variant hover:text-surface-container-lowest font-body-md text-body-md transition-colors hover:bg-primary-fixed-dim/10" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="policy">policy</span>
+<span>Audit Trail</span>
+</a>
+</nav>
+</div>
+<div class="p-space-md border-t border-outline-variant/20 dark:border-outline/10 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="verified_user">verified_user</span>
+<span>Compliance Rules</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container hover:text-surface-container-lowest font-body-md text-body-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span>System Settings</span>
+</a>
+<div class="mt-3 pt-3 border-t border-outline-variant/15 flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center text-tertiary-fixed font-title-md text-title-md border border-tertiary-fixed/30">
+          ML
+        </div>
+<div class="overflow-hidden">
+<div class="font-label-md text-label-md text-surface-container-lowest truncate">M. Lawal (MLRO)</div>
+<div class="font-label-sm text-label-sm text-on-primary-container truncate">Principal Compliance Officer</div>
+</div>
+</div>
+</div>
+</aside>
+<div class="ml-64 flex flex-col min-h-screen">
+<header class="sticky top-0 right-0 h-16 z-30 bg-surface/90 dark:bg-surface-container-low/90 backdrop-blur-md shadow-sm border-b border-outline-variant/40 dark:border-outline/20">
+<div class="flex justify-between items-center w-full h-full px-space-lg">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed tracking-tight">EFIMS</span>
+<span class="text-outline font-body-md">/</span>
+<span class="font-title-md text-title-md text-on-surface">Entity Resolution &amp; Network Graph</span>
+</div>
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-container rounded-full text-body-md text-on-surface placeholder:text-outline border-0 focus:ring-2 focus:ring-primary-container transition-all" placeholder="Search sanctions, BVN, RC number, or alias..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden xl:flex items-center gap-6">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1" href="#">Cluster View</a>
+<a class="text-primary font-title-md text-title-md border-b-2 border-primary pb-1" href="#">Synapse Matrix</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-on-surface pb-1" href="#">Sanctions List</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Notifications">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Audit History">
+<span class="material-symbols-outlined text-xl" data-icon="history">history</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Compliance Guidance">
+<span class="material-symbols-outlined text-xl" data-icon="help_outline">help_outline</span>
+</button>
+<button class="ml-2 px-4 py-1.5 rounded-full border border-primary text-primary font-label-md text-label-md hover:bg-surface-container transition-all active:scale-95">
+              Filter Graph
+            </button>
+<button class="px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-all shadow-sm active:scale-95">
+              Export Telemetry
+            </button>
+</div>
+</div>
+</div>
+</header>
+<section class="bg-surface-container-lowest px-space-lg py-3 border-b border-outline-variant/30 flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase tracking-wider font-bold">
+          High-Priority Target
+        </span>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">
+            Apex Synergy Logistics Ltd &amp; Associated Key Principals
+          </h1>
+<p class="font-label-sm text-label-sm text-outline flex items-center gap-2">
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="sync">sync</span>
+            Screening Database Sync: <span class="text-tertiary font-semibold">Live</span> (UN, OFAC, EU, UK HMT, NFIU, Interpol Red Notices) • RC-893104 • TIN: 20993182-0001
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-full border border-outline-variant/60 text-on-surface font-label-md text-label-md hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-base" data-icon="refresh">refresh</span>
+<span>Re-screen Entity Portfolio</span>
+</button>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-full border border-outline-variant/60 text-on-surface font-label-md text-label-md hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-base" data-icon="check_circle">check_circle</span>
+<span>Whitelist False Positive</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md hover:bg-primary-container shadow-sm transition-all">
+<span class="material-symbols-outlined text-base" data-icon="gavel">gavel</span>
+<span>Generate Statutory Sanctions Attestation (Court Ready)</span>
+</button>
+</div>
+</section>
+<main class="p-space-lg flex flex-col gap-6 max-w-[1440px] w-full mx-auto">
+<section class="grid grid-cols-12 gap-6 items-stretch">
+<div class="col-span-12 lg:col-span-5 rounded-xl bg-primary-container text-on-primary p-space-lg shadow-lg relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-secondary-fixed/10 blur-3xl pointer-events-none"></div>
+<div class="flex items-center justify-between border-b border-on-primary-container/20 pb-3">
+<span class="font-label-md text-label-md tracking-wider text-secondary-fixed uppercase">Statutory Composite Metric</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="warning">warning</span>
+              Tier-1 Critical Hold
+            </span>
+</div>
+<div class="my-6 flex flex-col sm:flex-row items-center justify-center gap-8">
+<div class="relative w-44 h-44 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 120 120">
+<circle class="text-primary/60" cx="60" cy="60" fill="transparent" r="48" stroke="currentColor" stroke-width="10"></circle>
+<circle cx="60" cy="60" fill="transparent" r="48" stroke="#F7D3CD" stroke-dasharray="301.6" stroke-dashoffset="24.1" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-kpi-metric text-kpi-metric text-secondary-fixed leading-none">92</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">out of 100</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 text-center sm:text-left">
+<span class="font-headline-md text-headline-md text-surface-container-lowest">CRITICAL RISK</span>
+<span class="font-label-md text-label-md text-error-container font-bold">PROHIBITED TRANSACTIONS</span>
+<p class="font-body-sm text-body-sm text-on-primary-container max-w-xs mt-1">
+                Triggered mandatory enhanced scrutiny due to cumulative domestic PEP proxy holdings and multi-jurisdictional shell structuring.
+              </p>
+</div>
+</div>
+<div class="bg-primary/40 rounded-lg p-3 border border-outline/20 flex items-center justify-between text-xs text-on-primary-fixed-variant">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-secondary-fixed" data-icon="schedule">schedule</span>
+              Calculated 14 mins ago via FinCrime ML v4.2
+            </span>
+<span class="font-semibold text-secondary-fixed">NFIU Tier-A Threshold Met</span>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-7 rounded-xl bg-surface-container-lowest border border-outline-variant/50 p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Weighted Risk Factor Spectrum</h2>
+<p class="font-body-sm text-body-sm text-outline">Autonomous decomposition of multi-vector threat vectors</p>
+</div>
+<span class="font-label-sm text-label-sm text-outline bg-surface-container px-2.5 py-1 rounded-full">
+              5 Vectors Active
+            </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 my-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-sm font-semibold">
+<span class="text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base" data-icon="account_tree">account_tree</span>
+                  PEP Exposure
+                </span>
+<span class="text-error font-title-md text-title-md">98/100</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 98%;"></div>
+</div>
+<span class="text-[11px] text-outline">1st-Degree Senatorial Kinship via primary shareholder</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-sm font-semibold">
+<span class="text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base" data-icon="shield">shield</span>
+                  Sanctions &amp; Watchlist Match
+                </span>
+<span class="text-error font-title-md text-title-md">94/100</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 94%;"></div>
+</div>
+<span class="text-[11px] text-outline">NFIU &amp; EFCC Positive Flag Index confirmation</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-sm font-semibold">
+<span class="text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base" data-icon="candlestick_chart">candlestick_chart</span>
+                  Behavioral Smurfing Score
+                </span>
+<span class="text-error font-title-md text-title-md">91/100</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 91%;"></div>
+</div>
+<span class="text-[11px] text-outline">Rapid micro-structuring under ₦5M statutory threshold</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-sm font-semibold">
+<span class="text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base" data-icon="newspaper">newspaper</span>
+                  Adverse Media
+                </span>
+<span class="text-secondary font-title-md text-title-md">88/100</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 88%;"></div>
+</div>
+<span class="text-[11px] text-outline">3 Tier-1 Investigative Journal reports verified</span>
+</div>
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<div class="flex justify-between items-center text-sm font-semibold">
+<span class="text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base" data-icon="public">public</span>
+                  Jurisdictional Secrecy Exposure
+                </span>
+<span class="text-secondary font-title-md text-title-md">84/100</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 84%;"></div>
+</div>
+<span class="text-[11px] text-outline">Cross-border flow linkages into BVI and Seychelles offshore conduit trusts</span>
+</div>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between text-xs text-outline">
+<span>Model calibration standard: FATF Recommendation 12 (PEPs) &amp; 40 (Immediate Measures)</span>
+<span class="text-primary font-semibold underline cursor-pointer">Inspect Parameter Weighting</span>
+</div>
+</div>
+</section>
+<section class="rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm overflow-hidden">
+<div class="px-space-lg py-4 border-b border-outline-variant/30 flex flex-wrap items-center justify-between gap-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Multi-List Screening Results Matrix</h2>
+<p class="font-body-sm text-body-sm text-outline">Real-time synchronized screening ledger across domestic, supranational, and OSINT registries</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline">View Filter:</span>
+<button class="px-3 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-primary font-semibold">All (5 Engines)</button>
+<button class="px-3 py-1 rounded-full text-outline font-label-sm text-label-sm hover:bg-surface-container">Positive Hits (3)</button>
+<button class="px-3 py-1 rounded-full text-outline font-label-sm text-label-sm hover:bg-surface-container">Clear (2)</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse font-body-md text-body-md">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-md text-label-md border-b border-outline-variant/40">
+<th class="py-3 px-space-lg">Screening Engine / Register</th>
+<th class="py-3 px-4">Jurisdiction &amp; Scope</th>
+<th class="py-3 px-4">Match Status</th>
+<th class="py-3 px-4">Confidence</th>
+<th class="py-3 px-4">Entity / Subject Match Details</th>
+<th class="py-3 px-space-lg text-right">Audit Audit Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-space-lg">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                    NFIU High-Risk Domestic PEP &amp; Terror Financing Register
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">Database Version 2024.11-R2 • Direct API Stream</div>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">Nigeria (Domestic AML/CFT)</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="cancel">cancel</span>
+                    POSITIVE MATCH
+                  </span>
+</td>
+<td class="py-4 px-4">
+<span class="font-title-md text-title-md text-error font-bold">98.2%</span>
+<span class="block text-[11px] text-outline">Fuzzy Token Exact</span>
+</td>
+<td class="py-4 px-4 max-w-sm">
+<p class="font-semibold text-on-surface">Politically Exposed Person First-Degree Associate</p>
+<p class="text-xs text-outline">Direct beneficial nexus to Hon. Senator Aliyu Garba (Former Federal Legislator).</p>
+</td>
+<td class="py-4 px-space-lg text-right">
+<button class="px-3 py-1.5 rounded-full border border-error text-error hover:bg-error-container text-xs font-semibold transition-all">
+                    View Dossier
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-space-lg">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                    EFCC Most Wanted / Financial Fraud Syndicate Watchlist
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">Special Operations Division Watchlist Registry</div>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">Federal Republic of Nigeria</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="cancel">cancel</span>
+                    POSITIVE MATCH
+                  </span>
+</td>
+<td class="py-4 px-4">
+<span class="font-title-md text-title-md text-error font-bold">91.5%</span>
+<span class="block text-[11px] text-outline">Biometric &amp; BVN Sync</span>
+</td>
+<td class="py-4 px-4 max-w-sm">
+<p class="font-semibold text-on-surface">Alleged Lead Organizer of Mule Ring 418</p>
+<p class="text-xs text-outline">Active Red Alert Case ref: EFCC/EC/ABJ/2023/892 regarding automated smurfing.</p>
+</td>
+<td class="py-4 px-space-lg text-right">
+<button class="px-3 py-1.5 rounded-full border border-error text-error hover:bg-error-container text-xs font-semibold transition-all">
+                    View Dossier
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-space-lg">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                    OFAC SDN &amp; Consolidated Sanctions List
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">US Department of the Treasury</div>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">United States / Global</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="check_circle">check_circle</span>
+                    NEGATIVE / CLEAN
+                  </span>
+</td>
+<td class="py-4 px-4">
+<span class="font-title-md text-title-md text-tertiary font-bold">0.0%</span>
+<span class="block text-[11px] text-outline">0 Matches Found</span>
+</td>
+<td class="py-4 px-4 max-w-sm">
+<p class="font-semibold text-on-surface">No SDN Designations</p>
+<p class="text-xs text-outline">Entity and directors unflagged in US Treasury sanctions databases.</p>
+</td>
+<td class="py-4 px-space-lg text-right">
+<button class="px-3 py-1.5 rounded-full border border-outline-variant text-outline hover:bg-surface-container text-xs font-semibold transition-all">
+                    Log Clear
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-space-lg">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                    EU Financial Sanctions &amp; UK HMT Office of Financial Sanctions Implementation
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">European External Action Service / UK Treasury</div>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">European Union &amp; United Kingdom</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="check_circle">check_circle</span>
+                    NEGATIVE / CLEAN
+                  </span>
+</td>
+<td class="py-4 px-4">
+<span class="font-title-md text-title-md text-tertiary font-bold">0.0%</span>
+<span class="block text-[11px] text-outline">0 Matches Found</span>
+</td>
+<td class="py-4 px-4 max-w-sm">
+<p class="font-semibold text-on-surface">No OFSI / EU Asset Freezes</p>
+<p class="text-xs text-outline">Directorship names cleared across London &amp; Brussels repositories.</p>
+</td>
+<td class="py-4 px-space-lg text-right">
+<button class="px-3 py-1.5 rounded-full border border-outline-variant text-outline hover:bg-surface-container text-xs font-semibold transition-all">
+                    Log Clear
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-space-lg">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Adverse Media &amp; Open-Source Intelligence (OSINT) Feed
+                  </div>
+<div class="font-label-sm text-label-sm text-outline">Natural Language Processing Crawler (840 Media Outlets)</div>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">Global News &amp; Judicial Gazette</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="report_problem">report_problem</span>
+                    3 HIGH MENTIONS
+                  </span>
+</td>
+<td class="py-4 px-4">
+<span class="font-title-md text-title-md text-secondary font-bold">89.4%</span>
+<span class="block text-[11px] text-outline">Entity Disambiguated</span>
+</td>
+<td class="py-4 px-4 max-w-sm">
+<p class="font-semibold text-on-surface">Corporate Registry Fraud Investigation</p>
+<p class="text-xs text-outline">Reported in BusinessDay Nigeria &amp; Premium Times regarding shell procurement bids.</p>
+</td>
+<td class="py-4 px-space-lg text-right">
+<button class="px-3 py-1.5 rounded-full border border-secondary text-secondary hover:bg-secondary-fixed text-xs font-semibold transition-all">
+                    Read Clips
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="grid grid-cols-12 gap-6 items-start">
+<div class="col-span-12 lg:col-span-7 rounded-xl bg-surface-container-lowest border border-outline-variant/50 p-space-lg shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">PEP Kinship &amp; Beneficial Ownership Topology</h2>
+<p class="font-body-sm text-body-sm text-outline">Automated lineage reconstruction identifying shadow controllers under FATF Guidance</p>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-fixed text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="hub">hub</span>
+              Synthesized Tree
+            </span>
+</div>
+<div class="p-6 rounded-lg bg-surface-container-low border border-outline-variant/40 flex flex-col gap-8 relative overflow-hidden">
+<div class="flex items-start gap-4 p-4 rounded-xl bg-surface-container-lowest border-l-4 border-error shadow-sm relative">
+<div class="w-12 h-12 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-2xl" data-icon="account_balance">account_balance</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-headline-md text-primary">Hon. Senator Aliyu Garba</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold">Tier-1 PEP</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline">Former Federal Legislator • Senate Committee on Public Procurement (2015-2023)</p>
+<div class="mt-2 flex items-center gap-3 text-xs text-on-surface-variant">
+<span class="bg-surface-container px-2 py-0.5 rounded">NIN: 71092839102</span>
+<span class="bg-surface-container px-2 py-0.5 rounded">NFIU Alert: PEP-A-0992</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center -my-4 relative z-10">
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-full px-4 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="family_restroom">family_restroom</span>
+                First-Degree Kinship (Biological Son &amp; Direct Trustee)
+                <span class="material-symbols-outlined text-sm text-error" data-icon="arrow_downward">arrow_downward</span>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 rounded-xl bg-surface-container-lowest border-l-4 border-secondary shadow-sm relative ml-6">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-2xl" data-icon="person">person</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-headline-md text-primary">Tanimu Usman Garba</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-bold">Beneficial Owner (65% Equity)</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline">Designated Proxy • Signatory to Offshore Clearing Mandates</p>
+<div class="mt-2 flex items-center gap-3 text-xs text-on-surface-variant">
+<span class="bg-surface-container px-2 py-0.5 rounded">BVN: 22189019283</span>
+<span class="bg-surface-container px-2 py-0.5 rounded">Designation: Managing Director</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center -my-4 relative z-10 ml-6">
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-full px-4 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="business">business</span>
+                Majority Commercial Control &amp; Shell Operation
+                <span class="material-symbols-outlined text-sm text-error" data-icon="arrow_downward">arrow_downward</span>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 rounded-xl bg-primary-container text-on-primary border-l-4 border-secondary-fixed shadow-md relative ml-12">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed text-primary flex items-center justify-center shrink-0 font-bold">
+<span class="material-symbols-outlined text-2xl" data-icon="domain">domain</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-headline-md text-surface-container-lowest">Apex Synergy Logistics Ltd</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold">Screening Subject</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-primary-container">Incorporated 2019 • Registered Class: Freight &amp; Government Logistics Haulage</p>
+<div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+<span class="bg-primary/50 text-secondary-fixed px-2 py-0.5 rounded border border-outline/30">RC: 893104</span>
+<span class="bg-primary/50 text-secondary-fixed px-2 py-0.5 rounded border border-outline/30">FIRS Tax Status: Delinquent</span>
+<span class="bg-error/30 text-error-container px-2 py-0.5 rounded">High-Value Smurfing Destination</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs text-outline pt-2 border-t border-outline-variant/30">
+<span>Graph Source: Corporate Affairs Commission (CAC) Sync &amp; NFIU Synapse AI Resolution</span>
+<button class="text-primary font-semibold hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="open_in_full">open_in_full</span>
+              Expand Synapse Canvas
+            </button>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-5 rounded-xl bg-surface-container-lowest border border-outline-variant/50 p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Statutory Disposition</h2>
+<p class="font-body-sm text-body-sm text-outline">MLRO Enforcement Mandate &amp; Regulatory Filing</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-2xl" data-icon="gavel">gavel</span>
+</div>
+<div class="p-3.5 rounded-lg bg-error-container/40 border border-error/30 mb-5">
+<div class="flex items-start gap-2.5">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="notification_important">notification_important</span>
+<div>
+<h4 class="font-title-md text-title-md text-on-error-container">Mandatory STR Filing Required</h4>
+<p class="font-body-sm text-body-sm text-on-error-container mt-1">
+                    Immediate filing of <strong>NFIU Form 04-A</strong> is legally required under <strong>Section 14 of AML Act 2022</strong>. The entity has exceeded maximum velocity and indirect PEP concealment thresholds.
+                  </p>
+</div>
+</div>
+</div>
+<form class="flex flex-col gap-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1.5">Compliance Disposition Decision</label>
+<select class="w-full rounded-lg border-outline-variant bg-surface-container-low text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary py-2.5 px-3">
+<option selected="">Block &amp; Confiscate (Complete Account Freeze + Tier-1 Flag)</option>
+<option>Restrict / PND Hold (Post-No-Debit pending NFIU Warrant)</option>
+<option>Monitor under Enhanced Due Diligence (Continuous Daily Telemetry)</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1.5">Officer Case Rationale &amp; Findings</label>
+<textarea class="w-full rounded-lg border-outline-variant bg-surface-container-low text-on-surface font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary p-3" placeholder="Provide forensic rationale for regulatory submittal..." rows="3">Unambiguous beneficial kinship identified between target firm and Tier-1 PEP. Corroborated with active EFCC mule syndicate investigation EFCC/EC/ABJ/2023/892. Recommending total post-no-debit asset freeze pursuant to CBN circular FPR/DIR/GEN/CIR/06/010.</textarea>
+</div>
+<div class="p-3.5 rounded-lg bg-surface-container-low border border-outline-variant/40 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary">Officer Digital Attestation</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="lock">lock</span>
+                    PKI Verified
+                  </span>
+</div>
+<div class="border border-dashed border-primary/40 rounded-lg p-3 bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container text-secondary-fixed flex items-center justify-center font-bold text-xs">
+<span class="material-symbols-outlined text-base" data-icon="fingerprint">fingerprint</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-primary">Mohammed Lawal, CAMS</div>
+<div class="text-[11px] text-outline">Lead MLRO • EFIMS-KEY-77189-NG</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] uppercase font-bold text-tertiary">Cryptographic Sign</div>
+<div class="text-[11px] text-outline font-mono">0x9B2F...41DC</div>
+</div>
+</div>
+<div class="text-[11px] text-outline flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="verified">verified</span>
+                  Audited pursuant to CBN Circular 2023 / AML-CFT Compliance Audit Notice.
+                </div>
+</div>
+</form>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-3">
+<button class="w-1/2 py-2.5 rounded-full border border-outline text-on-surface font-label-md text-label-md hover:bg-surface-container transition-all">
+              Save Draft Dossier
+            </button>
+<button class="w-1/2 py-2.5 rounded-full bg-primary text-surface-container-lowest font-label-md text-label-md hover:bg-primary-container transition-all shadow-md flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="send">send</span>
+              Submit Disposition
+            </button>
+</div>
+</div>
+</section>
+<footer class="mt-4 pt-4 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-outline">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+            EFIMS Engine Node 08: Operational
+          </span>
+<span>•</span>
+<span>Latency: 42ms</span>
+<span>•</span>
+<span>NFIU Direct Portal: Synchronized</span>
+</div>
+<div>
+          Confidential Legal Intelligence Document. Generated for Statutory Compliance Purposes under Section 14 AML Act 2022.
+        </div>
+</footer>
+</main>
+</div>
+</body></html>

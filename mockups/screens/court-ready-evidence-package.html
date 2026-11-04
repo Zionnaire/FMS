@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core — Court-Ready Evidence Package Generator</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed-variant": "#314c48",
+            "error": "#ba1a1a",
+            "on-surface": "#1b1c1b",
+            "on-primary": "#ffffff",
+            "surface-container-low": "#f6f3f1",
+            "secondary-fixed": "#ffdad4",
+            "tertiary-fixed": "#c4ebd9",
+            "surface-variant": "#e5e2e0",
+            "inverse-surface": "#30302f",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "background": "#fcf9f7",
+            "surface-container-lowest": "#ffffff",
+            "on-background": "#1b1c1b",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "inverse-on-surface": "#f3f0ee",
+            "tertiary-container": "#163a2d",
+            "on-secondary-container": "#795e59",
+            "surface": "#fcf9f7",
+            "outline": "#727877",
+            "secondary-container": "#ffdad4",
+            "on-tertiary-fixed": "#002116",
+            "on-tertiary": "#ffffff",
+            "on-error": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-container": "#f0edeb",
+            "surface-dim": "#dcd9d8",
+            "outline-variant": "#c1c8c6",
+            "on-secondary-fixed-variant": "#59413d",
+            "secondary": "#735854",
+            "primary": "#072320",
+            "error-container": "#ffdad6",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-primary-container": "#86a19d",
+            "on-primary-fixed": "#04201d",
+            "on-secondary": "#ffffff",
+            "primary-container": "#1e3835",
+            "inverse-primary": "#b0ccc8",
+            "on-surface-variant": "#414847",
+            "tertiary": "#002419",
+            "primary-fixed-dim": "#b0ccc8",
+            "surface-container-highest": "#e5e2e0",
+            "on-tertiary-container": "#7fa494",
+            "on-secondary-fixed": "#2a1713",
+            "surface-container-high": "#eae8e6",
+            "surface-tint": "#496360",
+            "primary-fixed": "#cbe8e4",
+            "surface-bright": "#fcf9f7"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-mobile": "0.75rem",
+            "space-md": "1.25rem",
+            "space-sm": "0.75rem",
+            "space-xl": "2.5rem",
+            "margin-mobile": "1rem",
+            "margin": "2rem",
+            "space-lg": "1.75rem",
+            "gutter": "1.25rem",
+            "space-xs": "0.375rem"
+          },
+          "fontFamily": {
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+    }
+    .judicial-stamp {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(115, 88, 84, 0.05),
+        rgba(115, 88, 84, 0.05) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col selection:bg-secondary-container selection:text-on-secondary-fixed">
+<aside class="fixed top-0 bottom-0 left-0 w-64 h-full bg-primary-container dark:bg-primary border-r border-outline-variant/20 dark:border-outline/20 shadow-2xl dark:shadow-none flex flex-col justify-between h-screen w-64 p-space-md z-30">
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-3 px-2 pt-1">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/10 border border-inverse-primary/30 flex items-center justify-center text-secondary-fixed shadow-inner">
+<span class="material-symbols-outlined text-title-lg" data-icon="shield">shield</span>
+</div>
+<div class="flex flex-col">
+<span class="text-title-lg font-title-lg text-surface tracking-tight leading-snug">EFIMS Core</span>
+<span class="text-label-sm font-label-sm text-on-primary-container tracking-wider">Chain of Custody L4</span>
+</div>
+</div>
+<div class="mx-1 px-3 py-2 rounded-lg bg-primary/60 border border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
+<span class="text-label-sm font-label-sm text-surface font-medium">Hardware Token Active</span>
+</div>
+<span class="material-symbols-outlined text-inverse-primary" data-icon="token" style="font-size: 16px;">token</span>
+</div>
+<nav aria-label="Primary Navigation" class="flex flex-col gap-1.5">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+<span class="font-medium text-body-md">Incidents</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span class="font-medium text-body-md">Cases</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="travel_explore">travel_explore</span>
+<span class="font-medium text-body-md">Investigations</span>
+</a>
+<a aria-current="page" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-container text-on-secondary-fixed font-title-md font-semibold transition-all duration-200 ease-in-out cursor-pointer shadow-sm" href="#">
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="lock" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="text-title-md">Evidence Vault</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="shield_with_heart">shield_with_heart</span>
+<span class="font-medium text-body-md">Containment &amp; Recovery</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span class="font-medium text-body-md">Regulatory &amp; CAPA</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-medium text-body-md">Configuration</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 hover:text-surface hover:bg-primary/50 transition-colors font-body-md transition-all duration-200 ease-in-out cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<span class="font-medium text-body-md">Audit Trail</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-2 pt-4 border-t border-inverse-primary/10">
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/75 hover:text-surface hover:bg-primary/40 rounded-full transition-all text-body-sm" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Security Status</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/75 hover:text-surface hover:bg-primary/40 rounded-full transition-all text-body-sm" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<div class="mt-2 px-3 py-2.5 rounded-xl bg-primary/40 border border-outline-variant/10 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-surface font-title-md border border-outline-variant/20">
+          EO
+        </div>
+<div class="flex flex-col">
+<span class="text-body-sm font-semibold text-surface leading-tight">Chief MLRO / Legal</span>
+<span class="text-label-sm font-label-sm text-on-primary-container/90">E-Gov Signatory L3</span>
+</div>
+</div>
+</div>
+</aside>
+<header class="fixed top-0 right-0 left-64 h-16 bg-surface/90 dark:bg-inverse-surface/90 backdrop-blur-md border-b border-outline-variant/30 dark:border-outline/30 shadow-sm dark:shadow-none flex items-center justify-between px-space-lg w-[calc(100%-16rem)] z-20">
+<div class="flex items-center gap-3">
+<span class="text-title-md font-title-md font-bold text-primary dark:text-inverse-primary">EFIMS Intelligence</span>
+<span class="text-outline-variant text-label-md">/</span>
+<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-label-md font-label-md">
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Evidence Vault</a>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right" style="font-size: 14px;">chevron_right</span>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Case CS-2024-0419</a>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right" style="font-size: 14px;">chevron_right</span>
+<span class="text-primary dark:text-inverse-primary font-semibold font-title-md">Court-Ready Evidence Packaging Suite</span>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-primary hover:bg-surface-container transition-all active:scale-95 text-body-sm font-medium shadow-sm" type="button">
+<span class="material-symbols-outlined text-primary" data-icon="verified" style="font-size: 16px;">verified</span>
+<span>Validate Package Checksum</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-on-primary hover:bg-primary-container transition-all active:scale-95 text-body-sm font-medium shadow-sm" type="button">
+<span class="material-symbols-outlined text-on-primary" data-icon="cloud_upload" style="font-size: 16px;">cloud_upload</span>
+<span>Transmit to Ministry of Justice Portal</span>
+</button>
+<div class="h-5 w-px bg-outline-variant/40 mx-1"></div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Notifications" type="button">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Attestation Status" type="button">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" title="Security Enclave Active" type="button">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+</button>
+</div>
+</div>
+</header>
+<main class="ml-64 mt-16 p-space-lg flex-1 bg-background flex flex-col gap-6 max-w-[1600px] w-[calc(100%-16rem)]">
+<section class="w-full bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-lg shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex items-start gap-4 z-10">
+<div class="w-14 h-14 rounded-2xl bg-primary-container text-secondary-container flex items-center justify-center shadow-md flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="gavel" data-weight="fill" style="font-size: 32px;">gavel</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-label-sm font-label-sm font-semibold uppercase tracking-wider">Statutory Export Phase IV</span>
+<span class="text-outline-variant text-label-sm">•</span>
+<span class="text-on-surface-variant text-label-sm font-label-sm">Evidentiary Standard Level 4 Non-Repudiation</span>
+</div>
+<h1 class="text-headline-lg font-headline-lg text-primary tracking-tight">
+            Statutory Evidentiary Package Compilation — Federal High Court &amp; NFIU Judicial Docket
+          </h1>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1 max-w-3xl">
+            Automated compilation, Merkle-root cryptographic sealing, and chain of custody packaging conforming to Section 84 of the Evidence Act 2011 (Electronic Evidence Authenticity Protocols).
+          </p>
+</div>
+</div>
+<div class="flex md:flex-col items-end justify-center gap-2 z-10 flex-shrink-0 border-l border-outline-variant/30 pl-6">
+<div class="flex items-center gap-2 text-right">
+<span class="text-label-md font-label-md text-on-surface-variant">Jurisdiction Target:</span>
+<span class="font-title-md text-primary font-semibold">Nigeria (Federal)</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface-variant text-label-sm">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="lock_clock" style="font-size: 15px;">lock_clock</span>
+<span>Sealed Docket Window Closes in 4d 18h</span>
+</div>
+</div>
+<div class="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-secondary-fixed/20 pointer-events-none blur-3xl"></div>
+</section>
+<div class="grid grid-cols-12 gap-6 items-start">
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="account_balance">account_balance</span>
+<h2 class="text-title-lg font-title-lg text-primary">Package Profile &amp; Judicial Mandate</h2>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant">Profile 01 of 03</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1.5" for="jurisdiction-select">Statutory Jurisdiction Profile</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border border-outline-variant/40 rounded-xl px-3.5 py-2.5 text-body-md font-medium text-on-surface focus:ring-2 focus:ring-primary-container focus:outline-none appearance-none pr-10" id="jurisdiction-select">
+<option selected="">Federal High Court of Nigeria (Criminal Division) - Sec 84 Evidence Act 2011</option>
+<option>NFIU / EFCC Mutual Legal Assistance Treaty (MLAT) Compliant Format</option>
+<option>CBN Supervisory Sanctions Panel &amp; Inter-Bank Fraud Enclave</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1.5" for="court-filing-mode">Filing Mode &amp; Legal Standard</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border border-outline-variant/40 rounded-xl px-3.5 py-2.5 text-body-md font-medium text-on-surface focus:ring-2 focus:ring-primary-container focus:outline-none appearance-none pr-10" id="court-filing-mode">
+<option selected="">Formal Prosecution Trial Exhibit Bundle (Pre-trial Motion)</option>
+<option>Admissible Ex-Parte Interim Forfeiture Annexure</option>
+<option>Subpoena Duces Tecum Special Master Disclosure</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<div class="mt-4 p-3 rounded-lg bg-surface-container-low/60 border border-outline-variant/20 flex items-center justify-between text-body-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary font-semibold" data-icon="policy">policy</span>
+<span>Statutory Rule Applied: <strong>Evidence Act 2011 § 84(4) Certificate of Certificate Holder</strong></span>
+</div>
+<span class="text-label-sm font-mono text-outline">HASH-STD-SHA256+RSA4096</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="rule_folder">rule_folder</span>
+<h2 class="text-title-lg font-title-lg text-primary">Evidentiary Bundle Checklist &amp; Content Selector</h2>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">6 of 6 Sections Bound &amp; Attested</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mb-4">
+            Select artifacts and cryptographic proof sets to include within the finalized sealed bundle. Every item contains an independent immutable hash linked to the Master Merkle Root.
+          </p>
+<div class="flex flex-col gap-2.5">
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Section 84 Certificate of Authenticity</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Auto-Generated</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  System operator affidavit swearing proper automated device operation, absence of unauthorized tampering, and continuous log preservation under oath.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: CERT-84-2024-0419</span>
+<span>SIZE: 412 KB</span>
+<span class="text-tertiary-container font-medium">STATUS: Cryptographically Affirmed</span>
+</div>
+</div>
+</label>
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Master Forensic Chronology &amp; Telemetry Sequence</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold">Timestamped (NTP Sync)</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  Microsecond-accurate time-aligned timeline correlating swift banking transfers, VPN connection handshakes, and core banking database ledger mutations.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: CHRONO-SEQ-V3.4</span>
+<span>SIZE: 14.8 MB</span>
+<span class="text-tertiary-container font-medium">STATUS: RFC-3161 Timestamped</span>
+</div>
+</div>
+</label>
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Raw Binary Artifacts with Merkle Root Hash Proofs</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-surface-container text-on-surface-variant font-semibold">Forensic Binaries</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  Raw full-packet capture (.PCAP), Cloudflare WAF firewall transcripts, and database dump extracts validated against root tree hash <code class="bg-surface-container-high px-1 rounded text-primary">0x9F4B...81E2</code>.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: BIN-ART-PACK-01</span>
+<span>SIZE: 98.6 MB</span>
+<span class="text-tertiary-container font-medium">STATUS: SHA256 Verified</span>
+</div>
+</div>
+</label>
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Expert Witness Testimony &amp; Forensic Narrative</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Lead Investigator Signed</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  Sworn forensic examiner analysis, methodology description, heuristic fraud topology deduction, and attribution confidence indices.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: AFF-NARR-INV-07</span>
+<span>SIZE: 3.2 MB</span>
+<span class="text-tertiary-container font-medium">STATUS: PGP Signed by O. Adeleke</span>
+</div>
+</div>
+</label>
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Chain of Custody Complete Transfer Ledger</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold">Non-Repudiation Trail</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  Continuous multi-custodian ledger tracing evidence collection from internal SOC capture, legal hold lock, to escrow archival.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: CUSTODY-AUDIT-L4</span>
+<span>SIZE: 840 KB</span>
+<span class="text-tertiary-container font-medium">STATUS: Tamper-Evident Sealed</span>
+</div>
+</div>
+</label>
+<label class="flex items-start gap-3.5 p-3.5 rounded-xl border border-outline-variant/30 bg-surface hover:bg-surface-container-low transition-colors cursor-pointer group">
+<input checked="" class="mt-1 rounded text-primary-container focus:ring-primary-container h-4 w-4 border-outline" type="checkbox"/>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-semibold text-on-surface group-hover:text-primary">Suspect Entity Resolution &amp; Biometric Linkage Diagrams</span>
+<span class="px-2 py-0.5 rounded text-label-sm bg-surface-container text-on-surface-variant font-semibold">High-Res Visual Exhibit</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">
+                  High-resolution vector relational diagrams mapping corporate beneficial ownership, BVN (Bank Verification Number) clusters, and suspicious mule accounts.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-label-sm font-mono text-outline">
+<span>REF: GRAPH-BIOM-DIAG-09</span>
+<span>SIZE: 24.6 MB</span>
+<span class="text-tertiary-container font-medium">STATUS: Vector Sealed (300 DPI)</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="enhanced_encryption">enhanced_encryption</span>
+<h2 class="text-title-lg font-title-lg text-primary">Encryption &amp; Judicial Packaging Directives</h2>
+</div>
+<span class="text-label-sm font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-semibold">FIPS 140-3 Level 3</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="p-3.5 rounded-xl border border-outline-variant/30 bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Container Format</span>
+<p class="text-body-md font-semibold text-primary mt-1">Court-Approved ISO-9660</p>
+<p class="text-body-sm text-on-surface-variant mt-1">With nested AES-256 TAR.GZ for universal court registrar mounting without third-party utilities.</p>
+</div>
+<div class="mt-3 flex items-center gap-1.5 text-label-sm text-primary font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+<span>Self-Mounting Ready</span>
+</div>
+</div>
+<div class="p-3.5 rounded-xl border border-outline-variant/30 bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Mandatory Watermark</span>
+<p class="text-body-md font-semibold text-primary mt-1">JUDICIAL ENCLAVE STAMP</p>
+<p class="text-body-sm text-on-surface-variant mt-1">Diagonal semi-transparent security watermark containing Investigator ID (#88192) &amp; filing epoch.</p>
+</div>
+<div class="mt-3 flex items-center gap-1.5 text-label-sm text-primary font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+<span>Embedded All Pages</span>
+</div>
+</div>
+<div class="p-3.5 rounded-xl border border-outline-variant/30 bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Key Escrow Mechanism</span>
+<p class="text-body-md font-semibold text-primary mt-1">Shamir Split-Key (2-of-3)</p>
+<p class="text-body-sm text-on-surface-variant mt-1">Requires dual quorum: Hon. Registrar Keycard + Lead Defense Counsel token to decrypt evidence in open court.</p>
+</div>
+<div class="mt-3 flex items-center gap-1.5 text-label-sm text-primary font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+<span>Quorum Verified</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="inventory_2">inventory_2</span>
+<h2 class="text-title-lg font-title-lg text-primary">Live Evidentiary Package Inspector &amp; Manifest</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 text-label-sm font-mono px-2.5 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-fixed animate-ping"></span>
+                100% Compiled &amp; Verified
+              </span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-3 p-3 bg-surface-container-low rounded-xl mb-4 text-center">
+<div class="border-r border-outline-variant/30">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Total Bundle Size</span>
+<p class="text-headline-md font-kpi-metric text-primary">142.4 <span class="text-title-md font-normal text-on-surface-variant">MB</span></p>
+</div>
+<div class="border-r border-outline-variant/30">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Discrete Files</span>
+<p class="text-headline-md font-kpi-metric text-primary">28 <span class="text-title-md font-normal text-on-surface-variant">Items</span></p>
+</div>
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Merkle Root Status</span>
+<p class="text-title-lg font-title-lg text-tertiary-container font-semibold mt-1">SEALED (L4)</p>
+</div>
+</div>
+<div class="overflow-hidden border border-outline-variant/30 rounded-xl">
+<table class="w-full text-left text-body-sm font-body-sm">
+<thead class="bg-surface-container border-b border-outline-variant/30 text-on-surface-variant text-label-sm">
+<tr>
+<th class="py-2.5 px-3.5">Filename</th>
+<th class="py-2.5 px-3.5">Statutory Class</th>
+<th class="py-2.5 px-3.5">SHA-256 Digest</th>
+<th class="py-2.5 px-3.5 text-right">Size</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-mono text-body-sm">
+<tr class="hover:bg-surface-container-low/60">
+<td class="py-2 px-3.5 font-sans font-medium text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="description" style="font-size: 16px;">description</span>
+                    Section_84_Certificate_Execution_Copy.pdf
+                  </td>
+<td class="py-2 px-3.5 text-on-surface-variant font-sans">Statutory Affidavit</td>
+<td class="py-2 px-3.5 text-outline text-label-sm">e3b0c44298fc1c149afbf4c89...</td>
+<td class="py-2 px-3.5 text-right text-on-surface">412 KB</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60">
+<td class="py-2 px-3.5 font-sans font-medium text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="timeline" style="font-size: 16px;">timeline</span>
+                    Chronology_Master_Timeline_v3.4.json
+                  </td>
+<td class="py-2 px-3.5 text-on-surface-variant font-sans">Telemetry Timeline</td>
+<td class="py-2 px-3.5 text-outline text-label-sm">7a2f581bc638d9f10927c3e10...</td>
+<td class="py-2 px-3.5 text-right text-on-surface">14.8 MB</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60">
+<td class="py-2 px-3.5 font-sans font-medium text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="data_object" style="font-size: 16px;">data_object</span>
+                    Raw_PCAP_Capture_Apex_Infiltration.iso
+                  </td>
+<td class="py-2 px-3.5 text-on-surface-variant font-sans">Forensic Payload</td>
+<td class="py-2 px-3.5 text-outline text-label-sm">49b284e3d09a13b62f55928d1...</td>
+<td class="py-2 px-3.5 text-right text-on-surface">98.6 MB</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60">
+<td class="py-2 px-3.5 font-sans font-medium text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="fingerprint" style="font-size: 16px;">fingerprint</span>
+                    Suspect_Beneficial_Graph_Cluster.svg
+                  </td>
+<td class="py-2 px-3.5 text-on-surface-variant font-sans">Visual Court Exhibit</td>
+<td class="py-2 px-3.5 text-outline text-label-sm">bc82310de4568fa094032d184...</td>
+<td class="py-2 px-3.5 text-right text-on-surface">24.6 MB</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-sm p-space-md relative overflow-hidden judicial-stamp">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="bookmark">bookmark</span>
+<h3 class="text-title-lg font-title-lg text-primary">Judicial Exhibit Docket</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-label-sm font-label-sm bg-secondary-container text-on-secondary-fixed font-bold tracking-wider">OFFICIAL</span>
+</div>
+<div class="bg-primary-container text-surface p-4 rounded-xl shadow-md border border-inverse-primary/20 mb-4 text-center">
+<span class="text-label-sm font-label-sm tracking-widest text-secondary-fixed uppercase font-semibold">Formal Exhibit Identification</span>
+<div class="text-headline-md font-headline-md text-surface tracking-wider mt-1 font-bold">
+              EXHIBIT EFIMS-2024-0419-A
+            </div>
+<span class="inline-block mt-1 text-label-sm text-inverse-primary/80 font-mono">COURT CLERK INDEX SEAL: NG-FHC-IKY-24</span>
+</div>
+<dl class="flex flex-col gap-3 text-body-sm">
+<div class="pb-2 border-b border-outline-variant/20">
+<dt class="text-label-sm font-label-sm text-on-surface-variant uppercase">Court Case Reference</dt>
+<dd class="text-body-md font-bold text-primary font-mono mt-0.5">FHC/L/CR/2024/512</dd>
+<dd class="text-body-sm text-on-surface-variant font-serif italic mt-0.5">Federal Republic of Nigeria vs. Apex Synergy Ltd &amp; Others</dd>
+</div>
+<div class="pb-2 border-b border-outline-variant/20">
+<dt class="text-label-sm font-label-sm text-on-surface-variant uppercase">Presiding Judicial Authority</dt>
+<dd class="text-body-md font-semibold text-primary mt-0.5">Hon. Justice M. B. Bello</dd>
+<dd class="text-body-sm text-on-surface-variant">Federal High Court of Nigeria, Court 3, Ikoyi Judicial Division, Lagos State</dd>
+</div>
+<div class="pb-2 border-b border-outline-variant/20">
+<dt class="text-label-sm font-label-sm text-on-surface-variant uppercase">Registrar Destination Gateway</dt>
+<dd class="text-body-md font-mono text-on-surface mt-0.5">registry.fhc.gov.ng:443/efims-intake</dd>
+<dd class="text-label-sm text-tertiary-container flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
+<span>Mutual TLS Endpoint Handshake Verified</span>
+</dd>
+</div>
+<div>
+<dt class="text-label-sm font-label-sm text-on-surface-variant uppercase">Prosecuting Agency / Unit</dt>
+<dd class="text-body-md font-semibold text-primary mt-0.5">NFIU Forensic Cyber Crime Special Taskforce</dd>
+<dd class="text-body-sm text-on-surface-variant">In collaboration with EFCC Operations Enclave B</dd>
+</div>
+</dl>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-sm p-space-md">
+<div class="flex items-center gap-2 pb-3 border-b border-outline-variant/30 mb-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="draw">draw</span>
+<h3 class="text-title-lg font-title-lg text-primary">Section 84(2) Attestation</h3>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed mb-4">
+            Under Section 84(2) of the Nigerian Evidence Act 2011, the undersigned certifies that the electronic systems operated in ordinary course, with integrity preserved, and without unauthorized distortion or systemic failure.
+          </p>
+<div class="flex flex-col gap-3">
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center font-bold text-title-md border border-outline-variant/20">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+</div>
+<div class="flex flex-col">
+<span class="text-body-md font-semibold text-primary leading-tight">B. O. Farouk, Esq.</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Chief Legal Counsel &amp; MLRO</span>
+<span class="text-label-sm font-mono text-outline mt-0.5">KEY: RSA-4096-7DF2-019</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="verified" data-weight="fill">verified</span>
+<span class="text-label-sm font-semibold text-tertiary-container mt-0.5">SIGNED</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-surface flex items-center justify-center font-bold text-title-md border border-outline-variant/20">
+<span class="material-symbols-outlined" data-icon="fingerprint">fingerprint</span>
+</div>
+<div class="flex flex-col">
+<span class="text-body-md font-semibold text-primary leading-tight">Dr. I. C. Adeleke, GCFA</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Principal Forensic Investigator</span>
+<span class="text-label-sm font-mono text-outline mt-0.5">KEY: ED25519-89B4-99C</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="verified" data-weight="fill">verified</span>
+<span class="text-label-sm font-semibold text-tertiary-container mt-0.5">SIGNED</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-label-sm text-on-surface-variant">
+<span>Audit Nonce: <code class="font-mono text-primary">#90812-NONCE-L4</code></span>
+<span>Signed: 2024-04-19 14:22:09 UTC</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-sm p-space-md flex flex-col gap-3">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase font-semibold">Judicial Release Actions</span>
+<button class="w-full py-3.5 px-4 rounded-full bg-primary text-on-primary hover:bg-primary-container font-title-md text-title-md font-semibold transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md active:scale-[0.98]" type="button">
+<span class="material-symbols-outlined text-on-primary" data-icon="package_2">package_2</span>
+<span>Compile &amp; Sign Court Package (.EFIMS)</span>
+</button>
+<button class="w-full py-2.5 px-4 rounded-full bg-secondary-container text-on-secondary-fixed hover:bg-secondary-fixed font-body-md text-body-md font-semibold transition-all duration-150 flex items-center justify-center gap-2 border border-outline-variant/20" type="button">
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span>Generate Print-Ready Section 84 Certificate (PDF)</span>
+</button>
+<button class="w-full py-2.5 px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-primary font-body-md text-body-md font-medium transition-all duration-150 flex items-center justify-center gap-2 border border-outline-variant/40" type="button">
+<span class="material-symbols-outlined text-primary-container" data-icon="send_and_archive">send_and_archive</span>
+<span>Direct E-Filing Dispatch to Judiciary Gateway</span>
+</button>
+<div class="mt-2 p-3 rounded-lg bg-error-container/40 border border-error-container text-on-error-container text-label-sm flex items-start gap-2">
+<span class="material-symbols-outlined text-error flex-shrink-0" data-icon="warning" style="font-size: 16px;">warning</span>
+<span>Irreversible action: Once the package is compiled and signed with the L4 hardware key, the Merkle tree seals permanently into the immutable audit trail.</span>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-4 py-4 border-t border-outline-variant/20 flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-4">
+<span>EFIMS Judicial Suite v4.19-PRO</span>
+<span>•</span>
+<span>Court Node Connection: LAGOS-HIGH-COURT-GW02 (Latency 14ms)</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>
+<span>NTRU-Prime Post-Quantum Ready</span>
+</span>
+<span>•</span>
+<span class="font-mono">BUILD-2024.04.19-CUSTODY</span>
+</div>
+</footer>
+</main>
+<script>
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const parentLabel = e.target.closest('label');
+        if (!e.target.checked) {
+          parentLabel.classList.add('opacity-60');
+        } else {
+          parentLabel.classList.remove('opacity-60');
+        }
+      });
+    });
+  </script>
+</body></html>

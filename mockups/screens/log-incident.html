@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core — Log New Operational Incident</title>
+<!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "primary-fixed": "#cbe8e4",
+            "on-error-container": "#93000a",
+            "primary": "#072320",
+            "inverse-on-surface": "#f3f0ee",
+            "tertiary-fixed": "#c4ebd9",
+            "error": "#ba1a1a",
+            "primary-fixed-dim": "#b0ccc8",
+            "surface-variant": "#e5e2e0",
+            "on-primary-fixed": "#04201d",
+            "outline": "#727877",
+            "on-secondary-fixed": "#2a1713",
+            "background": "#fcf9f7",
+            "on-secondary-container": "#795e59",
+            "surface": "#fcf9f7",
+            "surface-tint": "#496360",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-surface": "#1b1c1b",
+            "tertiary": "#002419",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "secondary-container": "#ffdad4",
+            "secondary-fixed": "#ffdad4",
+            "surface-container-highest": "#e5e2e0",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-container": "#7fa494",
+            "surface-container": "#f0edeb",
+            "surface-bright": "#fcf9f7",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-primary-container": "#86a19d",
+            "inverse-primary": "#b0ccc8",
+            "primary-container": "#1e3835",
+            "on-primary": "#ffffff",
+            "inverse-surface": "#30302f",
+            "on-surface-variant": "#414847",
+            "error-container": "#ffdad6",
+            "on-background": "#1b1c1b",
+            "surface-container-low": "#f6f3f1",
+            "secondary": "#735854",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#002116",
+            "surface-container-high": "#eae8e6",
+            "surface-dim": "#dcd9d8",
+            "outline-variant": "#c1c8c6",
+            "tertiary-container": "#163a2d",
+            "on-primary-fixed-variant": "#314c48"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-mobile": "1rem",
+            "space-md": "1.25rem",
+            "gutter": "1.25rem",
+            "margin": "2rem",
+            "space-lg": "1.75rem",
+            "gutter-mobile": "0.75rem",
+            "space-xl": "2.5rem",
+            "space-xs": "0.375rem",
+            "space-sm": "0.75rem"
+          },
+          "fontFamily": {
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "headline-xl-mobile": ["Playfair Display"]
+          },
+          "fontSize": {
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(30, 56, 53, 0.2);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen antialiased selection:bg-secondary-fixed selection:text-primary">
+<!-- APP SHELL CONTAINER -->
+<div class="flex min-h-screen w-full">
+<!-- PERSISTENT SIDEBAR NAVIGATION (w-64 fixed) -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col z-40 bg-primary-container border-r border-outline-variant/20 shadow-xl justify-between p-4">
+<!-- Monogram & Brand -->
+<div>
+<div class="flex items-center gap-3 px-2 py-3 border-b border-surface-variant/10 mb-4">
+<div class="w-9 h-9 rounded-xl bg-tertiary-container flex items-center justify-center text-secondary-container shadow-inner">
+<span class="material-symbols-outlined text-xl" data-icon="shield_lock">shield_lock</span>
+</div>
+<div>
+<h1 class="text-title-lg font-title-lg text-surface font-bold tracking-tight">EFIMS Core</h1>
+<p class="text-label-sm font-label-sm text-on-primary-container tracking-wider font-semibold">PROD — NG CORE BANKING</p>
+</div>
+</div>
+<!-- Quick Action CTA -->
+<button class="w-full mb-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-surface-variant/15 text-surface font-label-md text-label-md hover:bg-surface-variant/25 transition-all border border-surface-variant/10 shadow-sm active:scale-[0.98]">
+<span class="material-symbols-outlined text-sm text-secondary-fixed" data-icon="add">add</span>
+<span>New Escalation</span>
+</button>
+<!-- Nav Items -->
+<nav class="space-y-1">
+<!-- Active Incidents Tab (Blush Rose Pill) -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold text-label-md font-label-md shadow-sm" href="#">
+<span class="material-symbols-outlined text-on-secondary-fixed text-lg" data-icon="crisis_alert" style="font-variation-settings: 'FILL' 1;">crisis_alert</span>
+<span>Incidents</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="workspaces">workspaces</span>
+<span>Cases</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="travel_explore">travel_explore</span>
+<span>Investigations</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="shield_lock">shield_lock</span>
+<span>Evidence Vault</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="health_and_safety">health_and_safety</span>
+<span>Containment &amp; Recovery</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="policy">policy</span>
+<span>Regulatory &amp; CAPA</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="tune">tune</span>
+<span>Configuration</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="history_toggle_off">history_toggle_off</span>
+<span>Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Telemetry Status -->
+<div class="pt-4 border-t border-surface-variant/10 space-y-2">
+<div class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-tertiary-container/60 text-surface-variant/90 text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-tertiary-fixed text-base" data-icon="satellite_alt">satellite_alt</span>
+<span class="truncate">System Telemetry 99.98% Operational</span>
+</div>
+<div class="flex items-center justify-between px-2 text-label-sm font-label-sm text-on-primary-container">
+<span>CBN Node: Online</span>
+<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+</div>
+</div>
+</aside>
+<!-- CONTENT WRAPPER (Starts offset by 16rem/w-64) -->
+<div class="ml-64 flex-1 flex flex-col min-w-0 bg-background">
+<!-- TOP BAR -->
+<header class="sticky top-0 z-30 h-[64px] bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-8">
+<!-- Search & Breadcrumb -->
+<div class="flex items-center gap-6 flex-1 max-w-2xl">
+<div class="flex items-center gap-1.5 text-label-sm font-label-sm text-on-surface-variant shrink-0">
+<span class="hover:text-primary transition-colors cursor-pointer">Financial Crime</span>
+<span class="text-outline-variant">›</span>
+<span class="hover:text-primary transition-colors cursor-pointer">Incidents</span>
+<span class="text-outline-variant">›</span>
+<span class="text-primary font-bold bg-surface-container-high px-2.5 py-0.5 rounded-full">New Intake</span>
+</div>
+<div class="relative w-full max-w-xs">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="search">search</span>
+<input class="w-full pl-9 pr-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/40 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Global search NIBSS, TxID, Account..." type="text"/>
+</div>
+</div>
+<!-- Right System Indicators -->
+<div class="flex items-center gap-4 shrink-0">
+<!-- S1 SLA Breach Countdown -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-error-container text-on-error-container border border-error/20">
+<span class="material-symbols-outlined text-sm animate-spin" data-icon="timer" style="animation-duration: 3s;">timer</span>
+<span class="text-label-sm font-label-sm font-bold tracking-tight">S1 SLA Breach (00:14:22)</span>
+</div>
+<!-- Tier Role Tag -->
+<div class="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface text-label-sm font-label-sm border border-outline-variant/30 font-semibold">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="verified_user">verified_user</span>
+<span>AML/MLRO Tier-1</span>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex items-center gap-1 border-l border-outline-variant/40 pl-3">
+<button class="p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Settings">
+<span class="material-symbols-outlined text-xl" data-icon="tune">tune</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Help Guide">
+<span class="material-symbols-outlined text-xl" data-icon="help">help</span>
+</button>
+</div>
+<!-- User Profile -->
+<div class="flex items-center gap-2.5 pl-3 border-l border-outline-variant/40">
+<div class="w-9 h-9 rounded-full bg-primary-container text-secondary-fixed flex items-center justify-center font-bold text-label-md border border-primary/30 shadow-sm">
+              AB
+            </div>
+<div class="text-left hidden lg:block">
+<p class="text-label-sm font-label-sm text-on-surface font-bold leading-tight">Adewale Balogun</p>
+<p class="text-label-sm font-label-sm text-outline leading-tight">Lead MLRO L3</p>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN PAGE CONTENT -->
+<main class="flex-1 px-8 py-8 max-w-7xl w-full mx-auto pb-32">
+<!-- Page Header -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between border-b border-outline-variant/30 pb-6 gap-4">
+<div>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-tertiary-fixed text-on-tertiary-fixed text-label-sm font-label-sm font-bold mb-2.5">
+<span class="material-symbols-outlined text-sm" data-icon="lock">lock</span>
+              Immutable SIEM Ledger v4.8 Active
+            </div>
+<h1 class="text-headline-xl font-headline-xl text-primary font-serif tracking-tight">Log New Operational Incident</h1>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1.5 max-w-3xl">
+              Statutory financial crime triage intake adhering to CBN Circular BSI/2023/IV and NDPR 2.1 compliance mandates. All submitted evidence, telemetry, and attestation logs undergo immediate SHA-256 cryptographic hashing.
+            </p>
+</div>
+<div class="flex items-center gap-2 self-start md:self-end shrink-0">
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-full border border-outline-variant/30 font-mono">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="fingerprint">fingerprint</span>
+              SHA-256 HASHING ACTIVE
+            </span>
+</div>
+</div>
+<!-- 2-COLUMN GRID (Main Form + Advisory Panel) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- MAIN INTAKE FORM (8 cols) -->
+<div class="lg:col-span-8 space-y-6">
+<!-- SECTION 1: Classification & Severity -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-5">
+<div class="flex items-center justify-between border-b border-surface-container pb-3">
+<h2 class="text-title-md font-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="category">category</span>
+                  1. Incident Classification &amp; Severity
+                </h2>
+<span class="text-label-sm font-label-sm text-outline">Mandatory Fields *</span>
+</div>
+<!-- Primary Category & Sub-Category Rail -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                    Incident Category <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full appearance-none rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option selected="">Unauthorized NIBSS Instant Payment</option>
+<option>ATM Fleet Skimming &amp; Logic Tampering</option>
+<option>Wire Tampering &amp; RTGS Intercept</option>
+<option>Insider Impersonation &amp; Collusion</option>
+<option>Cash Smurfing &amp; Structuring Ring</option>
+<option>SIM Swap / Telco Identity Intercept</option>
+<option>Core Banking API Sentinel Breach</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                    Sub-Category / Payment Rail Origin <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full appearance-none rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option selected="">NIP (NIBSS Instant Payment)</option>
+<option>RTGS (Real Time Gross Settlement)</option>
+<option>SWIFT GPI / Cross-Border Wire</option>
+<option>POS Interswitch / Terminal Rail</option>
+<option>USSD Direct Session Gateway</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+<!-- Severity Tier Assessment + Discovery Channel -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-2">
+                    Initial Severity Tier Assessment <span class="text-error">*</span>
+</label>
+<div class="grid grid-cols-4 gap-2">
+<label class="flex flex-col items-center justify-center p-2.5 rounded-xl border-2 border-error bg-error-container/30 cursor-pointer text-center">
+<input checked="" class="sr-only" name="severity" type="radio" value="S1"/>
+<span class="text-label-sm font-label-sm font-bold text-error">S1 Critical</span>
+<span class="text-[10px] text-error font-medium leading-none mt-0.5">&lt;60 min</span>
+</label>
+<label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container cursor-pointer text-center">
+<input class="sr-only" name="severity" type="radio" value="S2"/>
+<span class="text-label-sm font-label-sm font-bold text-amber-700">S2 High</span>
+<span class="text-[10px] text-outline font-medium leading-none mt-0.5">4-hr SLA</span>
+</label>
+<label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container cursor-pointer text-center">
+<input class="sr-only" name="severity" type="radio" value="S3"/>
+<span class="text-label-sm font-label-sm font-bold text-on-surface">S3 Medium</span>
+<span class="text-[10px] text-outline font-medium leading-none mt-0.5">24-hr SLA</span>
+</label>
+<label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container cursor-pointer text-center">
+<input class="sr-only" name="severity" type="radio" value="S4"/>
+<span class="text-label-sm font-label-sm font-bold text-outline">S4 Low</span>
+<span class="text-[10px] text-outline font-medium leading-none mt-0.5">72-hr SLA</span>
+</label>
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                    Discovery &amp; Ingestion Channel <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full appearance-none rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option selected="">Automated AML Heuristic Engine (RULE-NG-889)</option>
+<option>Frontline Branch Ops (Victoria Island)</option>
+<option>Whistleblower Secure Encrypted Hotline</option>
+<option>Core Banking API Sentinel Telemetry</option>
+<option>External Law Enforcement (EFCC / NFIU Notice)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Narrative & Temporal Discovery -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-5">
+<div class="flex items-center justify-between border-b border-surface-container pb-3">
+<h2 class="text-title-md font-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="schedule">schedule</span>
+                  2. Narrative &amp; Temporal Discovery
+                </h2>
+<span class="text-label-sm font-label-sm text-outline">Timezone: WAT (UTC+1)</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Date & Time Detected -->
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                    Date &amp; Time Detected (WAT) <span class="text-error">*</span>
+</label>
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2 text-body-md font-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" type="datetime-local" value="2024-10-24T14:22"/>
+<p class="text-label-sm font-label-sm text-error font-medium mt-1.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="alarm">alarm</span>
+                    CBN 60-min containment clock initialized
+                  </p>
+</div>
+<!-- Source Telemetry Ref -->
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                    Source Detection Telemetry Ref ID
+                  </label>
+<div class="relative">
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2 text-body-md font-body-md font-mono text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. TEL-NIP-2024-8849" type="text" value="TEL-NIP-2024-8849"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline" data-icon="hub">hub</span>
+</div>
+<p class="text-label-sm font-label-sm text-outline mt-1.5">Origin Core Node: Instant Settlement Hub (NIP-GW-04)</p>
+</div>
+</div>
+<!-- Summary / Incident Title -->
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold mb-1.5">
+                  Summary / Incident Title <span class="text-error">*</span>
+</label>
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md font-semibold text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" placeholder="High-level incident headline" type="text" value="High-Frequency NIP Settlement Spike on Dormant Corporate Clearing Account"/>
+</div>
+<!-- Rich Text Narrative -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold">
+                    Comprehensive Incident Narrative &amp; Observed TTPs <span class="text-error">*</span>
+</label>
+<span class="text-label-sm font-label-sm text-outline">Markdown Supported</span>
+</div>
+<textarea class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-3.5 text-body-md font-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" rows="4">Multiple rapid-fire unauthorized NIP settlement requests detected originating from non-standard internal IP subnet (10.244.18.91) targeting dormant enterprise clearing account. Outgoing tranches initiated within 180 seconds, bypassing normal 2FA threshold via spoofed session bearer tokens.</textarea>
+</div>
+</div>
+<!-- SECTION 3: Entity Identification & Financial Exposure -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-5">
+<div class="flex items-center justify-between border-b border-surface-container pb-3">
+<h2 class="text-title-md font-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance">account_balance</span>
+                  3. Entity Identification &amp; Financial Exposure
+                </h2>
+<span class="text-label-sm font-label-sm text-on-tertiary-fixed-variant bg-tertiary-fixed/60 px-2 py-0.5 rounded font-semibold">Core Banking KYC Connected</span>
+</div>
+<!-- Origin Account & Target Account in 2-cols -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Origin Account (NUBAN) -->
+<div class="space-y-3">
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold">
+                    Affected Origin Account Number (NUBAN 10-Digit) <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md font-mono text-on-surface focus:ring-1 focus:ring-primary focus:border-primary pr-28" type="text" value="0148892110"/>
+<span class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 bg-surface-container-highest text-primary font-bold text-label-sm font-label-sm px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified
+                    </span>
+</div>
+<!-- Resolved Corporate Entity Card -->
+<div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/60 text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="domain">domain</span>
+</div>
+<div class="min-w-0">
+<p class="text-label-sm font-label-sm text-outline">Resolved Corporate Entity</p>
+<p class="text-body-md font-body-md text-primary font-bold truncate">Dangote Cement Corporate Clearing</p>
+<p class="text-label-sm font-label-sm font-mono text-outline">Account #0148892110 • Tier-3 Corporate</p>
+</div>
+</div>
+</div>
+<!-- Target / Beneficiary Account -->
+<div class="space-y-3">
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold">
+                    Target Beneficiary Account &amp; Institution <span class="text-error">*</span>
+</label>
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-body-md font-body-md font-mono text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Beneficiary NUBAN (10-digit)" type="text" value="2044819920"/>
+<div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container/60 text-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="account_balance">account_balance</span>
+</div>
+<div class="min-w-0">
+<p class="text-label-sm font-label-sm text-outline">Beneficiary Destination Institution</p>
+<p class="text-body-md font-body-md text-primary font-bold truncate">GTBank Plc — Opebi Branch</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Beneficiary: Shellford Dynamic Logistics Ent.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Financial Exposure Amount & Conversions -->
+<div class="space-y-2 pt-2 border-t border-surface-container">
+<label class="block text-label-sm font-label-sm text-on-surface font-semibold">
+                  Disputed Financial Exposure / Value at Risk <span class="text-error">*</span>
+</label>
+<div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+<div class="flex gap-2 flex-1">
+<select class="w-28 rounded-xl bg-surface-container-low border border-outline-variant/40 px-3 py-2.5 text-body-md font-body-md font-bold text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option selected="">NGN ₦</option>
+<option>USD $</option>
+<option>GBP £</option>
+<option>EUR €</option>
+</select>
+<div class="relative flex-1">
+<input class="w-full rounded-xl bg-surface-container-low border border-outline-variant/40 px-3.5 py-2.5 text-title-md font-title-md font-bold text-primary focus:ring-1 focus:ring-primary focus:border-primary font-mono" type="text" value="45,000,000.00"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline" data-icon="payments">payments</span>
+</div>
+</div>
+<!-- Conversion Badge -->
+<div class="px-4 py-2.5 rounded-xl bg-surface-container text-on-surface text-body-sm font-body-sm flex items-center justify-between sm:justify-start gap-3 border border-outline-variant/30 shrink-0">
+<span class="text-outline">FX Conversion Preview:</span>
+<span class="font-mono font-bold text-primary">~$27,450.00 USD</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-label-sm font-label-sm px-1 pt-1">
+<span class="text-outline">Statutory Threshold: &gt;₦10M Triggers Mandatory S1 Review &amp; Tier-1 Containment</span>
+<span class="text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+                    High Exposure Alert Triggered
+                  </span>
+</div>
+</div>
+</div>
+<!-- SECTION 4: Forensic Evidence & Artifact Ingestion -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-4">
+<div class="flex items-center justify-between border-b border-surface-container pb-3">
+<div>
+<h2 class="text-title-md font-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="inventory_2">inventory_2</span>
+                    4. Forensic Evidence &amp; Artifact Ingestion
+                  </h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Automatic SHA-256 pre-computation for chain-of-custody preservation.</p>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-mono bg-surface-container px-2.5 py-1 rounded-full font-bold">SHA-256 Enabled</span>
+</div>
+<!-- Drag & Drop Box -->
+<div class="border-2 border-dashed border-outline-variant/70 rounded-2xl p-6 text-center hover:border-primary transition-colors bg-surface-container-low/40 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed/60 text-secondary mx-auto flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-2xl" data-icon="cloud_upload">cloud_upload</span>
+</div>
+<p class="text-body-md font-body-md font-bold text-on-surface">
+                  Drag &amp; drop forensic dumps, transaction logs, or customer correspondence
+                </p>
+<p class="text-label-sm font-label-sm text-outline mt-1">
+                  Accepted formats: PCAP, XML packets, CSV, audit logs (Max 50MB per artifact)
+                </p>
+<button class="mt-3 px-4 py-1.5 rounded-full bg-surface-container-highest hover:bg-surface-container text-on-surface text-label-sm font-label-sm font-semibold transition-colors" type="button">
+                  Browse Local Workstation
+                </button>
+</div>
+<!-- Uploaded Artifacts List -->
+<div class="space-y-2">
+<!-- File 1 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-body-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="code">code</span>
+<div>
+<div class="flex items-center gap-2">
+<p class="font-bold text-on-surface">nibss_pacs008_packet_raw.xml</p>
+<span class="text-label-sm font-label-sm text-outline">48.2 KB</span>
+</div>
+<p class="text-label-sm font-label-sm font-mono text-outline truncate max-w-sm sm:max-w-md">SHA-256: d85a49c5e3...19afbf4c89 (Verified)</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold px-2 py-0.5 rounded">SHA-256 Verified</span>
+<button class="text-outline hover:text-error transition-colors" type="button">
+<span class="material-symbols-outlined text-lg" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<!-- File 2 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-body-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="data_object">data_object</span>
+<div>
+<div class="flex items-center gap-2">
+<p class="font-bold text-on-surface">session_waf_audit_0341.json</p>
+<span class="text-label-sm font-label-sm text-outline">112.9 KB</span>
+</div>
+<p class="text-label-sm font-label-sm font-mono text-outline truncate max-w-sm sm:max-w-md">SHA-256: b349f81a70...62ca78019b (Verified)</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold px-2 py-0.5 rounded">SHA-256 Verified</span>
+<button class="text-outline hover:text-error transition-colors" type="button">
+<span class="material-symbols-outlined text-lg" data-icon="close">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 5: Statutory Attestation & Submission -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-6">
+<div class="flex items-center justify-between border-b border-surface-container pb-3">
+<h2 class="text-title-md font-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="verified_user">verified_user</span>
+                  5. Statutory Attestation &amp; Sign-off
+                </h2>
+<span class="text-label-sm font-label-sm font-mono text-outline">WAT: 2024-10-24 14:38:09</span>
+</div>
+<!-- Reporting Officer Card -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-full bg-primary-container text-secondary-fixed flex items-center justify-center font-bold text-label-md shadow-sm">
+                    AB
+                  </div>
+<div>
+<p class="text-body-md font-body-md text-primary font-bold">Reporting Officer: Adewale Balogun</p>
+<p class="text-label-sm font-label-sm text-outline">Lead MLRO L3 • Fraud Ops &amp; Compliance Directorate (ID: EF-9441)</p>
+</div>
+</div>
+<div class="text-left sm:text-right">
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm bg-surface-container-high px-2.5 py-1 rounded-md text-primary font-bold">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Session Authenticated
+                  </span>
+</div>
+</div>
+<!-- Mandatory Compliance Checkbox -->
+<label class="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low/50 hover:bg-surface-container-low transition-colors cursor-pointer border border-outline-variant/30">
+<input checked="" class="mt-0.5 rounded text-primary focus:ring-primary border-outline-variant w-4 h-4" type="checkbox"/>
+<div class="text-body-sm font-body-sm">
+<span class="font-bold text-on-surface">Affirm initial factual veracity under Section 7 AML Act &amp; NDPR 2.1 Guidelines.</span>
+<p class="text-outline text-label-sm font-label-sm mt-0.5 leading-relaxed">
+                    I certify under regulatory penalty that all account metadata, amounts, and evidentiary attachments represent authentic operational discoveries. False or negligent reporting constitutes a statutory breach under the Nigerian Banking Act.
+                  </p>
+</div>
+</label>
+<!-- Form Action Bar -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-surface-container">
+<button class="w-full sm:w-auto px-5 py-2.5 rounded-full text-outline hover:text-error hover:bg-error-container/20 font-label-md text-label-md font-semibold transition-all" type="button">
+                  Cancel / Reset
+                </button>
+<div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+<button class="w-full sm:w-auto px-6 py-2.5 rounded-full border border-primary/20 text-primary hover:bg-surface-container font-label-md text-label-md font-bold transition-all" type="button">
+                    Save Draft to Triage Queue
+                  </button>
+<button class="w-full sm:w-auto px-7 py-3 rounded-full bg-primary hover:bg-primary-container text-surface font-label-md text-label-md font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group" type="button">
+<span class="material-symbols-outlined text-base" data-icon="lock_reset">lock_reset</span>
+<span>Commit Incident to Live Triage Queue</span>
+<span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT ADVISORY COLUMN (4 cols) -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- CBN Directive Hero Card -->
+<div class="bg-primary-container text-surface rounded-2xl p-6 shadow-xl relative overflow-hidden">
+<div class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-secondary-fixed/10 blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-2 text-secondary-fixed mb-3">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider font-bold">Regulatory Directive</span>
+</div>
+<h3 class="text-title-lg font-title-lg font-serif mb-2">CBN Circular BSI/2023/IV Mandate</h3>
+<p class="text-body-sm font-body-sm text-surface-variant/90 leading-relaxed mb-4">
+                Under Section 4.2 of the Nigerian Banking System Incident Framework, all high-value or core settlement breaches must execute containment actions within strict statutory windows.
+              </p>
+<div class="bg-surface-container-lowest/10 backdrop-blur-sm rounded-xl p-4 border border-surface-variant/15 space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm font-bold text-secondary-container">S1 Containment SLA:</span>
+<span class="text-label-sm font-label-sm font-mono font-bold text-surface">60 Minutes</span>
+</div>
+<div class="w-full bg-surface-variant/20 h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary-fixed h-full rounded-full" style="width: 76%"></div>
+</div>
+<p class="text-label-sm font-label-sm text-surface-variant/70">
+                  Elapsed since first detection: <span class="font-mono text-secondary-fixed font-semibold">45m 38s</span>
+</p>
+</div>
+</div>
+<!-- Severity Rating Guidelines -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-4">
+<h4 class="text-title-md font-title-md text-primary font-serif">Severity Rating Matrix</h4>
+<div class="space-y-3 text-body-sm font-body-sm">
+<div class="p-3 rounded-xl bg-surface-container-low border-l-4 border-error space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">Tier 1: Critical (S1)</span>
+<span class="text-label-sm font-label-sm font-bold text-error">60 Min SLA</span>
+</div>
+<p class="text-on-surface-variant text-label-sm font-label-sm">
+                    Exposure exceeding ₦10,000,000, automated session harvesting, or unauthorized Core/NIBSS settlement breach.
+                  </p>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low border-l-4 border-amber-600 space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">Tier 2: High (S2)</span>
+<span class="text-label-sm font-label-sm font-bold text-amber-700">4-Hour SLA</span>
+</div>
+<p class="text-on-surface-variant text-label-sm font-label-sm">
+                    Single-account ATO under ₦10M, phishing compromises, isolated branch staff non-compliance without active damage.
+                  </p>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low border-l-4 border-primary/40 space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">Tier 3: Medium (S3)</span>
+<span class="text-label-sm font-label-sm font-bold text-outline">24-Hour SLA</span>
+</div>
+<p class="text-on-surface-variant text-label-sm font-label-sm">
+                    Failed login bursts, low-confidence heuristic alerts, customer KYC mismatch with zero initial balance loss.
+                  </p>
+</div>
+</div>
+</div>
+<!-- Intake Automation Checklist -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/40 shadow-sm space-y-3">
+<h4 class="text-title-md font-title-md text-primary font-serif">Intake Automation Pipeline</h4>
+<ul class="space-y-2.5 text-body-sm font-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Automated account lien placing if severity triage confirms Tier 1.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>NIBSS Anti-Fraud portal dispatch via secure API gateway.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Encrypted snapshot forwarded to Chief Compliance Officer's dossier.</span>
+</li>
+</ul>
+<div class="pt-3 border-t border-surface-container">
+<a class="text-label-sm font-label-sm font-bold text-secondary hover:text-primary flex items-center justify-between" href="#">
+<span>View Escalation SOP v4.8</span>
+<span class="material-symbols-outlined text-sm" data-icon="open_in_new">open_in_new</span>
+</a>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</div>
+</body></html>

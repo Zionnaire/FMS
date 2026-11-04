@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Clearing Telemetry Console - 02 Interbank Rail Telemetry &amp; Latency</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-on-surface": "#f3f0ee",
+            "surface-container-low": "#f6f3f1",
+            "surface-container-highest": "#e5e2e0",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-error": "#ffffff",
+            "on-tertiary-container": "#7fa494",
+            "on-surface-variant": "#414847",
+            "surface-tint": "#496360",
+            "primary": "#072320",
+            "outline-variant": "#c1c8c6",
+            "outline": "#727877",
+            "on-primary-fixed": "#04201d",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary-fixed": "#2a1713",
+            "surface-bright": "#fcf9f7",
+            "tertiary-container": "#163a2d",
+            "on-secondary": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#e1bfb9",
+            "on-surface": "#1b1c1b",
+            "primary-fixed-dim": "#b0ccc8",
+            "surface-dim": "#dcd9d8",
+            "primary-container": "#1e3835",
+            "background": "#fcf9f7",
+            "secondary-fixed": "#ffdad4",
+            "primary-fixed": "#cbe8e4",
+            "secondary": "#735854",
+            "surface": "#fcf9f7",
+            "on-secondary-fixed-variant": "#59413d",
+            "inverse-surface": "#30302f",
+            "tertiary-fixed": "#c4ebd9",
+            "surface-container": "#f0edeb",
+            "surface-container-high": "#eae8e6",
+            "on-error-container": "#93000a",
+            "error-container": "#ffdad6",
+            "secondary-container": "#ffdad4",
+            "on-secondary-container": "#795e59",
+            "on-primary-container": "#86a19d",
+            "on-primary": "#ffffff",
+            "surface-variant": "#e5e2e0",
+            "on-primary-fixed-variant": "#314c48",
+            "on-tertiary-fixed": "#002116",
+            "tertiary": "#002419",
+            "inverse-primary": "#b0ccc8",
+            "on-background": "#1b1c1b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.75rem",
+            "margin": "2rem",
+            "space-xl": "2.5rem",
+            "space-xs": "0.375rem",
+            "gutter": "1.25rem",
+            "space-md": "1.25rem",
+            "gutter-mobile": "0.75rem",
+            "space-sm": "0.75rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Playfair Display"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "headline-md": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-secondary-container selection:text-on-secondary-container font-body-md text-body-md min-h-screen">
+<!-- ================= SIDE NAVIGATION (Shared Component: SideNavBar) ================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col justify-between z-40 bg-primary-container text-secondary-fixed shadow-xl border-r border-outline-variant/20">
+<div class="h-full flex flex-col justify-between py-6 px-4">
+<!-- Brand & Security Suite Anchor -->
+<div>
+<div class="flex items-center gap-3 px-2 mb-8">
+<div class="w-10 h-10 rounded-xl bg-surface-container-lowest/10 flex items-center justify-center border border-surface-container-lowest/20 shadow-sm text-secondary-fixed">
+<span class="material-symbols-outlined" data-icon="shield_with_heart" style="font-size: 22px;">shield_with_heart</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-surface-container-lowest tracking-tight">EFIMS Core</span>
+<span class="font-label-sm text-label-sm text-on-primary-container tracking-wider">Batch 8 Forensic Suite</span>
+</div>
+</div>
+<!-- Navigation Links Cluster (Targeting Rail Latency active state) -->
+<nav class="space-y-1.5">
+<!-- 1: Audit Telemetry -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span>Audit Telemetry</span>
+</a>
+<!-- 2: Cluster Health -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="dns">dns</span>
+<span>Cluster Health</span>
+</a>
+<!-- 3: Rail Latency (ACTIVE TAB) -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-container text-on-secondary-container font-semibold shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="speed" style="font-variation-settings: 'FILL' 1;">speed</span>
+<span>Rail Latency</span>
+</a>
+<!-- 4: Cryptographic Logs -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="encrypted">encrypted</span>
+<span>Cryptographic Logs</span>
+</a>
+<!-- 5: Rule Engine -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span>Rule Engine</span>
+</a>
+<!-- 6: Security Tokens -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Security Tokens</span>
+</a>
+</nav>
+</div>
+<!-- Footer Block / System Health & Action -->
+<div class="space-y-4 pt-4 border-t border-outline-variant/15">
+<!-- Botanical Biophilic Motivational Tile -->
+<div class="p-3.5 rounded-xl bg-surface-container-lowest/5 border border-surface-container-lowest/10 relative overflow-hidden">
+<div class="flex items-center justify-between text-secondary-fixed mb-1">
+<span class="font-label-sm text-label-sm font-semibold tracking-wider">CLEARING BUS STATUS</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary-fixed"></span>
+</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-primary-container/90 leading-snug">Autonomous packet verification synchronized across 4 nodes.</p>
+</div>
+<!-- Footer Navigation Items -->
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined" data-icon="pulse_alert">pulse_alert</span>
+<span>System Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-primary-container/70 hover:text-on-primary hover:bg-primary/50 transition-colors font-medium font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span>Compliance Settings</span>
+</a>
+</div>
+<!-- Primary Pill Action CTA -->
+<button class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-surface-container-lowest border border-surface-container-lowest/20 font-label-md text-label-md transition-all duration-150 active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="file_download">file_download</span>
+<span>Export Audit Bundle</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- ================= MAIN VIEWPORT CONTAINER ================= -->
+<div class="ml-64 flex flex-col min-h-screen">
+<!-- ================= TOP NAVIGATION BAR (Shared Component: TopNavBar) ================= -->
+<header class="docked full-width top-0 sticky z-30 bg-surface shadow-sm border-b border-outline-variant/30 flex justify-between items-center px-8 py-3.5">
+<!-- Left Anchor & Breadcrumb Context -->
+<div class="flex items-center gap-6">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="font-bold text-primary">EFIMS Telemetry</span>
+<span>/</span>
+<span>Payment Settlement Rails &amp; Network Latency</span>
+</div>
+<div class="flex items-center gap-2.5 mt-0.5">
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Rail Latency Ingress</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+              Switch: NIBSS / CentralSwitch / Interswitch
+            </span>
+</div>
+</div>
+<!-- Integrated Search Bar -->
+<div class="relative hidden xl:block w-72">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-outline">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/40 text-on-surface placeholder:text-outline text-body-sm focus:outline-none focus:ring-2 focus:ring-primary-container/20" placeholder="Search packet trace ID or rail..." type="text"/>
+</div>
+</div>
+<!-- Navigation & Action Cluster -->
+<div class="flex items-center gap-4">
+<!-- Breadcrumb / Status Badge -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/40">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm font-semibold text-primary">All 4 Ingress Rails Monitored</span>
+</div>
+<!-- Secondary Action -->
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-full border border-primary/20 hover:bg-surface-container-high text-primary font-label-md text-label-md transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span>Configure QoS Thresholds</span>
+</button>
+<!-- Primary Action -->
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+<span>Download P99 Latency Dossier</span>
+</button>
+<!-- Trailing Utility Icons -->
+<div class="flex items-center gap-1 pl-2 border-l border-outline-variant/30 text-on-surface-variant">
+<button class="p-2 rounded-full hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<!-- Avatar -->
+<div class="ml-2 flex items-center gap-2 pl-2 border-l border-outline-variant/30">
+<div class="w-8 h-8 rounded-full bg-primary-container text-secondary-fixed flex items-center justify-center font-bold text-label-md" title="Chief Forensic Security Officer Avatar">
+              FS
+            </div>
+</div>
+</div>
+</div>
+</header>
+<!-- ================= EXECUTIVE WORKSPACE CANVAS ================= -->
+<main class="p-8 space-y-8 flex-1">
+<!-- ================= HEADER KPI ROW (4 BENTO CARDS) ================= -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+<!-- KPI Card 1: P99 Switch Latency (Hero Velvet Spruce Surface) -->
+<div class="p-6 rounded-2xl bg-primary-container text-surface-container-lowest shadow-md relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm tracking-wider text-secondary-fixed-dim uppercase">Clearing Benchmark</span>
+<h3 class="font-headline-md text-headline-md font-bold text-surface-container-lowest mt-1">P99 Switch Latency</h3>
+</div>
+<div class="p-2 rounded-xl bg-surface-container-lowest/10 text-secondary-fixed">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+</div>
+<div class="my-4 flex items-baseline gap-2">
+<span class="font-kpi-metric text-kpi-metric text-surface-container-lowest">412</span>
+<span class="font-title-lg text-title-lg text-secondary-fixed">ms</span>
+<span class="ml-auto px-2.5 py-1 rounded-full bg-secondary-fixed/20 text-secondary-fixed font-label-sm text-label-sm font-semibold border border-secondary-fixed/30">
+              Threshold: 800ms
+            </span>
+</div>
+<div class="pt-3 border-t border-surface-container-lowest/10 flex items-center justify-between text-body-sm text-on-primary-container">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span>Normal Operational Window</span>
+</div>
+<span class="font-medium text-surface-container-lowest">Δ -42ms vs 1h</span>
+</div>
+</div>
+<!-- KPI Card 2: Active Clearing Corridor Volume -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Settlement Pipe</span>
+<h3 class="font-title-md text-title-md font-bold text-primary mt-1">Active Corridor Volume</h3>
+</div>
+<div class="p-2 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+</div>
+<div class="my-4">
+<div class="flex items-baseline gap-1">
+<span class="font-kpi-metric text-kpi-metric text-primary">₦142.8M</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Processed in past hour</p>
+</div>
+<div class="pt-3 border-t border-outline-variant/20 flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Throughput Volume</span>
+<span class="font-semibold text-primary">3,410 transactions</span>
+</div>
+</div>
+<!-- KPI Card 3: Jitter & Packet Retransmission -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Data Integrity</span>
+<h3 class="font-title-md text-title-md font-bold text-primary mt-1">Jitter &amp; Retransmission</h3>
+</div>
+<div class="p-2 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined" data-icon="network_check">network_check</span>
+</div>
+</div>
+<div class="my-4">
+<div class="flex items-baseline gap-1">
+<span class="font-kpi-metric text-kpi-metric text-primary">0.04%</span>
+<span class="font-body-md text-body-md text-on-surface-variant">TCP retry</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Clearing packet jitter &lt; 1.2ms</p>
+</div>
+<div class="pt-3 border-t border-outline-variant/20 flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">ISO 8583 Settlement Frames</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm font-semibold text-primary">0 Dropped</span>
+</div>
+</div>
+<!-- KPI Card 4: Gateway Connection Posture -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Clearing Nodes</span>
+<h3 class="font-title-md text-title-md font-bold text-primary mt-1">Connection Posture</h3>
+</div>
+<div class="p-2 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+</div>
+</div>
+<div class="my-4">
+<div class="flex items-baseline gap-1">
+<span class="font-kpi-metric text-kpi-metric text-primary">4/4</span>
+<span class="font-title-md text-title-md font-bold text-on-surface-variant">Active</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Ingress redundancy 100%</p>
+</div>
+<div class="pt-3 border-t border-outline-variant/20 flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Corridors:</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary truncate max-w-[140px]" title="NIP Direct, RTGS, CentralSwitch, Interswitch">NIP, RTGS, CS, ISW</span>
+</div>
+</div>
+</section>
+<!-- ================= TOP SECTION: REAL-TIME MILLISECOND LATENCY SPECTRUM ================= -->
+<section class="p-7 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-6">
+<!-- Header & Controls -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-outline-variant/20 pb-5">
+<div>
+<div class="flex items-center gap-2.5">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Real-Time Millisecond Latency Spectrum</h2>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">Past 24 Hours</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Comparative latency quantiles (Avg, P95, P99) across national clearing switches and real-time webhook rails.</p>
+</div>
+<!-- Time Range & Filtering Tabs -->
+<div class="flex items-center gap-2">
+<div class="flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/30 text-label-sm font-semibold">
+<button class="px-3 py-1.5 rounded-full text-on-surface-variant hover:text-primary">1 Hour</button>
+<button class="px-3 py-1.5 rounded-full text-on-surface-variant hover:text-primary">6 Hours</button>
+<button class="px-3 py-1.5 rounded-full bg-primary-container text-on-primary shadow-xs">24 Hours</button>
+<button class="px-3 py-1.5 rounded-full text-on-surface-variant hover:text-primary">7 Days</button>
+</div>
+<button class="p-2 rounded-full border border-outline-variant/40 hover:bg-surface-container text-primary">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+</button>
+</div>
+</div>
+<!-- Comparative Multi-Rail Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Rail 1: NIP Direct -->
+<div class="p-5 rounded-xl bg-surface-container-low/60 border border-outline-variant/40 space-y-3 relative hover:border-primary/40 transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-primary tracking-wider uppercase">Direct Switch</span>
+<h4 class="font-title-md text-title-md font-bold text-primary">NIBSS Instant Payments</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold">NIP</span>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-center">
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">Avg</span>
+<span class="font-title-md text-title-md font-bold text-primary">380ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">P95</span>
+<span class="font-title-md text-title-md font-bold text-primary">520ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest border border-secondary-container">
+<span class="font-label-sm text-label-sm text-secondary font-semibold block">P99</span>
+<span class="font-title-md text-title-md font-bold text-primary">690ms</span>
+</div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>SLA Target: &lt;800ms</span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-size: 14px;">check_circle</span> Healthy
+              </span>
+</div>
+</div>
+<!-- Rail 2: RTGS High-Value -->
+<div class="p-5 rounded-xl bg-surface-container-low/60 border border-outline-variant/40 space-y-3 relative hover:border-primary/40 transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-secondary tracking-wider uppercase">Gross Settlement</span>
+<h4 class="font-title-md text-title-md font-bold text-primary">RTGS High-Value Corridor</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold">RTGS</span>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-center">
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">Avg</span>
+<span class="font-title-md text-title-md font-bold text-primary">1,120ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">P95</span>
+<span class="font-title-md text-title-md font-bold text-primary">1,450ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest border border-outline-variant">
+<span class="font-label-sm text-label-sm text-secondary font-semibold block">P99</span>
+<span class="font-title-md text-title-md font-bold text-primary">1,890ms</span>
+</div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>SLA Target: &lt;2,500ms</span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-size: 14px;">check_circle</span> Scheduled Batch
+              </span>
+</div>
+</div>
+<!-- Rail 3: CentralSwitch Clearing Gateway -->
+<div class="p-5 rounded-xl bg-surface-container-low/60 border border-outline-variant/40 space-y-3 relative hover:border-primary/40 transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-primary tracking-wider uppercase">Clearing Core</span>
+<h4 class="font-title-md text-title-md font-bold text-primary">CentralSwitch Clearing</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold">CS-NET</span>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-center">
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">Avg</span>
+<span class="font-title-md text-title-md font-bold text-primary">240ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">P95</span>
+<span class="font-title-md text-title-md font-bold text-primary">310ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest border border-secondary-container">
+<span class="font-label-sm text-label-sm text-secondary font-semibold block">P99</span>
+<span class="font-title-md text-title-md font-bold text-primary">440ms</span>
+</div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>SLA Target: &lt;500ms</span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="verified" style="font-size: 14px;">verified</span> Ultra Low Latency
+              </span>
+</div>
+</div>
+<!-- Rail 4: Neo-Bank Webhook Rails -->
+<div class="p-5 rounded-xl bg-surface-container-low/60 border border-outline-variant/40 space-y-3 relative hover:border-primary/40 transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-primary tracking-wider uppercase">API Ingress</span>
+<h4 class="font-title-md text-title-md font-bold text-primary">Neo-Bank Webhooks</h4>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold">REST</span>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-center">
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">Avg</span>
+<span class="font-title-md text-title-md font-bold text-primary">185ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-outline block">P95</span>
+<span class="font-title-md text-title-md font-bold text-primary">240ms</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-lowest border border-secondary-container">
+<span class="font-label-sm text-label-sm text-secondary font-semibold block">P99</span>
+<span class="font-title-md text-title-md font-bold text-primary">380ms</span>
+</div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Kuda, Moniepoint, PalmPay</span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="bolt" style="font-size: 14px;">bolt</span> Edge CDN
+              </span>
+</div>
+</div>
+</div>
+<!-- Latency Timeline Graph Area with Spike Annotation -->
+<div class="rounded-xl bg-surface-container-low p-6 border border-outline-variant/30 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="font-label-sm text-label-sm font-bold text-primary tracking-wider uppercase">24-Hour Telemetry Trace</span>
+<div class="flex items-center gap-4 text-label-sm">
+<span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-primary-container rounded-full"></span> NIP Direct</span>
+<span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-secondary rounded-full"></span> RTGS</span>
+<span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-primary-fixed-dim rounded-full"></span> CentralSwitch</span>
+<span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-secondary-fixed-dim rounded-full"></span> Neo-Bank Webhooks</span>
+</div>
+</div>
+<!-- Interactive Anomaly Marker Badge -->
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container border border-secondary-fixed font-label-sm text-label-sm">
+<span class="material-symbols-outlined" data-icon="report" style="font-size: 16px;">report</span>
+<span>1 Spike Annotated: 03:41 WAT (BGP Convergence Anomaly)</span>
+</div>
+</div>
+<!-- Stylized Metric Visual Timeline Grid -->
+<div class="relative h-48 w-full flex items-end justify-between gap-1 pt-6 px-2">
+<!-- Horizontal Reference Threshold Grid Lines -->
+<div class="absolute inset-x-0 top-6 border-b border-dashed border-error/40 flex justify-between text-label-sm text-error/80 px-1">
+<span>Critical SLA Threshold: 800ms</span>
+<span>800ms</span>
+</div>
+<div class="absolute inset-x-0 top-24 border-b border-dashed border-outline-variant/50 flex justify-between text-label-sm text-outline px-1">
+<span>Nominal Operating Latency: 400ms</span>
+<span>400ms</span>
+</div>
+<div class="absolute inset-x-0 bottom-6 border-b border-dashed border-outline-variant/30 flex justify-between text-label-sm text-outline px-1">
+<span>Baseline: 150ms</span>
+<span>150ms</span>
+</div>
+<!-- Simulated SVG Multi-Curve Latency Graph -->
+<svg class="absolute inset-0 h-full w-full overflow-visible" preserveaspectratio="none" viewbox="0 0 1000 180">
+<!-- Defs for soft blush atmospheric gradient -->
+<defs>
+<lineargradient id="roseAtmosphere" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ffdad4" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#ffdad4" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- CentralSwitch Line (Ultra Low) -->
+<path d="M0,130 Q120,135 240,128 T480,122 T720,132 T1000,125" fill="none" opacity="0.7" stroke="#727877" stroke-dasharray="3,3" stroke-width="2"></path>
+<!-- Neo-Bank Line -->
+<path d="M0,145 Q150,140 300,148 T600,142 T850,140 T1000,138" fill="none" stroke="#b0ccc8" stroke-width="2.5"></path>
+<!-- RTGS Line (High Value, slower wave) -->
+<path d="M0,60 Q180,68 350,55 T700,65 T1000,58" fill="none" stroke="#735854" stroke-width="2"></path>
+<!-- NIP Latency Curve (with prominent 03:41 WAT anomaly spike) -->
+<!-- Area fill for editorial warmth -->
+<path d="M0,110 Q100,108 180,112 L220,115 L250,22 L275,105 Q400,110 600,95 T850,102 L1000,98 L1000,180 L0,180 Z" fill="url(#roseAtmosphere)"></path>
+<!-- Main Stroke -->
+<path d="M0,110 Q100,108 180,112 L220,115 L250,22 L275,105 Q400,110 600,95 T850,102 L1000,98" fill="none" stroke="#1e3835" stroke-width="3"></path>
+<!-- Spike Point Highlight at 03:41 WAT -->
+<circle cx="250" cy="22" fill="#1e3835" r="6" stroke="#ffdad4" stroke-width="3"></circle>
+</svg>
+<!-- Interactive Marker Pill Overlay pinned over the anomaly -->
+<div class="absolute left-[24%] top-0 -translate-x-1/2 -translate-y-1 z-10 flex flex-col items-center">
+<div class="bg-primary-container text-surface-container-lowest px-3 py-1.5 rounded-lg shadow-lg border border-secondary-fixed text-label-sm space-y-0.5 pointer-events-auto cursor-pointer">
+<div class="font-bold flex items-center gap-1.5 text-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-ping"></span>
+<span>03:41 WAT Anomaly</span>
+</div>
+<div class="text-body-sm text-surface-container-lowest">NIBSS BGP Flap: <span class="font-semibold text-secondary-fixed">798ms Spike</span></div>
+<div class="font-label-sm text-outline-variant">Resolved in 18.4s via CentralSwitch Failover</div>
+</div>
+<div class="w-0.5 h-4 bg-primary-container"></div>
+</div>
+</div>
+<!-- Bottom Time Axis Labels -->
+<div class="flex items-center justify-between text-label-sm text-outline border-t border-outline-variant/30 pt-2 px-1">
+<span>24h ago (11:00)</span>
+<span>15:00</span>
+<span>19:00</span>
+<span>23:00</span>
+<span class="font-bold text-primary">03:41 WAT (Incident Point)</span>
+<span>07:00</span>
+<span class="font-bold text-primary">Live Now (11:00)</span>
+</div>
+</div>
+</section>
+<!-- ================= BOTTOM SECTION: SPLIT WORKBENCH GRID ================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- LEFT 2/3 COLUMN: INGRESS RAIL DISCONNECTION & FALLBACK MATRIX -->
+<div class="lg:col-span-8 p-7 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-5">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-4">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-md text-headline-md font-bold text-primary">Ingress Rail Disconnection &amp; Fallback Matrix</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">4 Active Ingress Pipes</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Real-time circuit breaker posture, failover priority ladders, and frame parsing protocols.</p>
+</div>
+<button class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-primary font-label-sm text-label-sm border border-outline-variant/40 transition-colors">
+<span class="material-symbols-outlined" data-icon="sync_alt">sync_alt</span>
+<span>Simulate Failover</span>
+</button>
+</div>
+<!-- Detailed Tabular Monitoring -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/30 text-label-sm font-bold text-outline uppercase tracking-wider">
+<th class="py-3 px-3">Clearing Pipe</th>
+<th class="py-3 px-3">Protocol</th>
+<th class="py-3 px-3">Throughput</th>
+<th class="py-3 px-3">Error Rate</th>
+<th class="py-3 px-3">Circuit Breaker</th>
+<th class="py-3 px-3">Failover Route</th>
+<th class="py-3 px-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-body-sm text-body-sm">
+<!-- Row 1: NIP Direct Ingress -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-4 px-3 font-semibold text-primary">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<div>
+<div class="font-bold text-primary">NIP Direct Primary</div>
+<div class="text-label-sm text-outline">Tier-1 Core Bus</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-3">
+<span class="px-2.5 py-1 rounded-md bg-surface-container text-primary font-label-sm text-label-sm font-semibold border border-outline-variant/30">ISO 20022</span>
+</td>
+<td class="py-4 px-3 font-medium text-primary">
+                    1,240 <span class="text-outline text-label-sm">tx/sec</span>
+</td>
+<td class="py-4 px-3">
+<span class="text-primary font-semibold">0.001%</span>
+</td>
+<td class="py-4 px-3">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold border border-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Armed - Closed
+                    </span>
+</td>
+<td class="py-4 px-3 text-on-surface-variant font-medium">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-outline" data-icon="redo" style="font-size: 16px;">redo</span>
+<span>CentralSwitch (Hop 1)</span>
+</div>
+</td>
+<td class="py-4 px-3 text-right">
+<button class="p-1.5 rounded-lg hover:bg-surface-container text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: RTGS High-Value Pipe -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-4 px-3 font-semibold text-primary">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<div>
+<div class="font-bold text-primary">RTGS Interbank Corridor</div>
+<div class="text-label-sm text-outline">Central Bank Clearing</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-3">
+<span class="px-2.5 py-1 rounded-md bg-surface-container text-primary font-label-sm text-label-sm font-semibold border border-outline-variant/30">ISO 8583 / AS4</span>
+</td>
+<td class="py-4 px-3 font-medium text-primary">
+                    84 <span class="text-outline text-label-sm">tx/sec</span>
+</td>
+<td class="py-4 px-3">
+<span class="text-primary font-semibold">0.000%</span>
+</td>
+<td class="py-4 px-3">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold border border-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Armed - Closed
+                    </span>
+</td>
+<td class="py-4 px-3 text-on-surface-variant font-medium">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-outline" data-icon="redo" style="font-size: 16px;">redo</span>
+<span>SWIFT Alliance MT/MX</span>
+</div>
+</td>
+<td class="py-4 px-3 text-right">
+<button class="p-1.5 rounded-lg hover:bg-surface-container text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: CentralSwitch Clearing Gateway -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-4 px-3 font-semibold text-primary">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<div>
+<div class="font-bold text-primary">CentralSwitch Dual Rail</div>
+<div class="text-label-sm text-outline">Multi-Tenant Bridge</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-3">
+<span class="px-2.5 py-1 rounded-md bg-surface-container text-primary font-label-sm text-label-sm font-semibold border border-outline-variant/30">ISO 20022</span>
+</td>
+<td class="py-4 px-3 font-medium text-primary">
+                    890 <span class="text-outline text-label-sm">tx/sec</span>
+</td>
+<td class="py-4 px-3">
+<span class="text-primary font-semibold">0.002%</span>
+</td>
+<td class="py-4 px-3">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold border border-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Armed - Closed
+                    </span>
+</td>
+<td class="py-4 px-3 text-on-surface-variant font-medium">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-outline" data-icon="redo" style="font-size: 16px;">redo</span>
+<span>Interswitch IPX Route</span>
+</div>
+</td>
+<td class="py-4 px-3 text-right">
+<button class="p-1.5 rounded-lg hover:bg-surface-container text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: Neo-Bank Webhooks / Interswitch -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-4 px-3 font-semibold text-primary">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<div>
+<div class="font-bold text-primary">Neo-Bank Aggregator Bus</div>
+<div class="text-label-sm text-outline">Kuda, PalmPay, Moniepoint</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-3">
+<span class="px-2.5 py-1 rounded-md bg-surface-container text-primary font-label-sm text-label-sm font-semibold border border-outline-variant/30">REST / mTLS Webhook</span>
+</td>
+<td class="py-4 px-3 font-medium text-primary">
+                    1,196 <span class="text-outline text-label-sm">tx/sec</span>
+</td>
+<td class="py-4 px-3">
+<span class="text-primary font-semibold">0.004%</span>
+</td>
+<td class="py-4 px-3">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold border border-secondary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Armed - Closed
+                    </span>
+</td>
+<td class="py-4 px-3 text-on-surface-variant font-medium">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-outline" data-icon="redo" style="font-size: 16px;">redo</span>
+<span>Direct VPC Peering</span>
+</div>
+</td>
+<td class="py-4 px-3 text-right">
+<button class="p-1.5 rounded-lg hover:bg-surface-container text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Bottom Audit Verification Banner -->
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<div class="text-body-sm">
+<span class="font-bold text-primary">WORM Cryptographic Log Engine:</span>
+<span class="text-on-surface-variant">Every ISO settlement envelope is SHA-256 hashed and appended to immutable disk storage.</span>
+</div>
+</div>
+<a class="font-label-sm text-label-sm font-bold text-primary hover:underline" href="#">View WORM Ledger</a>
+</div>
+</div>
+<!-- RIGHT 1/3 COLUMN: CLEARING NODE JITTER & MTU DIAGNOSTICS -->
+<div class="lg:col-span-4 p-7 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm space-y-6 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-4">
+<div>
+<span class="font-label-sm text-label-sm text-outline tracking-wider uppercase font-bold">Physical Switch Layer</span>
+<h3 class="font-headline-md text-headline-md font-bold text-primary mt-0.5">Jitter &amp; MTU Diagnostics</h3>
+</div>
+<div class="p-2 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined" data-icon="cable">cable</span>
+</div>
+</div>
+<!-- Diagnostics Metrics List -->
+<div class="space-y-4 pt-5">
+<!-- Metric 1: Physical Switch Connection -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between text-body-sm">
+<span class="font-semibold text-primary">Physical Dark Fiber Cross-Connect</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">100 Gbps Link</span>
+</div>
+<div class="flex items-center justify-between text-label-sm text-outline">
+<span>Switch Fabric MTU: 9000 (Jumbo Frames)</span>
+<span class="text-primary font-semibold">Zero Fragmentation</span>
+</div>
+</div>
+<!-- Metric 2: BGP Route Advertisements -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between text-body-sm">
+<span class="font-semibold text-primary">BGP Route Advertisements (AS3729)</span>
+<span class="text-primary font-bold">2 ASN Peers Active</span>
+</div>
+<div class="flex items-center justify-between text-label-sm text-outline">
+<span>Last Route Convergence: 03:41 WAT</span>
+<span class="text-primary font-semibold">Hold-Down: 180s</span>
+</div>
+</div>
+<!-- Metric 3: TLS 1.3 Session Resumption -->
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+<div class="flex items-center justify-between text-body-sm">
+<span class="font-semibold text-primary">TLS 1.3 Session Resumption</span>
+<span class="font-bold text-primary">99.4% 0-RTT</span>
+</div>
+<!-- Mini Progress Bar -->
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 99.4%"></div>
+</div>
+<div class="flex items-center justify-between text-label-sm text-outline">
+<span>Handshake Latency: &lt; 4.2ms</span>
+<span>ECDHE P-384 Cipher</span>
+</div>
+</div>
+<!-- Metric 4: Automated Drift Threshold Alert -->
+<div class="p-3.5 rounded-xl bg-secondary-container/40 border border-secondary-fixed space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md font-bold text-primary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary" data-icon="notification_important">notification_important</span>
+                    Latency Drift Policy
+                  </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold">Active</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Automated circuit-breaker tripping armed if delta exceeds <span class="font-bold text-primary">+200ms</span> sustained over 3 consecutive settlement cycles (45 seconds).
+                </p>
+</div>
+</div>
+</div>
+<!-- Quick Action Footer for Diagnostics -->
+<div class="pt-4 border-t border-outline-variant/20 space-y-2">
+<button class="w-full py-2.5 px-4 rounded-full bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="speed">speed</span>
+<span>Execute Wire-Speed Packet Ping</span>
+</button>
+<div class="text-center">
+<span class="font-label-sm text-label-sm text-outline">Ingress Switch Sync: Last ACK 280ms ago</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

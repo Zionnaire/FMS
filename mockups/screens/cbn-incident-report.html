@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Enterprise | Mandatory CBN Incident Report</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Verbatim Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#c4ebd9",
+            "error-container": "#ffdad6",
+            "on-surface-variant": "#414847",
+            "primary-fixed-dim": "#b0ccc8",
+            "surface-bright": "#fcf9f7",
+            "tertiary": "#002419",
+            "inverse-primary": "#b0ccc8",
+            "surface": "#fcf9f7",
+            "on-tertiary": "#ffffff",
+            "on-secondary-container": "#795e59",
+            "on-secondary-fixed": "#2a1713",
+            "inverse-surface": "#30302f",
+            "primary-fixed": "#cbe8e4",
+            "primary-container": "#1e3835",
+            "primary": "#072320",
+            "surface-container-low": "#f6f3f1",
+            "on-error-container": "#93000a",
+            "on-error": "#ffffff",
+            "secondary-fixed-dim": "#e1bfb9",
+            "outline-variant": "#c1c8c6",
+            "surface-container": "#f0edeb",
+            "on-primary-fixed": "#04201d",
+            "surface-container-lowest": "#ffffff",
+            "on-background": "#1b1c1b",
+            "secondary-container": "#ffdad4",
+            "surface-container-highest": "#e5e2e0",
+            "outline": "#727877",
+            "inverse-on-surface": "#f3f0ee",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "on-secondary": "#ffffff",
+            "background": "#fcf9f7",
+            "surface-container-high": "#eae8e6",
+            "on-primary": "#ffffff",
+            "on-surface": "#1b1c1b",
+            "secondary": "#735854",
+            "on-secondary-fixed-variant": "#59413d",
+            "on-tertiary-fixed": "#002116",
+            "on-primary-fixed-variant": "#314c48",
+            "on-tertiary-container": "#7fa494",
+            "error": "#ba1a1a",
+            "surface-tint": "#496360",
+            "tertiary-container": "#163a2d",
+            "on-primary-container": "#86a19d",
+            "surface-variant": "#e5e2e0",
+            "surface-dim": "#dcd9d8",
+            "secondary-fixed": "#ffdad4"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1.25rem",
+            "space-xs": "0.375rem",
+            "space-sm": "0.75rem",
+            "margin-mobile": "1rem",
+            "space-lg": "1.75rem",
+            "space-xl": "2.5rem",
+            "space-md": "1.25rem",
+            "margin": "2rem",
+            "gutter-mobile": "0.75rem"
+          },
+          "fontFamily": {
+            "headline-md": [
+              "Playfair Display"
+            ],
+            "headline-xl-mobile": [
+              "Playfair Display"
+            ],
+            "label-sm": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-xl": [
+              "Playfair Display"
+            ],
+            "body-sm": [
+              "Plus Jakarta Sans"
+            ],
+            "body-lg": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-lg-mobile": [
+              "Playfair Display"
+            ],
+            "title-lg": [
+              "Plus Jakarta Sans"
+            ],
+            "kpi-metric": [
+              "Plus Jakarta Sans"
+            ],
+            "label-md": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-lg": [
+              "Playfair Display"
+            ],
+            "body-md": [
+              "Plus Jakarta Sans"
+            ],
+            "title-md": [
+              "Plus Jakarta Sans"
+            ]
+          },
+          "fontSize": {
+            "headline-md": [
+              "22px",
+              {
+                "lineHeight": "28px",
+                "fontWeight": "600"
+              }
+            ],
+            "headline-xl-mobile": [
+              "30px",
+              {
+                "lineHeight": "38px",
+                "letterSpacing": "-0.01em",
+                "fontWeight": "600"
+              }
+            ],
+            "label-sm": [
+              "11px",
+              {
+                "lineHeight": "14px",
+                "letterSpacing": "0.04em",
+                "fontWeight": "600"
+              }
+            ],
+            "headline-xl": [
+              "40px",
+              {
+                "lineHeight": "48px",
+                "letterSpacing": "-0.02em",
+                "fontWeight": "600"
+              }
+            ],
+            "body-sm": [
+              "12px",
+              {
+                "lineHeight": "16px",
+                "fontWeight": "400"
+              }
+            ],
+            "body-lg": [
+              "15px",
+              {
+                "lineHeight": "24px",
+                "fontWeight": "400"
+              }
+            ],
+            "headline-lg-mobile": [
+              "24px",
+              {
+                "lineHeight": "32px",
+                "letterSpacing": "-0.01em",
+                "fontWeight": "600"
+              }
+            ],
+            "title-lg": [
+              "18px",
+              {
+                "lineHeight": "24px",
+                "fontWeight": "700"
+              }
+            ],
+            "kpi-metric": [
+              "32px",
+              {
+                "lineHeight": "38px",
+                "letterSpacing": "-0.03em",
+                "fontWeight": "700"
+              }
+            ],
+            "label-md": [
+              "12px",
+              {
+                "lineHeight": "16px",
+                "letterSpacing": "0.02em",
+                "fontWeight": "600"
+              }
+            ],
+            "headline-lg": [
+              "28px",
+              {
+                "lineHeight": "36px",
+                "letterSpacing": "-0.015em",
+                "fontWeight": "600"
+              }
+            ],
+            "body-md": [
+              "13px",
+              {
+                "lineHeight": "20px",
+                "fontWeight": "400"
+              }
+            ],
+            "title-md": [
+              "16px",
+              {
+                "lineHeight": "22px",
+                "fontWeight": "600"
+              }
+            ]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(114, 120, 119, 0.25);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(114, 120, 119, 0.45);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen selection:bg-secondary-fixed selection:text-on-secondary-fixed flex">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT 1: SideNavBar (Strict implementation from JSON & Anchors)  -->
+<!-- ========================================================================= -->
+<aside class="fixed inset-y-0 left-0 w-64 z-40 bg-primary-container dark:bg-primary border-r border-primary/20 dark:border-outline-variant/10 shadow-md dark:shadow-none flex flex-col justify-between h-full p-4">
+<!-- Top Block: Brand Emblem & Navigation -->
+<div class="flex flex-col gap-6">
+<!-- Brand & Subtext -->
+<div class="flex items-center gap-3 px-2 pt-1">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container flex items-center justify-center border border-tertiary-fixed/20 shadow-inner">
+<span class="material-symbols-outlined text-tertiary-fixed text-2xl" data-icon="policy" style="font-variation-settings: 'FILL' 1;">policy</span>
+</div>
+<div>
+<h1 class="text-title-lg font-title-lg text-on-primary dark:text-primary-fixed tracking-wide leading-tight">EFIMS Enterprise</h1>
+<p class="text-label-sm font-label-sm text-on-primary-container leading-none mt-0.5">Regulatory &amp; AML/CFT Portal</p>
+</div>
+</div>
+<!-- Emergency Alert Pill Banner -->
+<div class="bg-secondary-container/15 border border-secondary-fixed/20 px-3.5 py-2.5 rounded-xl flex items-center gap-2.5">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary-fixed"></span>
+</span>
+<span class="text-label-sm font-label-sm text-secondary-fixed tracking-wider">Emergency Regulatory Alert</span>
+</div>
+<!-- Primary SideNav Tabs (Active Tab: Regulatory Reporting -> index 2) -->
+<nav aria-label="Main Navigation" class="flex flex-col gap-1.5">
+<!-- Tab 0: Incident Management -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 dark:text-on-primary-fixed-variant hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 dark:hover:bg-primary-container/50 cursor-pointer active:scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="gavel">gavel</span>
+<span>Incident Management</span>
+</a>
+<!-- Tab 1: Financial Crime Intel -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 dark:text-on-primary-fixed-variant hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 dark:hover:bg-primary-container/50 cursor-pointer active:scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="shield">shield</span>
+<span>Financial Crime Intel</span>
+</a>
+<!-- Tab 2: Regulatory Reporting (CRITICAL ACTIVE MATCH TO CURRENT PAGE) -->
+<a aria-current="page" class="flex items-center gap-3 px-4 py-2.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-title-md cursor-pointer active:scale-[0.99] transition-transform duration-150 shadow-sm" href="#">
+<span class="material-symbols-outlined text-lg text-on-secondary-fixed" data-icon="policy" style="font-variation-settings: 'FILL' 1;">policy</span>
+<span>Regulatory Reporting</span>
+</a>
+<!-- Tab 3: Case Investigation -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 dark:text-on-primary-fixed-variant hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 dark:hover:bg-primary-container/50 cursor-pointer active:scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="fact_check">fact_check</span>
+<span>Case Investigation</span>
+</a>
+<!-- Tab 4: Audit & Compliance -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 dark:text-on-primary-fixed-variant hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 dark:hover:bg-primary-container/50 cursor-pointer active:scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="history_edu">history_edu</span>
+<span>Audit &amp; Compliance</span>
+</a>
+<!-- Tab 5: System Settings -->
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-full text-on-primary-container/80 dark:text-on-primary-fixed-variant hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 dark:hover:bg-primary-container/50 cursor-pointer active:scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span>System Settings</span>
+</a>
+</nav>
+</div>
+<!-- Bottom Block: Environmental Status & Footer Navigation -->
+<div class="flex flex-col gap-3 pt-4 border-t border-primary/40">
+<!-- Regulatory HSM Enclave Badge -->
+<div class="p-3 bg-tertiary-container/80 rounded-xl border border-tertiary-fixed/10 flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed text-lg" data-icon="verified_user">verified_user</span>
+<div class="overflow-hidden">
+<p class="text-label-sm font-label-sm text-tertiary-fixed leading-tight">HSM Cluster #04 Active</p>
+<p class="text-body-sm font-body-sm text-on-primary-container truncate">Enclave: FIPS 140-3 L4</p>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<!-- Footer Tab: Documentation -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container/70 hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 text-body-sm" href="#">
+<span class="material-symbols-outlined text-base" data-icon="menu_book">menu_book</span>
+<span>Documentation</span>
+</a>
+<!-- Footer Tab: Compliance Helpdesk -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-full text-on-primary-container/70 hover:text-on-primary font-label-md transition-colors hover:bg-primary/40 text-body-sm" href="#">
+<span class="material-symbols-outlined text-base" data-icon="headset_mic">headset_mic</span>
+<span>Compliance Helpdesk</span>
+</a>
+</div>
+<div class="px-2 pt-1 text-label-sm font-label-sm text-on-primary-container/60">
+        EFIMS Portal v4.11.2 • CBN Node
+      </div>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CONTAINER (Offset by fixed 256px / 16rem SideNav)           -->
+<!-- ========================================================================= -->
+<div class="flex-1 ml-64 min-w-0 flex flex-col bg-background">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT 2: TopNavBar (Strict implementation from JSON & Anchors)  -->
+<!-- ========================================================================= -->
+<header class="sticky top-0 z-30 w-full bg-surface border-b border-outline-variant/40 shadow-sm flex items-center justify-between px-6 py-3 h-16">
+<!-- Left: Breadcrumb / Search / Mandate Cluster -->
+<div class="flex items-center gap-4">
+<!-- Search Input Bar with pill shape -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg" data-icon="search">search</span>
+<input class="w-72 pl-9 pr-4 py-1.5 bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-full border border-outline-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-outline transition-all" placeholder="Search Mandate, STR Ref, or Account..." type="text"/>
+</div>
+<div class="h-4 w-px bg-outline-variant/60"></div>
+<!-- Breadcrumbs -->
+<nav class="hidden xl:flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+<span class="hover:text-primary cursor-pointer">EFIMS Enterprise</span>
+<span class="material-symbols-outlined text-xs text-outline" data-icon="chevron_right">chevron_right</span>
+<span class="hover:text-primary cursor-pointer">Regulatory Reporting</span>
+<span class="material-symbols-outlined text-xs text-outline" data-icon="chevron_right">chevron_right</span>
+<span class="hover:text-primary cursor-pointer">CBN Mandates</span>
+<span class="material-symbols-outlined text-xs text-outline" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-title-md">Form BSD-CR-01</span>
+</nav>
+</div>
+<!-- Center-Right: Compliance SLA Countdown Badge -->
+<div class="flex items-center gap-3">
+<div class="hidden lg:flex items-center gap-2 bg-secondary-fixed/30 border border-secondary-fixed-dim/60 px-3.5 py-1.5 rounded-full">
+<span class="material-symbols-outlined text-error text-base animate-pulse" data-icon="schedule">schedule</span>
+<span class="text-label-md font-label-md text-on-secondary-fixed">CBN 24-Hour Mandate: <strong class="font-title-md text-error tracking-wide font-mono">04h 18m Remaining</strong></span>
+</div>
+<!-- Live Sync Status -->
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-tertiary-fixed/30 text-tertiary rounded-full border border-tertiary-fixed-dim/40">
+<span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
+<span class="text-label-sm font-label-sm font-semibold">NFIU/CBN Live Sync</span>
+</div>
+</div>
+<!-- Right: Actions & User Avatar -->
+<div class="flex items-center gap-3">
+<!-- Trailing Secondary Action: Validate XML -->
+<button class="cursor-pointer active:scale-[0.98] transition-transform duration-150 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-primary/20 text-primary font-label-md text-label-md hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-base" data-icon="code">code</span>
+<span>Validate XML</span>
+</button>
+<!-- Trailing Primary Action: Transmit Filing -->
+<button class="cursor-pointer active:scale-[0.98] transition-transform duration-150 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-container text-surface-bright font-title-md text-title-md hover:bg-primary shadow-sm hover:shadow transition-all" type="button">
+<span class="material-symbols-outlined text-secondary-fixed text-base" data-icon="send">send</span>
+<span>Transmit Filing</span>
+</button>
+<!-- Trailing Icon Actions -->
+<div class="flex items-center gap-1 pl-1 border-l border-outline-variant/50">
+<button class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-lg" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Verified Protocol">
+<span class="material-symbols-outlined text-lg" data-icon="verified_user">verified_user</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Help Desk">
+<span class="material-symbols-outlined text-lg" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+<!-- Officer Profile Avatar -->
+<div class="flex items-center gap-2.5 pl-2">
+<img class="w-8 h-8 rounded-full border border-outline-variant/60 object-cover shadow-sm" data-alt="Professional studio portrait of an executive Nigerian compliance officer wearing bespoke formal business attire, seated against a warm neutral architectural office background with subtle botanical elements and high-key soft daylighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfx7p_mScUXLa3MEcxu-EAlnGk54hXdVi7TdISeMz4OJj0YObD7qflfqMfz9FS64wm4mhIy2vo6E6YwVVZkpvCiZybRQfPN_stoLfij4SkpzAjcQDakNGc2OPJ7XgvnJvKyEOamUZst65wqJ6ZilEILK8sQfCUApSBiBu1e5EUXnAXMgCakl93x8txaAXoN5oAimtk4o-y1WN_WPmrJihOIfCUvnfc0kfXnOkQjZej3x8h7FOAWqjC4Q"/>
+<div class="hidden xl:block leading-tight text-left">
+<p class="text-label-md font-label-md text-on-surface font-semibold">M. Lawal CAMS</p>
+<p class="text-label-sm font-label-sm text-outline">Lead MLRO</p>
+</div>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- CONTENT CANVAS: Warm Porcelain Base with Botanical Editorial Typography   -->
+<!-- ========================================================================= -->
+<main class="flex-1 p-gutter lg:p-space-lg flex flex-col gap-6 max-w-[1600px] w-full mx-auto">
+<!-- SCREEN HEADER SECTION -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline-variant/30 pb-5">
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container text-secondary-fixed text-label-sm font-label-sm tracking-wider uppercase">
+              FORM BSD-CR-01
+            </span>
+<span class="text-label-md font-label-md text-secondary font-mono">
+              Ref: CBN/BSD/REV-2024/0981
+            </span>
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm text-tertiary-container bg-tertiary-fixed/40 px-2 py-0.5 rounded-full font-medium">
+<span class="material-symbols-outlined text-xs" data-icon="shield">shield</span>
+              Statutory Disclosure
+            </span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-primary font-bold tracking-tight">
+            Mandatory Central Bank of Nigeria (CBN) Incident Disclosure
+          </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+            Enacted pursuant to <span class="font-semibold text-primary">Section 3.2.1 of Circular BSD/DIR/GEN/LAB/11/021</span> on Electronic Fraud &amp; Settlement Disruption Reporting for All Deposit Money Banks and Payment Service Providers.
+          </p>
+</div>
+<!-- Secondary Utility Quick-Buttons -->
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3.5 py-2 rounded-full border border-outline-variant/60 bg-surface-container-lowest text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors inline-flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+<span>Audit Trail (14 Revisions)</span>
+</button>
+<button class="px-3.5 py-2 rounded-full bg-secondary-fixed text-on-secondary-fixed font-title-md text-title-md hover:bg-secondary-fixed-dim transition-colors inline-flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="print">print</span>
+<span>Export Official Dossier</span>
+</button>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- SUMMARY KPI BENTO GRID                                                    -->
+<!-- ========================================================================= -->
+<section aria-label="Incident Summary Metrics" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- KPI 1: Statutory Deadline (Hero Amber Alert) -->
+<div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between mb-3">
+<div>
+<p class="text-label-sm font-label-sm text-outline tracking-wider uppercase">Statutory Filing Deadline</p>
+<h3 class="font-kpi-metric text-kpi-metric text-error font-mono tracking-tight mt-1">04h 18m 12s</h3>
+</div>
+<span class="p-2 rounded-lg bg-error-container/40 text-error">
+<span class="material-symbols-outlined text-xl" data-icon="timer">timer</span>
+</span>
+</div>
+<div class="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+              24h Statutory Window
+            </span>
+<span class="font-semibold text-error">Exp: 08:30 WAT</span>
+</div>
+</div>
+<!-- KPI 2: Total Defalcation & Lien Rate (Evergreen Hero Card) -->
+<div class="p-5 rounded-xl bg-primary-container text-on-primary shadow-md relative overflow-hidden flex flex-col justify-between border border-primary/40">
+<div class="flex items-start justify-between mb-2">
+<div>
+<p class="text-label-sm font-label-sm text-secondary-fixed tracking-wider uppercase">Total Incident Defalcation</p>
+<h3 class="font-kpi-metric text-kpi-metric text-surface-bright tracking-tight mt-1 font-mono">₦45,000,000<span class="text-lg opacity-70">.00</span></h3>
+</div>
+<span class="p-2 rounded-lg bg-tertiary-container text-tertiary-fixed">
+<span class="material-symbols-outlined text-xl" data-icon="account_balance">account_balance</span>
+</span>
+</div>
+<div class="pt-2 border-t border-on-primary-container/20 flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-primary-container">Liened &amp; Contained</span>
+<span class="text-secondary-fixed font-title-md font-semibold">₦38.2M (84.88% Preserved)</span>
+</div>
+</div>
+<!-- KPI 3: Impacted Settlement Rails -->
+<div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between mb-3">
+<div>
+<p class="text-label-sm font-label-sm text-outline tracking-wider uppercase">Impacted Settlement Rails</p>
+<h3 class="font-title-lg text-title-lg text-primary font-bold mt-1.5">NIBSS NIP &amp; CentralSwitch</h3>
+</div>
+<span class="p-2 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-xl" data-icon="hub">hub</span>
+</span>
+</div>
+<div class="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Rail Status</span>
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm font-semibold text-secondary px-2 py-0.5 rounded-full bg-secondary-container/40">
+<span class="material-symbols-outlined text-xs" data-icon="lock">lock</span>
+              Inward Clearing Isolated
+            </span>
+</div>
+</div>
+<!-- KPI 4: Regulatory Enclave Verification -->
+<div class="p-5 rounded-xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between mb-3">
+<div>
+<p class="text-label-sm font-label-sm text-outline tracking-wider uppercase">Regulatory Enclave Verification</p>
+<h3 class="font-title-lg text-title-lg text-primary font-bold mt-1.5">Hardware HSM #04</h3>
+</div>
+<span class="p-2 rounded-lg bg-tertiary-fixed/30 text-tertiary">
+<span class="material-symbols-outlined text-xl" data-icon="verified_user">verified_user</span>
+</span>
+</div>
+<div class="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Signature Standard</span>
+<span class="font-semibold text-tertiary font-mono text-label-sm">FIPS 140-3 Level 4</span>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE: Asymmetric 2-Column Desktop Grid                          -->
+<!-- ========================================================================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- ======================================================================= -->
+<!-- LEFT COLUMN (8/12 - 2/3 Width): Detailed Sections A through D           -->
+<!-- ======================================================================= -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- SECTION A: Regulated Institution Details -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-primary-container text-surface-bright flex items-center justify-center text-label-sm font-title-md">A</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">Regulated Institution &amp; Reporting Officer</h3>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Verified CBN Entity Record</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<label class="text-label-sm font-label-sm text-outline block mb-1">Financial Institution Name</label>
+<p class="text-title-md font-title-md text-primary font-semibold">National Settlement Clearing Bank Plc</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Commercial Banking License: Tier-1</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<label class="text-label-sm font-label-sm text-outline block mb-1">CBN Institution Code / RC</label>
+<p class="text-title-md font-title-md text-primary font-mono font-semibold">CB-COMM-0041 / RC-109284</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Clearing Sort Code: 044-150012</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<label class="text-label-sm font-label-sm text-outline block mb-1">Designated Reporting Officer</label>
+<p class="text-title-md font-title-md text-primary font-semibold">Mohammed Lawal CAMS</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Chief Anti-Money Laundering Officer</p>
+</div>
+</div>
+</section>
+<!-- SECTION B: Incident Categorization & Breach Topology -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-primary-container text-surface-bright flex items-center justify-center text-label-sm font-title-md">B</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">Incident Categorization &amp; Attack Topology</h3>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container text-label-sm font-label-sm font-semibold">
+                Severity: Tier 1 Critical
+              </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+<div class="space-y-1">
+<span class="text-label-sm font-label-sm text-outline">Statutory Incident Classification</span>
+<div class="p-3 rounded-lg border border-outline-variant/40 bg-surface-container-low text-on-surface font-body-md text-body-md flex items-center justify-between">
+<span>High-Velocity Clearing Fraud &amp; Session Hijack</span>
+<span class="material-symbols-outlined text-outline text-base" data-icon="policy">policy</span>
+</div>
+</div>
+<div class="space-y-1">
+<span class="text-label-sm font-label-sm text-outline">Compromised Ingress Vector / Hostname</span>
+<div class="p-3 rounded-lg border border-outline-variant/40 bg-surface-container-low font-mono text-body-md text-body-md flex items-center justify-between text-primary">
+<span>NIP-GW-PROD-04.clearing.internal</span>
+<span class="material-symbols-outlined text-outline text-base" data-icon="dns">dns</span>
+</div>
+</div>
+</div>
+<!-- Root Cause & Attack Narrative -->
+<div class="space-y-2">
+<label class="text-label-sm font-label-sm text-outline block">Forensic Root Cause Determination</label>
+<div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md font-body-md text-on-surface space-y-2">
+<p>
+                  At <strong class="font-mono">03:42:19 WAT</strong>, perimeter telemetry detected synthetic credential injection targeting internal API endpoint <code class="bg-surface-container-highest px-1.5 py-0.5 rounded text-label-sm font-mono text-primary">/api/v2/settlement/outward-nip</code>. Threat actor bypassed secondary multi-factor challenge via an illicitly cloned Kerberos service ticket (Ticket Granting Service hash reuse).
+                </p>
+<div class="flex items-center gap-3 pt-2 text-label-sm font-label-sm border-t border-outline-variant/30 text-on-surface-variant">
+<span class="flex items-center gap-1 font-semibold text-primary">
+<span class="material-symbols-outlined text-base" data-icon="crisis_alert">crisis_alert</span>
+                    Breach Duration: 31m 40s
+                  </span>
+<span>•</span>
+<span>IP Geolocation: Autonomous System 37105 (Routing anomaly isolated)</span>
+<span>•</span>
+<span class="text-tertiary font-semibold">Firewall Policy Updated: RULE-904-DROP</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION C: Detailed Financial Exposure & Countermeasure Narrative -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-primary-container text-surface-bright flex items-center justify-center text-label-sm font-title-md">C</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">Financial Exposure, Tranches &amp; PND Dispatch</h3>
+</div>
+<span class="text-label-sm font-label-sm font-mono text-outline">₦45,000,000.00 Total Sum</span>
+</div>
+<!-- Financial Breakdown Table -->
+<div class="overflow-x-auto custom-scrollbar border border-outline-variant/40 rounded-xl mb-4">
+<table class="w-full text-left border-collapse text-body-sm font-body-sm">
+<thead>
+<tr class="bg-surface-container-high/60 border-b border-outline-variant/40 text-label-md font-label-md text-on-surface-variant">
+<th class="py-2.5 px-3.5">Tranche Ref</th>
+<th class="py-2.5 px-3.5">Beneficiary Institution</th>
+<th class="py-2.5 px-3.5">Target Mule Accounts</th>
+<th class="py-2.5 px-3.5">Amount Dispatched</th>
+<th class="py-2.5 px-3.5">Recovery Status</th>
+<th class="py-2.5 px-3.5 text-right">PND Timestamp</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3.5 font-mono font-medium text-primary">TR-2024-098-A</td>
+<td class="py-2.5 px-3.5">First Apex Bank Plc (011)</td>
+<td class="py-2.5 px-3.5 font-mono">0092817264 (4 Mules)</td>
+<td class="py-2.5 px-3.5 font-mono font-semibold">₦15,000,000.00</td>
+<td class="py-2.5 px-3.5">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed/60 text-tertiary text-label-sm font-label-sm font-medium inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check_circle">check_circle</span> 100% Liened
+                      </span>
+</td>
+<td class="py-2.5 px-3.5 text-right font-mono text-outline">04:14:02 WAT</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3.5 font-mono font-medium text-primary">TR-2024-098-B</td>
+<td class="py-2.5 px-3.5">Zenith Trust Microfinance (502)</td>
+<td class="py-2.5 px-3.5 font-mono">2209182371 (5 Mules)</td>
+<td class="py-2.5 px-3.5 font-mono font-semibold">₦14,200,000.00</td>
+<td class="py-2.5 px-3.5">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed/60 text-tertiary text-label-sm font-label-sm font-medium inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check_circle">check_circle</span> 100% Liened
+                      </span>
+</td>
+<td class="py-2.5 px-3.5 text-right font-mono text-outline">04:14:38 WAT</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3.5 font-mono font-medium text-primary">TR-2024-098-C</td>
+<td class="py-2.5 px-3.5">Kuda Payment Service Bank (090)</td>
+<td class="py-2.5 px-3.5 font-mono">1102948190 (3 Mules)</td>
+<td class="py-2.5 px-3.5 font-mono font-semibold">₦9,000,000.00</td>
+<td class="py-2.5 px-3.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-label-sm font-label-sm font-medium inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="lock">lock</span> ₦9.0M Trapped
+                      </span>
+</td>
+<td class="py-2.5 px-3.5 text-right font-mono text-outline">04:15:10 WAT</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3.5 font-mono font-medium text-primary">TR-2024-098-D</td>
+<td class="py-2.5 px-3.5">Moniepoint Microfinance (505)</td>
+<td class="py-2.5 px-3.5 font-mono">8039281722 (2 Mules)</td>
+<td class="py-2.5 px-3.5 font-mono font-semibold text-error">₦6,800,000.00</td>
+<td class="py-2.5 px-3.5">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-label-sm font-label-sm font-medium inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="warning">warning</span> Outward ATM Drain
+                      </span>
+</td>
+<td class="py-2.5 px-3.5 text-right font-mono text-outline">04:16:44 WAT</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Inter-bank Containment Broadcast Note -->
+<div class="p-3 bg-secondary-container/20 border border-secondary-container/40 rounded-lg flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-lg mt-0.5" data-icon="broadcast_on_personal">broadcast_on_personal</span>
+<div class="text-body-sm font-body-sm text-on-surface">
+<strong class="font-semibold text-primary">Automated Post-No-Debit (PND) Broadcast Transmitted:</strong>
+                At 04:14:00 WAT, automated ISO 8583 administrative messages were relayed across NIBSS central switch invoking emergency recall and PND flags across all 14 designated beneficiary accounts. ₦38.2M immobilized immediately.
+              </div>
+</div>
+</section>
+<!-- SECTION D: Technical Containment & Forensic Artifact Attachments -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30 mb-4">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-full bg-primary-container text-surface-bright flex items-center justify-center text-label-sm font-title-md">D</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">Technical Containment &amp; Evidentiary Artifacts</h3>
+</div>
+<span class="text-label-sm font-label-sm text-outline">Evidence Act 2011 Sec. 84</span>
+</div>
+<div class="space-y-3">
+<!-- File 1: PCAP Dump -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant/40 bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl" data-icon="data_object">data_object</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-primary font-semibold">nip-gateway-ingress-payload-capture.pcapng</p>
+<p class="text-body-sm font-body-sm text-outline font-mono">SHA-256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (412 MB)</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed/60 text-tertiary font-label-sm font-label-sm font-semibold">Cryptographically Sealed</span>
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Download Hash Verification">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<!-- File 2: WAF Session Logs -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant/40 bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl" data-icon="terminal">terminal</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-primary font-semibold">waf_reverse_proxy_session_logs_normalized.json.gz</p>
+<p class="text-body-sm font-body-sm text-outline font-mono">SHA-256: 8f4e2a1b9c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f (84 MB)</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed/60 text-tertiary font-label-sm font-label-sm font-semibold">Cryptographically Sealed</span>
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Download Hash Verification">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<!-- File 3: Section 84 Certificate -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-outline-variant/40 bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xl" data-icon="description">description</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-primary font-semibold">section_84_evidence_act_certificate_sworn_affidavit.pdf</p>
+<p class="text-body-sm font-body-sm text-outline font-mono">Digitally Notarized by Federal High Court Registry, Lagos Division (2.4 MB)</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm font-label-sm font-semibold">Legal Attestation Complete</span>
+<button class="p-2 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container-high transition-colors" title="Download Hash Verification">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- ======================================================================= -->
+<!-- RIGHT COLUMN (4/12 - 1/3 Width): CBN Routing & Dual-Signoff             -->
+<!-- ======================================================================= -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- CBN Examiner Routing Direct Node Card -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm">
+<div class="flex items-center gap-2.5 pb-3 border-b border-outline-variant/30 mb-3">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="account_balance">account_balance</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">CBN Direct Node Route</h3>
+</div>
+<div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-2.5 text-body-sm font-body-sm mb-4">
+<div class="flex items-center justify-between">
+<span class="text-outline">Receiving Directorate:</span>
+<span class="font-semibold text-primary">Banking Supervision (BSD)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-outline">Physical Headquarters:</span>
+<span class="text-on-surface">Plot 33, Tafawa Balewa Way, Abuja</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-outline">Gateway Node IP:</span>
+<span class="font-mono text-primary font-medium">196.3.12.8:8443</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-outline">Cryptographic Protocol:</span>
+<span class="font-semibold text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="lock">lock</span>
+                  Mutual TLS 1.3 Verified
+                </span>
+</div>
+</div>
+<!-- Visual Node Topology Indicator -->
+<div class="flex items-center justify-between px-2 py-1 text-label-sm font-label-sm text-outline">
+<span class="flex items-center gap-1 text-tertiary">
+<span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                Bank HSM #04
+              </span>
+<span class="material-symbols-outlined text-outline" data-icon="east">east</span>
+<span class="flex items-center gap-1 text-primary font-semibold">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                CBN Secure Ingest #01
+              </span>
+</div>
+</section>
+<!-- Dual-Signoff Attestation Box -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-space-md shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="draw">draw</span>
+<h3 class="font-headline-md text-headline-md text-primary font-semibold">Dual-Signoff Attestation</h3>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-secondary-container/40 text-secondary font-medium">1 of 2 Signed</span>
+</div>
+<!-- Signer 1: MLRO (Completed) -->
+<div class="p-3.5 rounded-xl border border-tertiary-fixed-dim bg-tertiary-fixed/20 relative">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 text-title-md font-title-md text-primary font-semibold">
+<span>Mohammed Lawal CAMS</span>
+<span class="material-symbols-outlined text-tertiary text-base" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Money Laundering Reporting Officer (MLRO)</p>
+<p class="text-body-sm font-body-sm text-tertiary font-mono mt-1">Signed: 04:31:18 WAT via YubiHSM Key #8812</p>
+</div>
+<span class="px-2 py-1 rounded bg-tertiary text-on-tertiary text-label-sm font-label-sm font-bold uppercase tracking-wider">
+                  Attested
+                </span>
+</div>
+</div>
+<!-- Signer 2: Chief Risk Officer (Pending) -->
+<div class="p-3.5 rounded-xl border-2 border-dashed border-outline-variant/70 bg-surface-container-low relative">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5 text-title-md font-title-md text-on-surface-variant font-semibold">
+<span>Dr. Folashade Adebayo</span>
+<span class="material-symbols-outlined text-outline text-base" data-icon="pending">pending</span>
+</div>
+<p class="text-label-sm font-label-sm text-outline">Chief Risk &amp; Compliance Officer (CRCO)</p>
+<p class="text-body-sm font-body-sm text-secondary font-semibold mt-1">Status: Pending Biometric Authorisation</p>
+</div>
+<span class="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed text-label-sm font-label-sm font-bold uppercase tracking-wider">
+                  Awaiting
+                </span>
+</div>
+<div class="mt-3 pt-3 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline">Push Request Dispatched: 04:32 WAT</span>
+<button class="text-label-sm font-label-sm font-semibold text-primary hover:underline inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="send">send</span>
+                  Resend SMS OTP
+                </button>
+</div>
+</div>
+</section>
+<!-- Legal & Statutory Sanction Warning Notice -->
+<section class="p-4 rounded-xl bg-error-container/30 border border-error/30 text-on-surface space-y-2">
+<div class="flex items-center gap-2 text-error font-title-md font-title-md font-semibold">
+<span class="material-symbols-outlined text-lg" data-icon="gavel">gavel</span>
+<h4>Statutory Warning: BOFIA 2020 Sec. 64</h4>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed">
+              Failure to submit electronic incident report BSD-CR-01 within <strong class="text-on-surface">24 hours of breach discovery</strong> constitutes a direct regulatory offense under Banks and Other Financial Institutions Act (BOFIA) 2020 and Section 4.3 of Circular BSD/DIR/GEN/LAB/11/021, attracting a statutory corporate penalty of ₦20,000,000.00 and administrative sanction on designated executive directors.
+            </p>
+</section>
+<!-- Action CTA Cluster -->
+<div class="flex flex-col gap-2.5 pt-2">
+<!-- Primary Action -->
+<button class="w-full py-3 px-4 rounded-full bg-primary-container text-surface-bright font-title-md text-title-md font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-all cursor-pointer active:scale-[0.98]" type="button">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="encrypted">encrypted</span>
+<span>Cryptographically Sign &amp; Transmit</span>
+</button>
+<!-- Secondary Action -->
+<button class="w-full py-2.5 px-4 rounded-full border border-primary/20 bg-surface-container-lowest text-primary font-title-md text-title-md hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]" type="button">
+<span class="material-symbols-outlined text-base" data-icon="fact_check">fact_check</span>
+<span>Validate &amp; Run Schema Pre-check</span>
+</button>
+<!-- Tertiary Action -->
+<button class="w-full py-2 px-4 rounded-full text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-sm" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span>Download Formal CBN Form BSD-01 (PDF)</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

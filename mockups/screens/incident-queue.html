@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EFIMS Core - Operational Incident Queue</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container": "#f0edeb",
+            "on-surface": "#1b1c1b",
+            "tertiary-fixed": "#c4ebd9",
+            "on-error-container": "#93000a",
+            "outline": "#727877",
+            "surface": "#fcf9f7",
+            "surface-dim": "#dcd9d8",
+            "on-primary-fixed": "#04201d",
+            "surface-variant": "#e5e2e0",
+            "primary-fixed": "#cbe8e4",
+            "tertiary": "#002419",
+            "on-tertiary": "#ffffff",
+            "inverse-on-surface": "#f3f0ee",
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#30302f",
+            "outline-variant": "#c1c8c6",
+            "tertiary-fixed-dim": "#a8cfbd",
+            "background": "#fcf9f7",
+            "on-tertiary-fixed": "#002116",
+            "secondary-fixed": "#ffdad4",
+            "secondary-container": "#ffdad4",
+            "on-primary-container": "#86a19d",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#59413d",
+            "surface-container-highest": "#e5e2e0",
+            "surface-container-high": "#eae8e6",
+            "primary": "#072320",
+            "primary-container": "#1e3835",
+            "on-background": "#1b1c1b",
+            "on-secondary-fixed": "#2a1713",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed-variant": "#2a4d40",
+            "primary-fixed-dim": "#b0ccc8",
+            "error": "#ba1a1a",
+            "on-tertiary-container": "#7fa494",
+            "surface-bright": "#fcf9f7",
+            "on-secondary-container": "#795e59",
+            "tertiary-container": "#163a2d",
+            "secondary-fixed-dim": "#e1bfb9",
+            "secondary": "#735854",
+            "on-primary-fixed-variant": "#314c48",
+            "surface-tint": "#496360",
+            "inverse-primary": "#b0ccc8",
+            "surface-container-low": "#f6f3f1",
+            "on-surface-variant": "#414847",
+            "on-error": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1.25rem",
+            "space-xl": "2.5rem",
+            "space-lg": "1.75rem",
+            "gutter-mobile": "0.75rem",
+            "gutter": "1.25rem",
+            "space-sm": "0.75rem",
+            "margin": "2rem",
+            "margin-mobile": "1rem",
+            "space-xs": "0.375rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "kpi-metric": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Playfair Display"],
+            "headline-lg-mobile": ["Playfair Display"]
+          },
+          "fontSize": {
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+            "kpi-metric": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      vertical-align: middle;
+      display: inline-block;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f6f3f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #c1c8c6;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen selection:bg-secondary-fixed selection:text-primary antialiased flex flex-col">
+<!-- ================= SIDEBAR COMPONENT (Shared Components JSON Anchor) ================= -->
+<aside class="fixed top-0 left-0 h-screen w-64 flex flex-col z-40 border-r border-outline-variant/20 shadow-xl bg-primary-container">
+<div class="w-64 h-full flex flex-col justify-between p-4 bg-primary-container">
+<!-- Top Brand & Monogram Block -->
+<div>
+<div class="flex items-center gap-3 px-2 py-3 mb-4">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#163a2d] to-secondary-fixed/40 flex items-center justify-center text-secondary-fixed border border-secondary-fixed/20 shadow-inner">
+<span class="material-symbols-outlined text-[24px]" data-icon="shield_lock">shield_lock</span>
+</div>
+<div>
+<span class="text-title-lg font-title-lg text-surface font-bold tracking-tight block leading-tight">EFIMS Core</span>
+<span class="text-[10px] uppercase font-bold tracking-widest text-on-primary-container block mt-0.5">PROD - NG CORE BANKING</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full flex items-center justify-center gap-2 mb-6 px-4 py-2.5 rounded-full bg-secondary-fixed text-primary font-title-md text-label-md font-bold shadow-md hover:bg-white active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="add_circle">add_circle</span>
+<span>New Escalation</span>
+</button>
+<!-- Navigation Tab Cluster -->
+<nav class="space-y-1">
+<!-- Item 1: Incidents (ACTIVE: style_active_navigation) -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full bg-secondary-fixed text-primary font-bold text-label-md font-label-md transition-colors shadow-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="crisis_alert" style="font-variation-settings: 'FILL' 1;">crisis_alert</span>
+<span>Incidents</span>
+</a>
+<!-- Item 2: Cases -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="workspaces">workspaces</span>
+<span>Cases</span>
+</a>
+<!-- Item 3: Investigations -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="travel_explore">travel_explore</span>
+<span>Investigations</span>
+</a>
+<!-- Item 4: Evidence Vault -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="shield_lock">shield_lock</span>
+<span>Evidence Vault</span>
+</a>
+<!-- Item 5: Containment & Recovery -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="health_and_safety">health_and_safety</span>
+<span>Containment &amp; Recovery</span>
+</a>
+<!-- Item 6: Regulatory & CAPA -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="policy">policy</span>
+<span>Regulatory &amp; CAPA</span>
+</a>
+<!-- Item 7: Configuration -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+<span>Configuration</span>
+</a>
+<!-- Item 8: Audit Trail -->
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-full text-surface-variant/80 hover:text-surface hover:bg-primary/50 text-label-md font-label-md transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history_toggle_off">history_toggle_off</span>
+<span>Audit Trail</span>
+</a>
+</nav>
+</div>
+<!-- Footer Botanical Telemetry Widget -->
+<div class="pt-4 border-t border-outline-variant/15 space-y-3">
+<div class="px-3.5 py-2.5 rounded-xl bg-tertiary-container/60 border border-secondary-fixed/10 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary-fixed"></span>
+</span>
+<span class="text-[11px] font-label-sm text-surface-variant/90 leading-tight">System Telemetry 99.98% Operational</span>
+</div>
+<span class="material-symbols-outlined text-surface-variant/60 text-[18px]" data-icon="satellite_alt">satellite_alt</span>
+</div>
+<div class="flex items-center justify-between px-2 pt-1 text-on-primary-container text-[11px]">
+<span>CBN Mandate v4.22</span>
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span> L2 Encrypted</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- ================= TOP NAVBAR COMPONENT (Shared Components JSON Anchor) ================= -->
+<header class="sticky top-0 right-0 h-[60px] z-30 ml-64 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 shadow-sm flex items-center justify-between px-6">
+<!-- Search Bar on Left with Breadcrumbs Context -->
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full max-w-md">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="search">search</span>
+</span>
+<input class="w-full pl-9 pr-4 py-1.5 text-body-sm font-body-sm bg-surface-container-low border border-outline-variant/50 rounded-full focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-outline transition-all" placeholder="Search incidents by ID, customer hash, NIBSS session, account..." type="text"/>
+</div>
+<!-- Quick Breadcrumb Context Pill -->
+<div class="hidden xl:flex items-center gap-1.5 text-label-sm font-label-sm text-on-surface-variant">
+<span>Financial Crime</span>
+<span class="text-outline-variant">/</span>
+<span class="text-primary font-bold">Incidents</span>
+<span class="text-outline-variant">/</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-mono text-[10px] text-primary">INC-2024-8821</span>
+</div>
+</div>
+<!-- Right-Hand Actions: SLA Status, Clearance Badge, Icon Cluster & User -->
+<div class="flex items-center gap-3.5">
+<!-- 3 Breached SLAs Alert Badge -->
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-error-container text-on-error-container border border-error/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+</span>
+<span class="text-label-sm font-label-sm font-bold tracking-tight">S1 SLA Breach (00:14:22)</span>
+<span class="text-[10px] bg-error text-white font-bold rounded-full px-1.5 py-0.2">3 Breached</span>
+</div>
+<!-- Clearance Badge -->
+<div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/40 text-on-surface text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary" data-icon="verified_user">verified_user</span>
+<span class="font-bold">AML/MLRO Tier-1</span>
+</div>
+<!-- Trailing Icon Cluster -->
+<div class="flex items-center gap-1 border-l border-r border-outline-variant/30 px-2 text-on-surface-variant">
+<button class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary"></span>
+</button>
+<button class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Filter Tuning">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+</button>
+<button class="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Help &amp; Docs">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+</button>
+</div>
+<!-- Profile Avatar Container -->
+<div class="flex items-center gap-2.5 pl-1 cursor-pointer group">
+<div class="w-8 h-8 rounded-full ring-2 ring-secondary-fixed bg-primary text-secondary-fixed flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A refined studio photographic portrait of a Nigerian female Chief AML Analytics Officer wearing an elegant forest green tailored blazer against a warm neutral backdrop. The lighting is soft and flattering with subtle amber rim highlights reflecting enterprise poise and deep executive confidence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4-HWDqfkjcwGZi0AszuXXhxAE2JnSX_cmokwUrUzbMe5tc0EcTz_G8Ff0H06NaLi0YQvvg6ZEwfSAoP_ZRK4WHSWpgAGfCLfcuSbZK3NUSCFEBuWDya6KY3rPwKdAXeKigmreN8ctCZMc0x6TI-K_33tamvQXsAoQft2Mnd5JDJvMCFr_J52oK2H2StIWe_5MUic6v-1iu36KMe9ns5S3AwgraDRbceLdZWhgtwk9IdN4cXCFBuBLDQ"/>
+</div>
+<div class="hidden lg:block text-left">
+<p class="text-label-sm font-label-sm font-bold text-primary leading-tight group-hover:text-secondary transition-colors">Dr. Folake Davies</p>
+<p class="text-[10px] text-outline font-label-sm">Chief AML Officer</p>
+</div>
+</div>
+</div>
+</header>
+<!-- ================= MAIN CONTENT WRAPPER ================= -->
+<main class="ml-64 flex-1 p-6 md:p-8 space-y-6">
+<!-- PAGE HEADER: Botanical Warm Editorial Headline & Polling Telemetry -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-outline-variant/20">
+<div>
+<div class="flex items-center gap-2 text-label-sm font-label-sm text-secondary uppercase tracking-widest font-bold mb-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="grid_view">grid_view</span>
+<span>Core Orchestration Desk</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">
+          Operational Incident Queue
+        </h1>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+          Real-time triage and automated tiering of flagged core banking anomalies across payment rails and accounts.
+        </p>
+</div>
+<!-- Live Polling Telemetry Widget & Fast Aggregation -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/40 shadow-sm">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+</span>
+<span class="text-label-sm font-label-sm font-bold text-primary">Live Socket: Polling (2s)</span>
+<span class="h-3.5 w-px bg-outline-variant"></span>
+<span class="text-label-sm font-label-sm text-secondary font-bold">42 Active Incidents</span>
+</div>
+<button class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary text-surface font-label-sm font-bold text-label-sm hover:bg-[#1E3835] active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="refresh">refresh</span>
+<span>Sync Now</span>
+</button>
+</div>
+</div>
+<!-- QUICK-VIEW TABS & CONTROLS SECTION -->
+<div class="space-y-4">
+<!-- Top Saved View Tabs (Segmented Control Pill Bar) -->
+<div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
+<!-- Tab 1: All Incidents (Active) -->
+<button class="px-4 py-2 rounded-full bg-primary text-surface font-bold text-label-md shadow-sm whitespace-nowrap flex items-center gap-2 transition-transform active:scale-95">
+<span>All Incidents</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-primary text-[11px] font-bold">42</span>
+</button>
+<!-- Tab 2: My Triage Queue -->
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-primary font-bold text-label-md border border-outline-variant/30 whitespace-nowrap flex items-center gap-2 transition-all">
+<span>My Triage Queue</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface text-[11px]">5</span>
+</button>
+<!-- Tab 3: S1/S2 Critical Focus -->
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-primary font-bold text-label-md border border-outline-variant/30 whitespace-nowrap flex items-center gap-2 transition-all">
+<span class="inline-block w-2 h-2 rounded-full bg-error"></span>
+<span>S1/S2 Critical Focus</span>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[11px] font-bold">8</span>
+</button>
+<!-- Tab 4: Awaiting Severity Assignment -->
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-primary font-bold text-label-md border border-outline-variant/30 whitespace-nowrap flex items-center gap-2 transition-all">
+<span>Awaiting Severity Assignment</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface text-[11px]">6</span>
+</button>
+<!-- Tab 5: Unassigned -->
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-primary font-bold text-label-md border border-outline-variant/30 whitespace-nowrap flex items-center gap-2 transition-all">
+<span>Unassigned</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed/40 text-primary text-[11px] font-bold">11</span>
+</button>
+</div>
+<!-- Secondary Filter Strip & Action Tools -->
+<div class="bg-surface-container-lowest rounded-2xl p-3.5 border border-outline-variant/40 shadow-[0_4px_20px_-4px_rgba(30,56,53,0.04)] flex flex-wrap items-center justify-between gap-3">
+<div class="flex flex-wrap items-center gap-2.5">
+<!-- Category Filter Dropdown -->
+<div class="relative">
+<select class="appearance-none bg-surface-container-low text-on-surface font-label-sm text-label-sm py-2 pl-3.5 pr-8 rounded-full border border-outline-variant/50 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<option>Category: All Rails &amp; Crime Types</option>
+<option>Unauthorized NIBSS Payment</option>
+<option>ATM Fleet Skimming</option>
+<option>Insider Impersonation</option>
+<option>Cash Smurfing</option>
+<option>SWIFT Inbound Tampering</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Severity Multi-Select Chip Button -->
+<div class="relative">
+<button class="flex items-center gap-2 bg-surface-container-low text-on-surface font-label-sm text-label-sm py-2 px-3.5 rounded-full border border-outline-variant/50 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="filter_alt">filter_alt</span>
+<span>Severity: <strong>All (S1 - S4)</strong></span>
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="arrow_drop_down">arrow_drop_down</span>
+</button>
+</div>
+<!-- Status Filter -->
+<div class="relative">
+<select class="appearance-none bg-surface-container-low text-on-surface font-label-sm text-label-sm py-2 pl-3.5 pr-8 rounded-full border border-outline-variant/50 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<option>Status: Active Workflows</option>
+<option>Open / In Triage</option>
+<option>Pending AI Review</option>
+<option>Dual-Signoff Required</option>
+<option>Escalated to MLRO</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Date Range Picker -->
+<button class="flex items-center gap-2 bg-surface-container-low text-on-surface font-label-sm text-label-sm py-2 px-3.5 rounded-full border border-outline-variant/50 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="calendar_month">calendar_month</span>
+<span>Past 24 Hours (Rolling UTC)</span>
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- Export Actions -->
+<div class="flex items-center gap-2 ml-auto">
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-outline-variant/60 text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[16px]" data-icon="file_download">file_download</span>
+<span>Export CSV</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-tertiary text-on-tertiary font-label-sm text-label-sm hover:bg-[#163a2d] transition-colors shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[16px]" data-icon="print">print</span>
+<span>Executive Dossier</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ================= ENTERPRISE DATA TABLE CONTAINER ================= -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-[0_4px_24px_-4px_rgba(30,56,53,0.06)] overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/70 border-b border-outline-variant/30 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-3.5 px-4 font-bold">Incident ID</th>
+<th class="py-3.5 px-4 font-bold">Category / Origin</th>
+<th class="py-3.5 px-4 font-bold">Severity</th>
+<th class="py-3.5 px-4 font-bold">Status</th>
+<th class="py-3.5 px-4 font-bold text-right">Exposure Flagged</th>
+<th class="py-3.5 px-4 font-bold">Assigned Analyst</th>
+<th class="py-3.5 px-4 font-bold">SLA Countdown</th>
+<th class="py-3.5 px-4 font-bold text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-body-sm text-body-sm text-on-surface">
+<!-- ROW 1: INC-2024-8902 (S1 Critical, Pulsing Red SLA) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#EF4444] animate-pulse"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8902</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">NIBSS-RTGS Core Rail</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-red-50 text-red-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">Unauthorized NIBSS Payment</p>
+<p class="text-[11px] text-outline">High-velocity API credential anomaly</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S1 Critical: Crimson #EF4444 pill -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EF4444] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="emergency" style="font-variation-settings: 'FILL' 1;">emergency</span>
+                  S1 Critical
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed/50 text-[#59413D] border border-secondary/20 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Escalated
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦45,000,000</span>
+<span class="text-[10px] text-outline block">USD eq. $29,400</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#1E3835] text-secondary-fixed text-[10px] font-bold flex items-center justify-center ring-1 ring-secondary-fixed">
+                    AB
+                  </div>
+<span class="font-bold text-on-surface text-[12px]">A. Balogun</span>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Pulsing Red Alert -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 font-mono text-[11px] font-bold animate-pulse">
+<span class="material-symbols-outlined text-[13px] text-red-600" data-icon="timer">timer</span>
+<span>00:18:42</span>
+</div>
+<span class="block text-[10px] text-red-700 font-bold mt-0.5">Critical Breaching</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2: INC-2024-8894 (S2 High, Terracotta Pill) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#E07A5F]"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8894</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">ATM Switch Gateway</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-orange-50 text-orange-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="credit_card">credit_card</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">ATM Fleet Skimming</p>
+<p class="text-[11px] text-outline">Terminal cluster Victoria Island 04</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S2 High: Burnt Terracotta #E07A5F -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E07A5F] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="warning">warning</span>
+                  S2 High
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                  Dual-Signoff Required
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦12,200,000</span>
+<span class="text-[10px] text-outline block">14 terminal payloads</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#735854] text-white text-[10px] font-bold flex items-center justify-center">
+                    FE
+                  </div>
+<span class="font-bold text-on-surface text-[12px]">F. Eze</span>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Amber -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-mono text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] text-amber-700" data-icon="hourglass_top">hourglass_top</span>
+<span>01:42:10</span>
+</div>
+<span class="block text-[10px] text-amber-800 font-medium mt-0.5">Tier 2 Escalation Risk</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 3: INC-2024-8889 (S1 Critical, Crimson Pill) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#EF4444]"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8889</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">SWIFT FinCore Inbound</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-red-50 text-red-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="lan">lan</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">SWIFT Inbound Tampering</p>
+<p class="text-[11px] text-outline">Message digest MT103 field 50K mismatch</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S1 Critical -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EF4444] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="emergency" style="font-variation-settings: 'FILL' 1;">emergency</span>
+                  S1 Critical
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                  Open / In Triage
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦85,000,000</span>
+<span class="text-[10px] text-outline block">EUR Correspondent #09</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#163a2d] text-tertiary-fixed text-[10px] font-bold flex items-center justify-center">
+                    KA
+                  </div>
+<span class="font-bold text-on-surface text-[12px]">K. Adeleke</span>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Neutral -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface border border-outline-variant/50 font-mono text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] text-outline" data-icon="schedule">schedule</span>
+<span>04:19:30</span>
+</div>
+<span class="block text-[10px] text-outline mt-0.5">SLA Safe Target</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 4: INC-2024-8871 (S2 High, Terracotta / Orange) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#E07A5F]"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8871</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">Staff Directory AD-Auth</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-orange-50 text-orange-900 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="badge">badge</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">Insider Impersonation</p>
+<p class="text-[11px] text-outline">Branch OPS lead token spoofed</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S2 High -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E07A5F] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="warning">warning</span>
+                  S2 High
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                  Pending AI Review
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦24,800,000</span>
+<span class="text-[10px] text-outline block">Overdraft override</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- Unassigned Badge -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-outline font-label-sm text-[11px] italic">
+<span class="material-symbols-outlined text-[12px]" data-icon="person_off">person_off</span>
+                  Unassigned
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Amber -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-mono text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] text-amber-700" data-icon="hourglass_top">hourglass_top</span>
+<span>01:14:05</span>
+</div>
+<span class="block text-[10px] text-amber-800 font-medium mt-0.5">Escalation Impending</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 5: INC-2024-8865 (S3 Medium, Honey Amber) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#F59E0B]"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8865</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">Agency POS Rail</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-yellow-50 text-yellow-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="layers">layers</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">Cash Smurfing</p>
+<p class="text-[11px] text-outline">Structured deposits under CBN reporting threshold</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S3 Medium: Honey Amber #F59E0B -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F59E0B] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="info">info</span>
+                  S3 Medium
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                  Open / In Triage
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦9,850,000</span>
+<span class="text-[10px] text-outline block">18 linked wallets</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#1E3835] text-secondary-fixed text-[10px] font-bold flex items-center justify-center ring-1 ring-secondary-fixed">
+                    AB
+                  </div>
+<span class="font-bold text-on-surface text-[12px]">A. Balogun</span>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Neutral -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface border border-outline-variant/50 font-mono text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] text-outline" data-icon="schedule">schedule</span>
+<span>05:32:00</span>
+</div>
+<span class="block text-[10px] text-outline mt-0.5">SLA Safe Target</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 6: INC-2024-8850 (S4 Low, Spruce Slate #6B807B) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#6B807B]"></span>
+<a class="font-bold text-primary group-hover:text-secondary underline decoration-secondary-fixed underline-offset-4 tracking-tight" href="#">INC-2024-8850</a>
+</div>
+<span class="text-[10px] text-outline block pl-4">USSD Session Monitor</span>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]" data-icon="phone_iphone">phone_iphone</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-snug">SIM Swap Rapid Velocity</p>
+<p class="text-[11px] text-outline">Telecom sync flagged 2 failed PIN retries</p>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- S4 Low: Spruce Slate #6B807B -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#6B807B] text-white font-label-sm text-[11px] font-bold shadow-sm">
+<span class="material-symbols-outlined text-[13px]" data-icon="check_circle">check_circle</span>
+                  S4 Low
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-label-sm text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                  Pending AI Review
+                </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<span class="font-title-md font-bold text-primary font-mono">₦2,150,000</span>
+<span class="text-[10px] text-outline block">Single retail account</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-[#735854] text-white text-[10px] font-bold flex items-center justify-center">
+                    FE
+                  </div>
+<span class="font-bold text-on-surface text-[12px]">F. Eze</span>
+</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<!-- SLA Timer: Neutral -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface border border-outline-variant/50 font-mono text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] text-outline" data-icon="schedule">schedule</span>
+<span>07:44:12</span>
+</div>
+<span class="block text-[10px] text-outline mt-0.5">SLA Safe Target</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2.5 py-1 rounded-full bg-primary text-surface hover:bg-[#1E3835] font-label-sm text-[11px] font-bold transition-all shadow-sm">
+                    Triage
+                  </button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="View Details">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors" title="Row Options">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- ================= PAGINATION BAR ================= -->
+<div class="bg-surface-container-low px-6 py-3.5 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-body-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="font-bold text-primary">Showing 1 to 10 of 42 Incidents</span>
+<span class="text-outline-variant">|</span>
+<span class="text-[12px] text-outline">Filtered from 1,280 daily events</span>
+</div>
+<div class="flex items-center gap-1.5">
+<!-- Previous Button -->
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-outline-variant/50 text-outline hover:text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed font-label-sm text-label-sm transition-colors" disabled="">
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_left">chevron_left</span>
+<span>Previous</span>
+</button>
+<!-- Page Number Chips -->
+<button class="w-8 h-8 rounded-full bg-primary text-white font-bold text-label-sm flex items-center justify-center shadow-sm">1</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">2</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">3</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">4</button>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface font-label-sm flex items-center justify-center transition-colors">5</button>
+<!-- Next Button -->
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-outline-variant/50 text-primary hover:border-primary hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">
+<span>Next</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BOTANICAL EXECUTIVE KPI FOOTNOTE / AT-A-GLANCE INSIGHT -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+<!-- Card 1: Total Exposure under Triage -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div>
+<p class="text-label-sm font-label-sm uppercase tracking-wider text-outline font-bold">Total Flagged Exposure</p>
+<p class="font-kpi-metric text-[24px] font-bold text-primary mt-0.5">₦178,950,000</p>
+<p class="text-[11px] text-secondary mt-0.5 font-medium">+14.2% from prior 24h baseline</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-fixed/50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+</div>
+<!-- Card 2: Mean Time to SLA Breach -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div>
+<p class="text-label-sm font-label-sm uppercase tracking-wider text-outline font-bold">Average First Response</p>
+<p class="font-kpi-metric text-[24px] font-bold text-primary mt-0.5">18m 45s</p>
+<p class="text-[11px] text-emerald-700 mt-0.5 font-medium">Within 30m CBN SLA threshold</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed/60 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="speed">speed</span>
+</div>
+</div>
+<!-- Card 3: AI Auto-Triaged Efficiency -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
+<div>
+<p class="text-label-sm font-label-sm uppercase tracking-wider text-outline font-bold">AI Synthetic Scoring Rate</p>
+<p class="font-kpi-metric text-[24px] font-bold text-primary mt-0.5">88.4%</p>
+<p class="text-[11px] text-outline mt-0.5 font-medium">Model v6.12 Active (Confidence &gt; 0.94)</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>
