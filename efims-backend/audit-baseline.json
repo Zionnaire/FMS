@@ -1,0 +1,22 @@
+{
+  "description": "Known, already-triaged production-path npm audit findings as of the 2026-11-10 production-hardening pass's Phase 1. All 17 current findings (5 high, 12 moderate) trace to multer/qs/uuid, whose only fix path is the NestJS 10->12 major upgrade this pass deliberately defers (see docs/OPEN_ITEMS.md and CLAUDE.md non-negotiable rule #10 for this pass). scripts/audit-guard.js fails CI only on a package name NOT in this list — i.e. a genuinely new finding — not on these already-known ones. Remove a package from this list the moment its underlying finding is actually fixed, so a regression back to the old version would be caught again.",
+  "acceptedPackages": [
+    "@nestjs/cache-manager",
+    "@nestjs/common",
+    "@nestjs/config",
+    "@nestjs/core",
+    "@nestjs/event-emitter",
+    "@nestjs/platform-express",
+    "@nestjs/platform-socket.io",
+    "@nestjs/schedule",
+    "@nestjs/terminus",
+    "@nestjs/throttler",
+    "@nestjs/websockets",
+    "body-parser",
+    "file-type",
+    "lodash",
+    "multer",
+    "qs",
+    "uuid"
+  ]
+}

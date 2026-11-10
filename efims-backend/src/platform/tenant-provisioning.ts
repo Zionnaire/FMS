@@ -313,7 +313,14 @@ export async function provisionTenant(prisma: PrismaClient, input: ProvisionTena
 
       return { adminUserId: admin.id };
     },
-    { maxWait: 10000, timeout: 30000 },
+    // Raised from the original 30000ms — the production-hardening pass's first automated e2e
+    // run hit "Transaction already closed" here reproducibly (observed at 30260ms, barely over
+    // the old ceiling), the same class of Neon-latency issue `PrismaService.withTenant`'s own doc
+    // comment already explains in detail. This transaction's ~11 sequential awaited writes (one
+    // admin user, 6 compartment grants, one team, one membership, 8 CD-key upserts) is real work
+    // against a real remote database, not an inflated number — raising the ceiling here, not
+    // trimming the work, matches this project's established precedent for this exact failure mode.
+    { maxWait: 15000, timeout: 60000 },
   );
 
   return { tenantId: tenant.id, adminUserId };

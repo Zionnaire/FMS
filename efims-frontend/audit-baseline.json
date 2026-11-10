@@ -1,0 +1,4 @@
+{
+  "description": "Known, already-triaged production-path npm audit findings. Empty as of the 2026-11-02 security-patch pass (0 production-path vulnerabilities after upgrading next/zod and moving shadcn to devDependencies). scripts/audit-guard.js fails CI on ANY production-path finding while this stays empty — add a package here only after deliberately triaging a real new finding as deferred, with a reason.",
+  "acceptedPackages": []
+}
