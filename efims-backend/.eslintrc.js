@@ -1,7 +1,9 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
+    // test/e2e/ has its own tsconfig (a dedicated rootDir/outDir so its specs sit outside the
+    // main build's src-only `include`) — listing both lets typed linting resolve either.
+    project: ['tsconfig.json', 'test/e2e/tsconfig.json'],
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
