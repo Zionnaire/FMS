@@ -27,10 +27,18 @@ reality.
 
 ## Confirmed architectural/operational gaps (from the 2026-11-02 production-readiness audit)
 
-- **Zero automated tests in either app.** Every "live-verified" claim in this project's history to
-  date is a manual Playwright/curl script run from a scratch folder, never committed to the repo.
+- ~~Zero automated tests in either app.~~ **Partially closed 2026-11-10 (hardening Phase 1):**
+  backend now has a committed Jest/Supertest e2e suite (`efims-backend/test/e2e/`) against a real
+  Postgres database, covering tenant isolation, the full 7-condition case-access rule, audit-ledger
+  integrity, the containment confirmation gate, auth/session security, and the ml-gateway advisory
+  boundary — 36 tests, ~65% statement coverage on the modules those 6 suites exercise. **Frontend
+  Playwright e2e is still not started** — every frontend "live-verified" claim remains a manual,
+  uncommitted script. CI (`.github/workflows/ci.yml`) runs lint/typecheck/build/dependency-audit for
+  both apps on every PR; the backend e2e job is gated on a repo variable until a CI-dedicated test
+  database's secrets are configured (see `efims-backend/test/e2e/README.md`).
 - **No deployment pipeline** — no `Dockerfile`, `render.yaml`, or CI/CD anywhere, despite being
-  described as "deployed to Render."
+  described as "deployed to Render." (CI now exists for lint/typecheck/build/audit/tests — see
+  above — but CI is not the same as a deployment pipeline; that gap is unchanged.)
 - **The in-memory cache, rate limiter, and `@Cron` jobs are all single-instance-only.** See
   `docs/DECISIONS.md`'s entry on this — correct only because deployment is explicitly
   single-instance today.
