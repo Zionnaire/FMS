@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -48,5 +48,29 @@ export class TriageController {
   @Get('history')
   getHistory(@CurrentUser() actor: AuthenticatedUser, @Param('incidentId', ParseUUIDPipe) incidentId: string) {
     return this.triageService.getHistory(actor, incidentId);
+  }
+
+  /** CD-08 Phase 2 advisory severity suggestion — read-only, same `TRIAGE_ROLES` gate as
+   * `assess`/`escalate` (whoever can triage should see the suggestion), never writes anything. */
+  @Get('suggestion')
+  @UseGuards(RolesGuard)
+  @Roles(...TRIAGE_ROLES)
+  suggestSeverity(@CurrentUser() actor: AuthenticatedUser, @Param('incidentId', ParseUUIDPipe) incidentId: string) {
+    return this.triageService.suggestSeverity(actor, incidentId);
+  }
+}
+
+/** Separate, non-nested controller for the tenant-wide severity trend — not scoped to one
+ * incident, so it doesn't belong under `/incidents/:incidentId/triage`. Same "a small dedicated
+ * controller for a cross-case/tenant-wide concern" pattern as `EvidenceQueueController`/
+ * `RecoveryQueueController`. */
+@Controller('triage')
+export class TriageTrendController {
+  constructor(private readonly triageService: TriageService) {}
+
+  @Get('severity-trend')
+  severityTrend(@CurrentUser() actor: AuthenticatedUser, @Query('days') days?: string) {
+    const parsed = days ? Number(days) : 30;
+    return this.triageService.severityTrend(actor, Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 90) : 30);
   }
 }

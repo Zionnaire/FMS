@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "EFIMS Core",
-  description: "Enterprise Financial Crime Intelligence & Incident Management System",
+  description: "Enterprise Financial Crime & Incident Orchestration Platform",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

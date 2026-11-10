@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SubmitButton } from "@/components/shell/submit-button";
 import { StatusBadge } from "@/components/shell/status-badge";
+import { SeveritySuggestionPanel } from "./severity-suggestion-panel";
+import { SimilarIncidentsPanel } from "./similar-incidents-panel";
 
 const STATUS_TONE: Record<string, "positive" | "warning" | "critical" | "neutral"> = {
   OPEN: "warning",
@@ -119,6 +121,8 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
               <p className="text-xs text-on-surface-variant">No triage assessment yet.</p>
             )}
 
+            <SeveritySuggestionPanel incidentId={id} />
+
             <form action={currentTriage ? escalateAction : assessAction} className="space-y-2 border-t border-outline-variant pt-3">
               <p className="text-xs font-bold text-on-surface-variant uppercase">
                 {currentTriage ? "Escalate / revise" : "Initial assessment"}
@@ -212,7 +216,9 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
         <CardHeader>
           <CardTitle className="text-sm font-bold text-on-surface">Relate / merge</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <CardContent className="space-y-4">
+          <SimilarIncidentsPanel incidentId={id} />
+          <div className="grid grid-cols-1 gap-4 border-t border-outline-variant pt-4 sm:grid-cols-2">
           <form action={relateAction} className="space-y-2">
             <Label className="text-xs">Mark as related to another incident</Label>
             <Input name="relatedIncidentId" placeholder="Incident id (UUID)" required />
@@ -223,6 +229,7 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
             <Input name="targetIncidentId" placeholder="Surviving incident id (UUID)" required />
             <SubmitButton size="sm" variant="outline">Merge</SubmitButton>
           </form>
+          </div>
         </CardContent>
       </Card>
     </>

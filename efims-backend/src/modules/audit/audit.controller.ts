@@ -41,4 +41,10 @@ export class AuditController {
   stats(@CurrentUser() actor: AuthenticatedUser) {
     return this.auditService.stats(actor);
   }
+
+  @Get('trend')
+  trend(@CurrentUser() actor: AuthenticatedUser, @Query('days') days?: string) {
+    const parsed = days ? Number(days) : 30;
+    return this.auditService.trend(actor, Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 90) : 30);
+  }
 }

@@ -51,6 +51,14 @@ export class IncidentsController {
     return this.incidentsService.getById(actor, id);
   }
 
+  /** CD-08 Phase 2 advisory duplicate/correlation detection — read-only, no `@Roles()` gate of
+   * its own since `getById` inside it already enforces the compartment-visibility check that
+   * matters, same reasoning as every other read route in this controller. */
+  @Get(':id/similar')
+  findSimilar(@CurrentUser() actor: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.incidentsService.findSimilarIncidents(actor, id);
+  }
+
   @Post(':id/relate')
   relate(
     @CurrentUser() actor: AuthenticatedUser,

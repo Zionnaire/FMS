@@ -3,19 +3,10 @@ import { requireSession } from "@/features/auth/session";
 import { listCases, getCaseStats } from "@/features/cases/api";
 import { CASE_STATUSES, type CaseStatus } from "@/features/cases/types";
 import { COMPARTMENTS, type Compartment } from "@/features/auth/types";
-import { StatusBadge } from "@/components/shell/status-badge";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CasesTable } from "./cases-table";
 
 const PAGE_SIZE = 20;
 const SENSITIVITY_LEVELS = [1, 2, 3, 4] as const;
-
-const STATUS_TONE: Record<CaseStatus, "positive" | "warning" | "critical" | "neutral"> = {
-  OPEN: "warning",
-  UNDER_INVESTIGATION: "warning",
-  ON_HOLD: "neutral",
-  CLOSED: "positive",
-};
 
 function isCaseStatus(value: string | undefined): value is CaseStatus {
   return !!value && (CASE_STATUSES as readonly string[]).includes(value);
@@ -217,60 +208,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
 
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-surface-container-low">
-              <TableHead>Case ID &amp; title</TableHead>
-              <TableHead>Compartment</TableHead>
-              <TableHead>Sensitivity</TableHead>
-              <TableHead>Linked incidents</TableHead>
-              <TableHead>Team</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center">Open</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cases.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-sm text-on-surface-variant">No cases match this filter.</TableCell>
-              </TableRow>
-            )}
-            {cases.map((c) => (
-              <TableRow key={c.id} className="hover:bg-surface-container-low/60">
-                <TableCell>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-surface-container px-2 py-0.5 font-mono text-xs font-bold text-primary">{c.referenceCode}</span>
-                    </div>
-                    <Link href={`/cases/${c.id}`} className="mt-1 text-sm font-semibold text-on-surface hover:text-primary hover:underline">
-                      {c.title}
-                    </Link>
-                  </div>
-                </TableCell>
-                <TableCell><Badge variant="outline" className="border-outline-variant text-on-surface-variant">{c.compartment}</Badge></TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${c.sensitivityLevel === 4 ? "bg-error-container text-on-error-container" : "bg-surface-container text-on-surface-variant"}`}>
-                    <span className="material-symbols-outlined text-sm">shield</span>
-                    Tier {c.sensitivityLevel}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                    <span className="material-symbols-outlined text-sm">link</span>
-                    {c.linkedIncidentsCount} linked
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs text-on-surface-variant">{c.assignedTeamName ?? "Unassigned"}</TableCell>
-                <TableCell><StatusBadge status={c.status} tone={STATUS_TONE[c.status]} /></TableCell>
-                <TableCell className="text-center">
-                  <Link href={`/cases/${c.id}`} className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container" title="Open case">
-                    <span className="material-symbols-outlined text-base">visibility</span>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <CasesTable cases={cases} />
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-outline-variant/20 bg-surface-container-low/40 p-4 sm:flex-row">
           <div className="text-xs text-on-surface-variant">

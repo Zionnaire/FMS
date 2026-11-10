@@ -26,7 +26,7 @@ export default function LoginPage() {
               <div>
                 <p className="font-headline text-xl font-semibold">EFIMS Core</p>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-on-primary-container">
-                  Financial Crime Intelligence
+                  Financial Crime & Incident Orchestration
                 </p>
               </div>
             </div>

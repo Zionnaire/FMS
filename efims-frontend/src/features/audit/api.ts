@@ -1,6 +1,6 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
-import type { AuditOutcome, AuditStats, ChainVerificationResult, ListAuditEventsResult } from "./types";
+import type { AuditOutcome, AuditStats, AuditTrendPoint, ChainVerificationResult, ListAuditEventsResult } from "./types";
 
 export interface QueryAuditEventsParams {
   accessToken: string;
@@ -30,4 +30,8 @@ export async function verifyAuditChain(accessToken: string): Promise<ChainVerifi
 
 export async function getAuditStats(accessToken: string): Promise<AuditStats> {
   return backendFetch<AuditStats>("/audit-events/stats", { accessToken });
+}
+
+export async function getAuditTrend(accessToken: string, days = 30): Promise<AuditTrendPoint[]> {
+  return backendFetch<AuditTrendPoint[]>(`/audit-events/trend?days=${days}`, { accessToken });
 }

@@ -39,3 +39,10 @@ export interface AuditStats {
   total: number;
   byOutcome: Record<AuditOutcome, number>;
 }
+
+export interface AuditTrendPoint {
+  date: string;
+  success: number;
+  denied: number;
+  failure: number;
+}

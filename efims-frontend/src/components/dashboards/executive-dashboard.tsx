@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getCaseStats } from "@/features/cases/api";
 import { getIncidentStats } from "@/features/incidents/api";
+import { getSeverityTrend } from "@/features/triage/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendChart } from "@/components/charts/trend-chart";
 
 function formatNgn(amount: string): string {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(Number(amount));
@@ -10,7 +13,11 @@ function formatNgn(amount: string): string {
  * `QueueDashboard` shell: an executive wants the whole portfolio's shape at a glance (loss vs.
  * recovered, case mix, incident pipeline), not a flat queue of individual rows to click into. */
 export async function ExecutiveDashboard({ accessToken }: { accessToken: string }) {
-  const [caseStats, incidentStats] = await Promise.all([getCaseStats(accessToken), getIncidentStats(accessToken)]);
+  const [caseStats, incidentStats, severityTrend] = await Promise.all([
+    getCaseStats(accessToken),
+    getIncidentStats(accessToken),
+    getSeverityTrend(accessToken, 30),
+  ]);
 
   return (
     <>
@@ -82,6 +89,25 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
           <p className="mt-1 text-xs text-on-surface-variant">Cases resolved to date</p>
         </div>
       </div>
+
+      <Card className="border-outline-variant shadow-card">
+        <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Severity trend — last 30 days</CardTitle></CardHeader>
+        <CardContent>
+          {severityTrend.length === 0 ? (
+            <p className="py-6 text-center text-xs text-on-surface-variant">No triage assessments in this window yet.</p>
+          ) : (
+            <TrendChart
+              data={severityTrend}
+              series={[
+                { key: "S1", label: "S1", color: "var(--color-severity-s1)" },
+                { key: "S2", label: "S2", color: "var(--color-severity-s2)" },
+                { key: "S3", label: "S3", color: "var(--color-severity-s3)" },
+                { key: "S4", label: "S4", color: "var(--color-severity-s4)" },
+              ]}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex flex-wrap gap-3">
         <Link href="/cases" className="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container">

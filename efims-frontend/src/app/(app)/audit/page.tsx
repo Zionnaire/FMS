@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { requireSession } from "@/features/auth/session";
-import { getAuditStats, queryAuditEvents, verifyAuditChain } from "@/features/audit/api";
+import { getAuditStats, getAuditTrend, queryAuditEvents, verifyAuditChain } from "@/features/audit/api";
 import { AUDIT_OUTCOMES, type AuditOutcome } from "@/features/audit/types";
 import { listUsers, userDisplayNameMap } from "@/features/users/api";
 import { ApiError } from "@/lib/backend-client";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mono } from "@/components/ui/mono";
+import { TrendChart } from "@/components/charts/trend-chart";
 
 const PAGE_SIZE = 50;
 
@@ -40,7 +42,12 @@ export default async function AuditPage(props: PageProps<"/audit">) {
     throw error;
   }
 
-  const [chain, stats, users] = await Promise.all([verifyAuditChain(accessToken), getAuditStats(accessToken), listUsers(accessToken)]);
+  const [chain, stats, trend, users] = await Promise.all([
+    verifyAuditChain(accessToken),
+    getAuditStats(accessToken),
+    getAuditTrend(accessToken, 30),
+    listUsers(accessToken),
+  ]);
   const nameOf = userDisplayNameMap(users);
 
   const activeParams = new URLSearchParams();
@@ -119,6 +126,24 @@ export default async function AuditPage(props: PageProps<"/audit">) {
           <p className="mt-1 text-xs text-on-surface-variant">Operation-level failures, not access denials</p>
         </div>
       </div>
+
+      <Card className="border-outline-variant shadow-card">
+        <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Outcome trend — last 30 days</CardTitle></CardHeader>
+        <CardContent>
+          {trend.length === 0 ? (
+            <p className="py-6 text-center text-xs text-on-surface-variant">No events in this window yet.</p>
+          ) : (
+            <TrendChart
+              data={trend}
+              series={[
+                { key: "success", label: "Success", color: "var(--color-tertiary)" },
+                { key: "denied", label: "Denied", color: "var(--color-secondary)" },
+                { key: "failure", label: "Failure", color: "var(--color-error)" },
+              ]}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {chain.breaks.length > 0 && (
         <div className="space-y-3 rounded-2xl border border-error/30 bg-error-container/20 p-5 shadow-card">
@@ -235,7 +260,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
             )}
             {events.map((event) => (
               <TableRow key={event.id} className="hover:bg-surface-container-low/60">
-                <TableCell className="font-mono text-xs text-on-surface">{event.action}</TableCell>
+                <TableCell><Mono className="text-on-surface">{event.action}</Mono></TableCell>
                 <TableCell className="text-xs text-on-surface-variant">{event.entityType}{event.entityId && ` #${event.entityId.slice(0, 8)}`}</TableCell>
                 <TableCell className="text-xs text-on-surface-variant">{event.actorUserId ? (nameOf.get(event.actorUserId) ?? event.actorUserId) : "—"}</TableCell>
                 <TableCell><StatusBadge status={event.outcome} tone={event.outcome === "SUCCESS" ? "positive" : event.outcome === "DENIED" ? "warning" : "critical"} /></TableCell>

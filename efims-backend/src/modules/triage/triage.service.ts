@@ -7,6 +7,7 @@ import { ConfigurationService } from '../configuration/configuration.service';
 import { Cd03SlaCalendars } from '../configuration/types/cd-value.types';
 import { TeamsService } from '../identity/teams.service';
 import { IncidentsService } from '../incidents/incidents.service';
+import { MlGatewayService, SeveritySuggestion } from '../ml-gateway/ml-gateway.service';
 import { CreateTriageAssessmentDto } from './dto/create-triage-assessment.dto';
 
 /**
@@ -25,7 +26,35 @@ export class TriageService {
     private readonly configurationService: ConfigurationService,
     private readonly incidentsService: IncidentsService,
     private readonly teamsService: TeamsService,
+    private readonly mlGatewayService: MlGatewayService,
   ) {}
+
+  /** CD-08 Phase 2, item one — advisory-only severity suggestion. Read-only: never writes a
+   * `TriageAssessment`, never affects `assess`/`escalate` in any way. The human still calls
+   * those with their own chosen severity exactly as before; this is a suggestion shown alongside
+   * their own form, not a prefill. Same `IncidentsService.getById` visibility check every other
+   * read in this module already goes through. */
+  async suggestSeverity(actor: AuthenticatedUser, incidentId: string): Promise<SeveritySuggestion> {
+    const incident = await this.incidentsService.getById(actor, incidentId);
+    const suggestion = await this.mlGatewayService.suggestSeverity({
+      category: incident.category,
+      type: incident.type,
+      title: incident.title,
+      description: incident.description,
+    });
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'triage.severity_suggestion.request',
+      entityType: 'Incident',
+      entityId: incidentId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { suggestedSeverity: suggestion.suggestedSeverity, confidence: suggestion.confidence },
+    });
+
+    return suggestion;
+  }
 
   /** The first assessment for an incident. Also moves the incident OPEN -> UNDER_REVIEW (see
    * IncidentsService.markUnderReview's own doc comment for why that's the one status transition
@@ -74,6 +103,38 @@ export class TriageService {
     return this.prisma.forCurrentTenant((tx) =>
       tx.triageAssessment.findMany({ where: { incidentId }, orderBy: { assessedAt: 'desc' } }),
     );
+  }
+
+  /** Daily severity-tier trend for the Executive dashboard's new chart (added 2026-11-10
+   * alongside the frontend's first charting library) — reuses `IncidentsService.getVisibleIncidentIds`
+   * for the same compartment-filtered visibility every other read in this module gets via
+   * `getById`, so the trend never includes an assessment on an incident this actor can't
+   * otherwise see. This module owns `TriageAssessment`, so the actual query stays here rather
+   * than in `incidents` (same non-negotiable #2 reasoning as every other cross-module call in
+   * this file — this is the one place that's allowed to query this table directly). */
+  async severityTrend(actor: AuthenticatedUser, days: number): Promise<{ date: string; S1: number; S2: number; S3: number; S4: number }[]> {
+    const visibleIds = await this.incidentsService.getVisibleIncidentIds(actor);
+    if (visibleIds.length === 0) return [];
+
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const assessments = await this.prisma.forCurrentTenant((tx) =>
+      tx.triageAssessment.findMany({
+        where: { incidentId: { in: visibleIds }, assessedAt: { gte: since } },
+        select: { severity: true, assessedAt: true },
+      }),
+    );
+
+    const byDay = new Map<string, { S1: number; S2: number; S3: number; S4: number }>();
+    for (const a of assessments) {
+      const key = a.assessedAt.toISOString().slice(0, 10);
+      const entry = byDay.get(key) ?? { S1: 0, S2: 0, S3: 0, S4: 0 };
+      entry[a.severity]++;
+      byDay.set(key, entry);
+    }
+
+    return Array.from(byDay.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, counts]) => ({ date, ...counts }));
   }
 
   private async getCurrentOrNull(incidentId: string): Promise<TriageAssessment | null> {

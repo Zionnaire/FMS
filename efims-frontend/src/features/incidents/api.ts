@@ -28,6 +28,20 @@ export async function getIncidentStats(accessToken: string): Promise<IncidentSta
   return backendFetch<IncidentStats>("/incidents/stats", { accessToken });
 }
 
+export interface SimilarIncidentResult {
+  incidentId: string;
+  score: number;
+  citedFactors: string[];
+}
+
+/** CD-08 Phase 2 advisory duplicate/correlation detection — fetched on demand, same "real Groq
+ * call, human opts in" reasoning as `features/triage/api.ts`'s `getSeveritySuggestion`. The
+ * caller wires the result to the already-existing `relateIncidents`/`mergeIncident` actions
+ * below — this only ever finds and scores candidates, never merges/links anything itself. */
+export async function getSimilarIncidents(accessToken: string, incidentId: string): Promise<SimilarIncidentResult[]> {
+  return backendFetch<SimilarIncidentResult[]>(`/incidents/${incidentId}/similar`, { accessToken });
+}
+
 export async function getIncident(accessToken: string, id: string): Promise<Incident> {
   return backendFetch<Incident>(`/incidents/${id}`, { accessToken });
 }

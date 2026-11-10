@@ -6,6 +6,126 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-10 — design system blend ("Botanical Precision") + the first real `ml-gateway`
+
+User pushed back hard on the 2026-11-02 audit's framing: unconvinced the product actually solves
+the problem it's named for ("Financial Crime **Intelligence** & Incident Management System" with
+zero AI anywhere), and dissatisfied with the design on three specific counts — doesn't read as
+"intelligence" (every page a form + a table), the information architecture feels flat, and the
+visual polish isn't there. Research confirmed concretely: 16 of 20 role dashboards share one
+identical KPI-row-plus-table shell, no charting library existed anywhere in `package.json`, no
+cross-entity search existed anywhere in the app, and — a real bug, not a style complaint — the
+implemented severity tokens had S2 and S3 defined as the literal same color (`#f59e0b`). A second,
+fully-specified design system, **"EFIMS Vanguard Precision"** (`mockups/design-tokens/
+efims-vanguard-precision.md`), already existed — built for exactly this forensic/analyst feel
+(Linear/Stripe engineering precision + Palantir Gotham/ServiceNow density) but superseded early in
+the project before most pages were built. Shown side-by-side against the shipped "Botanical
+Executive" on a real case page; user chose to blend the two rather than adopt either wholesale.
+
+**Design: "Botanical Precision" token blend** (`efims-frontend/src/app/globals.css`) — Vanguard's
+cooler slate surface scale replaces Botanical's warm porcelain-cream, Botanical's spruce-green
+(`#072320`) is kept as the one warm primary accent, secondary/tertiary move to Vanguard's cooler
+slate/blue pairing, elevation shadows retint from green to neutral slate. Playfair Display
+headlines are kept (explicitly not swapped to Inter). Severity tokens adopt Vanguard's 4 distinct
+colors verbatim, fixing the S2/S3 collision as part of the token swap rather than a one-line patch.
+Shape-language policy documented: `rounded-full` reserved for status badges only, going forward.
+
+**Structural additions, all new, none existed before**:
+- **Global Ctrl+K search** (`components/shell/command-palette.tsx` + `app/api/search/route.ts`) —
+  fans out to the cases/incidents/signals list endpoints' existing `q` filter plus a `GET /users`
+  substring match; no new search index, reuses what's there.
+- **First real charts** (`components/charts/trend-chart.tsx`, `recharts`) — an outcome trend on the
+  Audit page and a severity trend on the Executive dashboard. Both needed small new backend
+  time-series endpoints (`GET /audit-events/trend`, `GET /triage/severity-trend`) since the
+  existing `*/stats` endpoints are point-in-time snapshots, not day-grouped series. The severity
+  trend read `TriageAssessment` — caught and fixed a real non-negotiable-#2 violation before it
+  shipped: this was first written directly inside `IncidentsService`, which doesn't own that
+  table; moved to `TriageService` (which already depends on `IncidentsService` for visibility,
+  never the reverse) using a new `IncidentsService.getVisibleIncidentIds` cross-module read,
+  mirroring `CasesService.getVisibleCaseIds`'s established pattern.
+- **Detail drawer** (`components/shell/detail-drawer.tsx`) — scoped to Cases only, per the plan.
+  Clicking a row opens a quick-preview slide-over using data already in the list response (no
+  extra fetch); "Open full case" still goes to the real `/cases/[id]` route, which is unchanged.
+- Dense table/mono treatment: `components/ui/table.tsx` tightened to Vanguard's 36/40px row-height
+  spec, new `components/ui/mono.tsx` for forensic identifiers (case/incident ids, hashes,
+  timestamps), applied to Audit and Cases as the representative pass — not every page.
+
+**The first real `ml-gateway`** (`efims-backend/src/modules/ml-gateway/`) — the module CLAUDE.md
+has named as the system's sole AI entry point since the beginning, never built until now. Builds
+exactly CD-08 Phase 2 (`docs/configuration-decisions.md`), nothing further up that roadmap:
+- `MlGatewayService` — the only caller of Groq anywhere in the codebase (non-negotiable #4),
+  using the `openai` SDK pointed at Groq's own base URL (Groq's API is OpenAI-compatible). Fails
+  gracefully (503, not a crash) when `GROQ_API_KEY` isn't configured — confirmed live.
+- **Severity suggestion** (`GET /incidents/:id/triage/suggestion`) — advisory-only, read-only,
+  never writes a `TriageAssessment`. Surfaced on the incident page as a "Get AI suggestion" button
+  the human opts into (not an automatic page-load call — it's a real external API call with real
+  latency/cost), shown beside the human's own severity picker, never prefilling it.
+- **Duplicate/correlation detection** (`GET /incidents/:id/similar`) — same advisory posture,
+  candidate set is this actor's own compartment-filtered visible incidents in the same category.
+  Wires to the already-existing, already-tested `relate`/`merge` actions — only the "find and
+  score" step is new.
+- Both capabilities were a genuine architectural near-miss, caught and corrected before shipping
+  (see above) — a concrete demonstration of why non-negotiable #2 matters in practice, not just
+  in principle.
+
+**Explicitly out of scope, confirmed real gaps, correctly deferred**: the much larger "intelligence"
+mockups (`network-graph`, `entity-risk-scoring-watchlist`, `customer-360-entity-profile`,
+`alert-rule-engine`) all need entirely new domain models (Customer/Account/Transaction/Entity)
+that don't exist anywhere in the schema — genuine multi-week undertakings, not a slice of this
+pass. CD-08 Phase 3+ (narrative generation, anomaly detection, case summarization) is not
+attempted. The mechanical density/mono roll-out across every remaining list page (Signals,
+Incidents, all 20 role dashboards) is not exhaustive — Audit, Cases, and the Executive dashboard
+are the representative pass; the rest inherit the new color tokens automatically (CSS variables)
+but not yet the literal density/mono/radius class changes.
+
+**Verification**: `npx tsc --noEmit` + lint clean on both apps throughout. Live-verified: the token
+blend screenshot-confirmed correct, Ctrl+K search (button and real keyboard shortcut) returning
+real results, both new charts rendering, the Cases drawer opening/closing correctly, both new
+ml-gateway endpoints degrading to a clean 503 (not a crash) with `GROQ_API_KEY` unset and the
+frontend panels surfacing that gracefully. Full regression — the complete admin-driven
+signal-to-users flow — re-run twice (once catching a test-script selector bug of its own, not an
+app bug), passing all 20 steps with zero console errors on the final run.
+
+---
+
+## 2026-11-10 (cont'd) — real Groq key wired in, two real bugs found and fixed
+
+User supplied a real `GROQ_API_KEY`. Verifying the two ml-gateway capabilities against it (not
+just their configured-vs-not-configured code paths, which were all that could be confirmed above)
+surfaced two real bugs, both fixed and re-verified live:
+
+- **Wrong model name.** `GROQ_MODEL` was hardcoded to `llama-3.3-70b-versatile`, which Groq has
+  since removed from its catalog — both endpoints 500'd with "The model ... does not exist."
+  Queried Groq's own `/v1/models` list with the real key to find what's actually servable today;
+  switched to `openai/gpt-oss-120b` in `efims-backend/.env` and `.env.example`. Both endpoints then
+  returned real, sane output: a severity suggestion of S4/92% confidence for a test incident with
+  no realized loss (correctly low per CD-02), and a similarity scan correctly scoring near-duplicate
+  test incidents at 0.99 against 0.40–0.55 for same-category-only matches. This is the kind of gap
+  that CLAUDE.md's own working agreement exists to catch early — a model name silently going stale
+  underneath a feature that had only ever been tested against its own 503 fallback path.
+- **`SimilarIncidentsPanel`'s inline Relate/Merge could get stuck disabled forever even though the
+  backend write had already succeeded.** Root cause: `act()` called the existing
+  `relateIncidentsAction`/`mergeIncidentAction` Server Actions (which call `revalidatePath`
+  internally) and then tried to locally `.filter()` the acted-on candidate out of client state —
+  but a Server Action invoked directly from a Client Component (not via `<form>`) races its own
+  `revalidatePath` against that local state update, and the local update could get lost even
+  though the backend call returned 200. Symptom: the button stayed disabled indefinitely, with no
+  console error, misleading a human reviewer into thinking the action hadn't registered when it
+  actually had. Fixed in `efims-frontend/src/app/(app)/incidents/[id]/similar-incidents-panel.tsx`
+  by re-fetching the similarity list from the backend after the action settles (in a `finally`)
+  instead of trusting local filter state — slower (the full list now re-scores via Groq again,
+  ~15–20s combined), but correct and self-healing regardless of the race, which matters more for
+  an advisory surface a human is relying on to reflect real state.
+
+**Verification**: direct backend calls confirmed real Groq JSON for both endpoints; a live browser
+pass confirmed the severity-suggestion panel renders real output (~5–9s latency, never prefilling
+the human's own picker) and the similarity panel renders real scored candidates with working
+inline Relate/Merge, re-tested specifically against the race above until it settled cleanly with
+zero stuck buttons across repeated runs. `npx tsc --noEmit` and `eslint` (whole `src/`, zero
+warnings) both clean on the frontend after the fix.
+
+---
+
 ## 2026-11-02 — production-readiness audit + security patches
 
 User asked for a full production-readiness gap analysis ("what do we still need for this to work

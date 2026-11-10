@@ -7,6 +7,7 @@ import { AuditService } from '../audit/audit.service';
 import { ConfigurationService } from '../configuration/configuration.service';
 import { Cd01IncidentTaxonomy } from '../configuration/types/cd-value.types';
 import { UsersService } from '../identity/users.service';
+import { MlGatewayService, SimilarIncidentResult } from '../ml-gateway/ml-gateway.service';
 import { MergeIncidentDto } from './dto/merge-incident.dto';
 import { RelateIncidentsDto } from './dto/relate-incidents.dto';
 
@@ -44,7 +45,45 @@ export class IncidentsService {
     private readonly auditService: AuditService,
     private readonly configurationService: ConfigurationService,
     private readonly usersService: UsersService,
+    private readonly mlGatewayService: MlGatewayService,
   ) {}
+
+  /** CD-08 Phase 2, item two — advisory duplicate/correlation detection. Read-only: finds and
+   * scores candidates, never merges/links/rejects anything itself. The candidate set is this
+   * actor's own compartment-filtered visible incidents in the same category (via the same
+   * `getVisibleIncidents` every other read in this module uses), excluding the target itself and
+   * anything already `MERGED`/`REJECTED` — the frontend wires the result to the existing, already-
+   * tested `relate`/`merge` actions below. */
+  async findSimilarIncidents(actor: AuthenticatedUser, incidentId: string): Promise<SimilarIncidentResult[]> {
+    const target = await this.getById(actor, incidentId);
+
+    const visible = await this.getVisibleIncidents(actor);
+    const candidates = visible.filter(
+      (i) => i.id !== target.id && i.category === target.category && i.status !== IncidentStatus.MERGED && i.status !== IncidentStatus.REJECTED,
+    );
+    if (candidates.length === 0) return [];
+
+    // Cap the candidate set so a large tenant doesn't send an unbounded prompt — recent first,
+    // the same ordering `getVisibleIncidents` already returns.
+    const capped = candidates.slice(0, 20);
+
+    const results = await this.mlGatewayService.findSimilarIncidents(
+      { id: target.id, referenceCode: target.referenceCode, category: target.category, type: target.type, title: target.title, description: target.description },
+      capped.map((c) => ({ id: c.id, referenceCode: c.referenceCode, category: c.category, type: c.type, title: c.title, description: c.description })),
+    );
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'incidents.similarity.request',
+      entityType: 'Incident',
+      entityId: incidentId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { candidateCount: capped.length, matchCount: results.length },
+    });
+
+    return results;
+  }
 
   /**
    * Called by SignalsService.validate with ITS OWN open transaction (`tx`), so Incident
@@ -146,6 +185,17 @@ export class IncidentsService {
     }
 
     return { total: visible.length, byStatus, restrictedCompartmentCount, linkedToCaseCount };
+  }
+
+  /** Cross-module read for other modules' own access-filtered queries (e.g. `triage`'s
+   * severity-trend chart data) — same `CasesService.getVisibleCaseIds` precedent: callers outside
+   * this module reach incident visibility through this method, never by filtering
+   * `tx.incident.findMany()` results themselves or (worse) reading another module's own table
+   * directly. Returns ids only, not full rows, so callers can't casually depend on unrelated
+   * incident fields. */
+  async getVisibleIncidentIds(actor: AuthenticatedUser): Promise<string[]> {
+    const visible = await this.getVisibleIncidents(actor);
+    return visible.map((i) => i.id);
   }
 
   private async getVisibleIncidents(actor: AuthenticatedUser, status?: IncidentStatus): Promise<Incident[]> {

@@ -167,6 +167,48 @@ export class AuditService {
     return { total, byOutcome };
   }
 
+  /** Daily outcome trend for the audit page's new chart (added 2026-11-10 alongside the
+   * frontend's first charting library) — `groupBy` can't express a date-truncated bucket, so this
+   * is the one place in this service that drops to raw SQL. Still runs inside
+   * `forCurrentTenant`'s transaction, so RLS applies exactly as it would to a Prisma-built query —
+   * same Postgres session/transaction, same `current_setting('app.current_tenant')` scoping. */
+  async trend(actor: AuthenticatedUser, days: number): Promise<{ date: string; success: number; denied: number; failure: number }[]> {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const rows = await this.prisma.forCurrentTenant((tx) =>
+      tx.$queryRaw<{ day: Date; outcome: AuditOutcome; count: bigint }[]>`
+        SELECT date_trunc('day', "createdAt") AS day, "outcome", COUNT(*) AS count
+        FROM "audit_events"
+        WHERE "createdAt" >= ${since}
+        GROUP BY day, "outcome"
+        ORDER BY day ASC
+      `,
+    );
+
+    const byDay = new Map<string, { success: number; denied: number; failure: number }>();
+    for (const row of rows) {
+      const key = row.day.toISOString().slice(0, 10);
+      const entry = byDay.get(key) ?? { success: 0, denied: 0, failure: 0 };
+      const count = Number(row.count);
+      if (row.outcome === AuditOutcome.SUCCESS) entry.success += count;
+      else if (row.outcome === AuditOutcome.DENIED) entry.denied += count;
+      else if (row.outcome === AuditOutcome.FAILURE) entry.failure += count;
+      byDay.set(key, entry);
+    }
+
+    await this.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'audit.trend',
+      entityType: 'AuditEvent',
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { days },
+    });
+
+    return Array.from(byDay.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, counts]) => ({ date, ...counts }));
+  }
+
   /** Walks the calling actor's tenant's entire chain in order and recomputes every hash —
    * O(n) in the number of events, acceptable at MVP volumes; a large-ledger optimization
    * (checkpointing, incremental verification from the last known-good point) is future work, not

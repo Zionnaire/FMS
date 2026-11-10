@@ -1,6 +1,6 @@
 # EFIMS — Project Context
 
-**EFIMS** = Enterprise Financial Crime Intelligence & Incident Management System.
+**EFIMS** = Enterprise Financial Crime & Incident Orchestration Platform.
 A multi-tenant SaaS for banks (Bank 1 is the first tenant) to manage fraud/incident intake,
 triage, case investigation, containment, recovery, CAPA, regulatory reporting, and audit —
 with AI used only in an advisory, human-overridable capacity.
@@ -198,12 +198,52 @@ never actually used anywhere) on both the tenant and platform login routes, live
 attempt in 60s correctly 429s). Fixed one stale doc comment claiming the user-management UI doesn't
 exist (it shipped in the entry above). Full detail in `docs/CHANGELOG.md`'s 2026-11-02 entry.
 
-**Next**: the full production-readiness gap list above is the real backlog now — automated test
-infrastructure is probably the single highest-leverage next step, but nothing in that list should
-be started without the user picking it. Smaller pre-existing follow-ups, still not started: a
-generic capability/permission-string engine (Role stays flat for now), access-recertification
-campaigns, and a real invite-link flow for new users (temporary passwords are issued directly
-today).
+**2026-11-10 — design system blend + the first real `ml-gateway`.** User pushed back on the
+2026-11-02 audit, unconvinced the product solves the problem it's named for (zero AI anywhere in a
+system whose name promises "Intelligence") and dissatisfied with the design (doesn't read as
+analytical, flat IA, polish). Both addressed together: **design** — blended the shipped "Botanical
+Executive" with a second, fully-specified design system found already sitting in the mockups
+(`mockups/design-tokens/efims-vanguard-precision.md`, built for exactly this forensic/analyst feel
+but superseded before most pages used it) — cooler Vanguard surfaces, Botanical's spruce-green kept
+as the one warm accent, Playfair headlines kept, severity tokens fixed to 4 distinct colors (was a
+real S2=S3 bug). Added genuinely new structure that didn't exist before: global Ctrl+K search, the
+app's first real charts (an outcome trend on Audit, a severity trend on the Executive dashboard),
+and a quick-preview detail drawer on Cases. **Intelligence** — built the real `ml-gateway` module
+for the first time (previously zero lines of code despite being named in this file since the
+start), implementing exactly CD-08 Phase 2: an advisory, read-only severity suggestion and a
+duplicate/correlation detector, both using Groq via the OpenAI-compatible `openai` SDK, both
+degrading to a clean 503 (not a crash) when unconfigured. Caught and fixed a real non-negotiable #2
+violation before it shipped: the severity-trend chart's data query was first written directly
+inside `IncidentsService` against a table (`TriageAssessment`) it doesn't own — moved to
+`TriageService` using a new cross-module `IncidentsService.getVisibleIncidentIds` read, mirroring
+`CasesService.getVisibleCaseIds`'s established pattern. Full regression re-run clean (20/20 steps,
+zero console errors). Full detail and what's explicitly deferred (the much larger mockups needing
+entirely new domain models — network graph, entity risk scoring, customer 360, alert rules — and
+CD-08 Phase 3+) are in `docs/CHANGELOG.md`'s 2026-11-10 entry.
+
+**2026-11-10 (cont'd) — real Groq key verification, two real bugs found and fixed.** User supplied
+a real `GROQ_API_KEY`. Verifying against it (not just the configured/unconfigured code paths above)
+found: (1) `GROQ_MODEL` was hardcoded to `llama-3.3-70b-versatile`, which Groq has since removed
+from its catalog — both endpoints 500'd until switched to `openai/gpt-oss-120b` (queried Groq's own
+`/v1/models` list with the real key to find a currently-servable one); confirmed live afterward with
+real, sane output (a 92%-confidence S4 suggestion for a no-loss test incident, a similarity scan
+correctly scoring true near-duplicates at 0.99 vs. 0.40–0.55 for same-category-only matches). (2) A
+real bug in `SimilarIncidentsPanel`: its inline Relate/Merge buttons could get stuck disabled
+forever even though the backend write had already succeeded — a Server Action invoked directly from
+a Client Component (not via `<form>`) races its own `revalidatePath` against a local
+`setState`/`.filter()` update, and the local update could get silently lost. Fixed by re-fetching the
+similarity list from the backend in a `finally` block instead of trusting local state — slower
+(~15–20s combined per action, since the full candidate set re-scores via Groq again) but correct and
+self-healing regardless of the race. Full detail in `docs/CHANGELOG.md`'s dated follow-up entry.
+
+**Next**: the full production-readiness gap list from 2026-11-02 is still the real backlog —
+automated test infrastructure is probably the single highest-leverage next step, but nothing in
+that list should be started without the user picking it. Smaller pre-existing follow-ups, still not
+started: a generic capability/permission-string engine (Role stays flat for now),
+access-recertification campaigns, a real invite-link flow for new users, and finishing the
+density/mono roll-out across the remaining list pages and role dashboards (Audit/Cases/Executive
+got the representative pass; the rest inherit the new color tokens automatically but not the
+literal density/mono changes yet).
 
 ## Working agreement
 

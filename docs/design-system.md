@@ -1,7 +1,7 @@
 # EFIMS Frontend Design System & Component Documentation
 
 **Design System:** Botanical Executive
-**Platform:** EFIMS (Enterprise Financial Crime Intelligence & Incident Management System)
+**Platform:** EFIMS (Enterprise Financial Crime & Incident Orchestration Platform)
 **Version:** 1.2.0 — Reconciled against shipped mockup palette
 **Target Environment:** Storybook 8+, Tailwind CSS v3.4+, React 18+ / TypeScript, Material Symbols Outlined
 
