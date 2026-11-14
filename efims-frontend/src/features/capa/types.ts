@@ -37,6 +37,12 @@ export interface CapaAction {
   cancelledAt: string | null;
 }
 
+/** `GET /capa`'s row shape — one row per CAPA action across every accessible case, backing the
+ * top-level Remediation register page. */
+export interface CapaRegisterRow extends CapaAction {
+  case: { referenceCode: string; title: string };
+}
+
 export interface CapaValidation {
   id: string;
   tenantId: string;

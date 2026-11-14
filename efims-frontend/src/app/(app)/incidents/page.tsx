@@ -31,8 +31,10 @@ function isCompartment(value: string | undefined): value is Compartment {
   return !!value && (COMPARTMENTS as readonly string[]).includes(value);
 }
 
-export default async function IncidentsPage(props: PageProps<"/incidents">) {
-  const searchParams = await props.searchParams;
+/** Exported separately from the default page export so `/intake`'s Incidents tab can render this
+ * exact content as a tab panel without duplicating any data-fetching — see that page's own doc
+ * comment. */
+export async function IncidentsPageContent(searchParams: { [key: string]: string | string[] | undefined }) {
   const status = isIncidentStatus(searchParams.status as string | undefined) ? (searchParams.status as IncidentStatus) : undefined;
   const compartment = isCompartment(searchParams.compartment as string | undefined) ? (searchParams.compartment as Compartment) : undefined;
   const q = (searchParams.q as string | undefined) || undefined;
@@ -272,4 +274,9 @@ export default async function IncidentsPage(props: PageProps<"/incidents">) {
       </div>
     </>
   );
+}
+
+export default async function IncidentsPage(props: PageProps<"/incidents">) {
+  const searchParams = await props.searchParams;
+  return IncidentsPageContent(searchParams);
 }

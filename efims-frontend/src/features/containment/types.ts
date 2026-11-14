@@ -23,3 +23,9 @@ export interface ContainmentRequest {
   cancellationReason: string | null;
   cancelledAt: string | null;
 }
+
+/** `GET /containment-requests`'s row shape — one row per request across every accessible case,
+ * backing the top-level Containment register page. */
+export interface ContainmentRegisterRow extends ContainmentRequest {
+  case: { referenceCode: string; title: string };
+}

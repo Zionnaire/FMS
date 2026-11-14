@@ -68,3 +68,42 @@ export async function removeCaseFlagAction(caseId: string, flagId: string): Prom
   await api.removeCaseFlag(accessToken, caseId, flagId);
   revalidatePath(`/cases/${caseId}`);
 }
+
+/** `BulkCaseActionResult`-shaped forms (bulk Assign/Escalate from the Cases queue page's new
+ * selection UI): the backend tolerates a partial failure (one bad case id in a batch doesn't
+ * fail the others), so these actions surface that honestly via `FormState`'s `error` field (a
+ * human-readable "N of M ... — failed: ..." string) rather than treating any non-empty
+ * `failed[]` as a hard error. A fully-empty `failed[]` returns `{}` (success, same as every
+ * other action in this app). */
+function summarizePartialFailure(total: number, failed: { caseId: string; reason: string }[]): FormState {
+  if (failed.length === 0) return {};
+  const succeededCount = total - failed.length;
+  const reasons = failed.map((f) => f.reason).join("; ");
+  return { error: `${succeededCount} of ${total} succeeded — ${failed.length} failed: ${reasons}` };
+}
+
+export async function bulkAssignCasesAction(caseIds: string[], _prevState: FormState, formData: FormData): Promise<FormState> {
+  const { accessToken } = await requireSession();
+  const teamId = String(formData.get("teamId") ?? "");
+  let result;
+  try {
+    result = await api.bulkAssignCases(accessToken, caseIds, teamId);
+  } catch (error) {
+    return parseActionError(error);
+  }
+  revalidatePath("/cases");
+  return summarizePartialFailure(caseIds.length, result.failed);
+}
+
+export async function bulkEscalateCasesAction(caseIds: string[], _prevState: FormState, formData: FormData): Promise<FormState> {
+  const { accessToken } = await requireSession();
+  const reason = String(formData.get("reason") ?? "");
+  let result;
+  try {
+    result = await api.bulkEscalateCases(accessToken, caseIds, reason);
+  } catch (error) {
+    return parseActionError(error);
+  }
+  revalidatePath("/cases");
+  return summarizePartialFailure(caseIds.length, result.failed);
+}

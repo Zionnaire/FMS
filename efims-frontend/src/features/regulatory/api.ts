@@ -1,6 +1,6 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
-import type { ObligationStatus, ObligationType, RegulatoryObligation } from "./types";
+import type { ObligationStatus, ObligationType, RegulatoryObligation, RegulatoryRegisterRow } from "./types";
 
 const base = (caseId: string) => `/cases/${caseId}/regulatory-obligations`;
 
@@ -36,4 +36,10 @@ export async function acknowledgeObligation(accessToken: string, caseId: string,
 
 export async function waiveObligation(accessToken: string, caseId: string, obligationId: string, reason: string): Promise<RegulatoryObligation> {
   return backendFetch<RegulatoryObligation>(`${base(caseId)}/${obligationId}/waive`, { method: "POST", body: { reason }, accessToken });
+}
+
+/** General cross-case register for the top-level "Regulatory reports" nav page — every
+ * obligation across every accessible case. */
+export async function getRegulatoryRegister(accessToken: string): Promise<RegulatoryRegisterRow[]> {
+  return backendFetch<RegulatoryRegisterRow[]>("/regulatory-obligations", { accessToken });
 }

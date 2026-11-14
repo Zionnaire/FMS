@@ -35,6 +35,12 @@ export interface EvidenceItem {
   custodyEvents?: CustodyEvent[];
 }
 
+/** `GET /evidence`'s row shape — one row per evidence item across every accessible case,
+ * backing the top-level Evidence register page. */
+export interface EvidenceRegisterRow extends EvidenceItem {
+  case: { referenceCode: string; title: string };
+}
+
 export interface VerifyEvidenceResult {
   intact: boolean;
   storedHash: string;

@@ -1,6 +1,7 @@
 import { requireSession } from "@/features/auth/session";
 import { SideNav } from "@/components/shell/sidenav";
 import { TopNav } from "@/components/shell/topnav";
+import { UnratifiedConfigurationBanner } from "@/components/shell/unratified-banner";
 
 /**
  * `requireSession()` here is the real (server-side) auth check for every route under this
@@ -20,6 +21,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <SideNav role={user.role} />
       <TopNav user={user} accessToken={accessToken} />
       <main className="ml-64 min-h-screen pt-16">
+        <UnratifiedConfigurationBanner accessToken={accessToken} />
         <div className="flex flex-col gap-6 p-8">{children}</div>
       </main>
     </div>

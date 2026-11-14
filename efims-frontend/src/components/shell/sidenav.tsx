@@ -7,6 +7,9 @@ interface NavItem {
   icon: string;
   /** Roles allowed to see this item — omit to show to everyone authenticated. */
   roles?: Role[];
+  /** One level of sub-items (Settings' sub-nav) — rendered indented under the parent, parent
+   * itself still links to its own href (its first/overview sub-page). */
+  children?: NavItem[];
 }
 
 /** Every role except Incident Reporter — "own reports only, no enterprise case browsing" per the
@@ -30,41 +33,72 @@ const CONFIG_ROLES: Role[] = ["ADMIN", "EXECUTIVE", "CONFIG_ADMIN"];
  * non-admin to do on this page, so the nav item stays `ADMIN`-only like every other gate here. */
 const USER_MANAGEMENT_ROLES: Role[] = ["ADMIN"];
 
+/** Compartment-aware nav gates (UX convenience only, same disclaimer as every other role check in
+ * this file — the backend's own compartment-filtered `getVisibleCases`/`getVisibleIncidents` is
+ * what actually enforces visibility; a role not seeing a link here that still navigated to it
+ * directly would get exactly the same backend-filtered, possibly-empty result either way). Mirrors
+ * each role's static compartment grant in `prisma/seed.ts`'s `ROLE_USERS`. */
+const HR_LEGAL_REFERRAL_ROLES: Role[] = ["HR_REVIEWER", "LEGAL_COUNSEL", "AUDITOR", "ADMIN"];
+const PROTECTED_DISCLOSURE_ROLES: Role[] = ["PROTECTED_DISCLOSURE_OFFICER", "AUDITOR", "ADMIN"];
+
+/** Settings > Retention & Legal Holds — `CONFIG_ROLES` (this is a governance/settings surface)
+ * plus the two roles who actually set/review legal holds day to day, mirroring the backend's own
+ * `LEGAL_HOLD_ROLES` constant (`common/constants/roles.ts`). */
+const RETENTION_ROLES: Role[] = [...CONFIG_ROLES, "LEGAL_COUNSEL", "COMPLIANCE_MLRO"];
+
 interface NavSection {
   label: string;
   items: NavItem[];
 }
 
-/** Grouped Monitor/Manage/Govern, per the role brief's own navigation grouping intent — adapted,
- * not copied verbatim (the brief's full page inventory for each group doesn't map 1:1 onto what
- * actually exists here; see each section's own items). Mirrors `mockups/screens/
- * command-center.html`'s sidenav item set, but only lists items with a real page behind them, and
- * folds the mockup's separate "Investigations"/"Evidence Vault"/"Containment & Recovery"/
- * "Regulatory & CAPA" items into tabs on the Case detail page instead of top-level nav — those
- * modules are all nested under a specific case in the real backend (`/cases/:caseId/...`), so a
- * case-scoped tab is the more accurate IA than a global list page for something that's never
- * actually browsed independently of a case. `notifications` has a page but no nav entry yet —
- * reached via the topnav bell instead. Add an entry here in the same change that ships that
- * section's first page; a nav link with nothing behind it is worse than no link. */
+/** Grouped Monitor/Manage/Govern, matching the user's own confirmed sidebar list. Investigations,
+ * Evidence, Approvals, Containment, Recoveries, and Remediation were previously case-detail tabs
+ * only ("a case-scoped tab is the more accurate IA than a global list page for something that's
+ * never actually browsed independently of a case") — the user's concrete sidebar list asked for
+ * these as real top-level pages too, so they now exist both ways: a cross-case register here, and
+ * the same data still reachable per-case via the existing case-detail tabs. `notifications` still
+ * has a page but no nav entry — reached via the topnav bell instead. Add an entry here in the same
+ * change that ships any future section's first page; a nav link with nothing behind it is worse
+ * than no link. */
 const NAV_SECTIONS: NavSection[] = [
   {
     label: "Monitor",
     items: [
-      { href: "/", label: "Dashboard", icon: "space_dashboard" },
-      { href: "/signals", label: "Signals", icon: "flag", roles: EXCEPT_REPORTER },
-      { href: "/incidents", label: "Incidents", icon: "crisis_alert", roles: EXCEPT_REPORTER },
+      { href: "/", label: "Overview", icon: "space_dashboard" },
+      { href: "/intake", label: "Intake & triage", icon: "flag", roles: EXCEPT_REPORTER },
+      { href: "/cases", label: "Cases", icon: "folder_managed", roles: EXCEPT_REPORTER },
+      { href: "/investigations", label: "Investigations", icon: "fact_check", roles: EXCEPT_REPORTER },
+      { href: "/evidence", label: "Evidence", icon: "inventory_2", roles: EXCEPT_REPORTER },
     ],
   },
   {
     label: "Manage",
-    items: [{ href: "/cases", label: "Cases", icon: "folder_managed", roles: EXCEPT_REPORTER }],
+    items: [
+      { href: "/approvals", label: "Approvals", icon: "policy", roles: EXCEPT_REPORTER },
+      { href: "/containment", label: "Containment", icon: "shield_lock", roles: EXCEPT_REPORTER },
+      { href: "/recovery", label: "Recoveries", icon: "account_balance", roles: EXCEPT_REPORTER },
+      { href: "/remediation", label: "Remediation", icon: "build_circle", roles: EXCEPT_REPORTER },
+      { href: "/tools/transaction-risk-scoring", label: "Transaction risk scoring", icon: "radar", roles: EXCEPT_REPORTER },
+    ],
   },
   {
     label: "Govern",
     items: [
-      { href: "/audit", label: "Audit Trail", icon: "history_edu", roles: AUDIT_READ_ROLES },
-      { href: "/configuration", label: "Configuration", icon: "settings", roles: CONFIG_ROLES },
-      { href: "/users", label: "Users", icon: "manage_accounts", roles: USER_MANAGEMENT_ROLES },
+      { href: "/regulatory", label: "Regulatory reports", icon: "gavel", roles: AUDIT_READ_ROLES },
+      { href: "/audit", label: "Audit trail", icon: "history_edu", roles: AUDIT_READ_ROLES },
+      { href: "/referrals", label: "HR & legal referrals", icon: "folder_shared", roles: HR_LEGAL_REFERRAL_ROLES },
+      { href: "/whistleblowing", label: "Protected disclosures", icon: "shield_person", roles: PROTECTED_DISCLOSURE_ROLES },
+      {
+        href: "/configuration",
+        label: "Settings",
+        icon: "settings",
+        children: [
+          { href: "/configuration", label: "Configuration", icon: "settings", roles: CONFIG_ROLES },
+          { href: "/users", label: "People & access", icon: "manage_accounts", roles: USER_MANAGEMENT_ROLES },
+          { href: "/settings/integrations", label: "Integrations", icon: "cable", roles: CONFIG_ROLES },
+          { href: "/settings/retention", label: "Retention & legal holds", icon: "lock_clock", roles: RETENTION_ROLES },
+        ],
+      },
     ],
   },
 ];
@@ -87,20 +121,41 @@ export function SideNav({ role }: { role: Role }) {
 
         <nav className="mt-1 flex flex-col gap-3">
           {NAV_SECTIONS.map((section) => {
-            const items = section.items.filter((item) => !item.roles || item.roles.includes(role));
+            const items = section.items
+              .map((item) => {
+                if (!item.children) return item;
+                const children = item.children.filter((child) => !child.roles || child.roles.includes(role));
+                return children.length > 0 ? { ...item, children } : null;
+              })
+              .filter((item): item is NavItem => item !== null && (!item.roles || item.roles.includes(role)));
             if (items.length === 0) return null;
             return (
               <div key={section.label} className="flex flex-col gap-1">
                 <span className="px-3.5 text-[10px] font-bold tracking-widest text-on-primary-container uppercase">{section.label}</span>
                 {items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-on-primary/80 transition-colors hover:bg-primary/40 hover:text-on-primary"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
+                  <div key={item.href} className="flex flex-col gap-0.5">
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-on-primary/80 transition-colors hover:bg-primary/40 hover:text-on-primary"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                    {item.children && (
+                      <div className="ml-4 flex flex-col gap-0.5 border-l border-on-primary/10 pl-3">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[11px] font-medium text-on-primary/70 transition-colors hover:bg-primary/40 hover:text-on-primary"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">{child.icon}</span>
+                            <span>{child.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             );

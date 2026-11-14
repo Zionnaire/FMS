@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError, backendFetch } from "@/lib/backend-client";
-import type { ApprovalAction, ApprovalRequest, SeverityBand, SlaClock } from "./types";
+import type { ApprovalAction, ApprovalRegisterRow, ApprovalRequest, SeverityBand, SlaClock } from "./types";
 
 // --- SLA clocks (nested under incidents) ---
 
@@ -61,4 +61,10 @@ export async function decideApproval(
   input: { approved: boolean; decisionNotes?: string },
 ): Promise<ApprovalRequest> {
   return backendFetch<ApprovalRequest>(`/cases/${caseId}/approvals/${approvalId}/decide`, { method: "POST", body: input, accessToken });
+}
+
+/** General cross-case register for the top-level "Approvals" nav page — every approval request
+ * across every accessible case. */
+export async function getApprovalsRegister(accessToken: string): Promise<ApprovalRegisterRow[]> {
+  return backendFetch<ApprovalRegisterRow[]>("/approvals", { accessToken });
 }

@@ -33,3 +33,9 @@ export interface RegulatoryObligation {
   waivedAt: string | null;
   submissions?: RegulatorySubmission[];
 }
+
+/** `GET /regulatory-obligations`'s row shape — one row per obligation across every accessible
+ * case, backing the top-level Regulatory reports register page. */
+export interface RegulatoryRegisterRow extends RegulatoryObligation {
+  case: { referenceCode: string; title: string };
+}

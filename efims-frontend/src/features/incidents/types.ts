@@ -22,7 +22,26 @@ export interface Incident {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  /** Structured facts the EFIMS AI Service's severity model needs — all nullable, captured via
+   * `PATCH /incidents/:id/risk-factors`. `financialExposureNgn` is a Decimal on the backend,
+   * serialized as a string over JSON (same convention as every other Decimal field in this app,
+   * e.g. `RecoveryRegisterRow.totalLoss`). */
+  financialExposureNgn: string | null;
+  customerImpactCount: number | null;
+  ongoingThreat: boolean | null;
+  insiderInvolvement: boolean | null;
+  dataCompromise: boolean | null;
+  regulatoryRelevance: boolean | null;
+  channel: string | null;
+  reportedByType: string | null;
 }
+
+export const INCIDENT_CHANNELS = [
+  "Mobile Banking", "Internet Banking", "ATM", "POS", "Branch", "USSD",
+  "Card Payment", "Bank Transfer", "Agent Banking", "Corporate Banking",
+] as const;
+
+export const REPORTED_BY_TYPES = ["Customer", "Staff", "System", "Audit", "External"] as const;
 
 export interface ListIncidentsResult {
   incidents: Incident[];

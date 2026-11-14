@@ -1,6 +1,6 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
-import type { EvidenceCategory, EvidenceItem, VerifyEvidenceResult } from "./types";
+import type { EvidenceCategory, EvidenceItem, EvidenceRegisterRow, VerifyEvidenceResult } from "./types";
 
 const base = (caseId: string) => `/cases/${caseId}/evidence`;
 
@@ -52,4 +52,12 @@ export async function setLegalHold(
  * access. */
 export async function getEvidenceQueue(accessToken: string): Promise<EvidenceItem[]> {
   return backendFetch<EvidenceItem[]>("/evidence/queue", { accessToken });
+}
+
+/** General cross-case register for the top-level "Evidence" nav page — every item across every
+ * accessible case, not the queue's curated subset. `legalHold` backs the Retention & Legal Holds
+ * settings page. */
+export async function getEvidenceRegister(accessToken: string, legalHold?: boolean): Promise<EvidenceRegisterRow[]> {
+  const query = legalHold === undefined ? "" : `?legalHold=${legalHold}`;
+  return backendFetch<EvidenceRegisterRow[]>(`/evidence${query}`, { accessToken });
 }

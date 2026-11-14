@@ -1,7 +1,7 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
 import type { Compartment } from "@/features/auth/types";
-import type { Case, CaseStats, CaseStatus, CaseStatusHistoryEntry, CaseUserFlag, CaseUserRelationType, ListCasesResult } from "./types";
+import type { BulkCaseActionResult, Case, CaseStats, CaseStatus, CaseStatusHistoryEntry, CaseUserFlag, CaseUserRelationType, ListCasesResult } from "./types";
 
 export interface ListCasesParams {
   accessToken: string;
@@ -11,9 +11,10 @@ export interface ListCasesParams {
   q?: string;
   limit?: number;
   offset?: number;
+  sevFilter?: "s1-s2" | "overdue";
 }
 
-export async function listCases({ accessToken, status, compartment, sensitivityLevel, q, limit, offset }: ListCasesParams): Promise<ListCasesResult> {
+export async function listCases({ accessToken, status, compartment, sensitivityLevel, q, limit, offset, sevFilter }: ListCasesParams): Promise<ListCasesResult> {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (compartment) params.set("compartment", compartment);
@@ -21,8 +22,17 @@ export async function listCases({ accessToken, status, compartment, sensitivityL
   if (q) params.set("q", q);
   if (limit !== undefined) params.set("limit", String(limit));
   if (offset !== undefined) params.set("offset", String(offset));
+  if (sevFilter) params.set("sevFilter", sevFilter);
   const query = params.toString();
   return backendFetch<ListCasesResult>(`/cases${query ? `?${query}` : ""}`, { accessToken });
+}
+
+export async function bulkAssignCases(accessToken: string, caseIds: string[], teamId: string): Promise<BulkCaseActionResult> {
+  return backendFetch<BulkCaseActionResult>("/cases/bulk-assign", { method: "POST", body: { caseIds, teamId }, accessToken });
+}
+
+export async function bulkEscalateCases(accessToken: string, caseIds: string[], reason: string): Promise<BulkCaseActionResult> {
+  return backendFetch<BulkCaseActionResult>("/cases/bulk-escalate", { method: "POST", body: { caseIds, reason }, accessToken });
 }
 
 export async function getCaseStats(accessToken: string): Promise<CaseStats> {
@@ -31,6 +41,9 @@ export async function getCaseStats(accessToken: string): Promise<CaseStats> {
 
 export interface CaseSummary {
   linkedIncidentsCount: number;
+  /** Added for the case-detail right rail's per-incident SLA panel — there is no case-level SLA
+   * clock, only one per incident (`SlaClock.incidentId`), and a case can link to several. */
+  linkedIncidents: { id: string; referenceCode: string }[];
   flagsCount: number;
   assignedTeamName: string | null;
 }

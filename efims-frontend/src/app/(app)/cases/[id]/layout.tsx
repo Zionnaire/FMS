@@ -4,6 +4,7 @@ import { getCaseSummary } from "@/features/cases/api";
 import { getRecoverySummary } from "@/features/recovery/api";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { CaseTabs } from "./case-tabs";
+import { CaseRightRail } from "./right-rail";
 
 const STATUS_TONE: Record<string, "positive" | "warning" | "critical" | "neutral"> = {
   OPEN: "warning",
@@ -84,7 +85,16 @@ export default async function CaseLayout({ children, params }: LayoutProps<"/cas
 
       <CaseTabs caseId={id} />
 
-      {children}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="flex flex-col gap-6">{children}</div>
+        <CaseRightRail
+          caseId={id}
+          referenceCode={caseRecord.referenceCode}
+          title={caseRecord.title}
+          assignedTeamName={summary.assignedTeamName}
+          linkedIncidents={summary.linkedIncidents}
+        />
+      </div>
     </>
   );
 }

@@ -3,6 +3,9 @@ import type { Compartment } from "@/features/auth/types";
 export const CASE_STATUSES = ["OPEN", "UNDER_INVESTIGATION", "ON_HOLD", "CLOSED"] as const;
 export type CaseStatus = (typeof CASE_STATUSES)[number];
 
+export const SEVERITY_TIERS = ["S1", "S2", "S3", "S4"] as const;
+export type SeverityTier = (typeof SEVERITY_TIERS)[number];
+
 export const CASE_USER_RELATION_TYPES = ["SUBJECT", "CONFLICT"] as const;
 export type CaseUserRelationType = (typeof CASE_USER_RELATION_TYPES)[number];
 
@@ -27,6 +30,12 @@ export interface Case {
 export interface CaseListItem extends Case {
   linkedIncidentsCount: number;
   assignedTeamName: string | null;
+  /** Not a `Case`-owned field — the highest severity among this case's linked incidents' latest
+   * assessment, rolled up by the backend (`CasesService.computeSeverityAndOverdue`). `null` if no
+   * linked incident has been assessed yet. */
+  effectiveSeverity: SeverityTier | null;
+  /** Not a `Case`-owned field — true if any linked incident's SLA clock is currently breached. */
+  isOverdue: boolean;
 }
 
 export interface ListCasesResult {
@@ -40,12 +49,19 @@ export interface ListCasesResult {
 export interface CaseStats {
   total: number;
   byStatus: Record<CaseStatus, number>;
+  bySeverity: Record<SeverityTier, number>;
+  overdueCount: number;
   highSensitivityCount: number;
   pendingApprovals: number;
   totalLoss: string;
   totalRecovered: string;
   outstanding: string;
   currency: "NGN";
+}
+
+export interface BulkCaseActionResult {
+  succeeded: string[];
+  failed: { caseId: string; reason: string }[];
 }
 
 export interface CaseUserFlag {

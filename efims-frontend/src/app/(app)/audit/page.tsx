@@ -92,11 +92,11 @@ export default async function AuditPage(props: PageProps<"/audit">) {
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-primary">{stats.byOutcome.SUCCESS}</span>
+            <span className="font-headline text-3xl font-bold text-on-surface">{stats.byOutcome.SUCCESS}</span>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-outline-variant/20 pt-3 text-xs text-on-surface-variant">
             <span>of {stats.total} total</span>
-            <span className="font-semibold text-primary">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
+            <span className="font-semibold text-on-surface">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
           </div>
         </div>
 

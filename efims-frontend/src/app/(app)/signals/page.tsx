@@ -15,8 +15,10 @@ function isSignalSource(value: string | undefined): value is SignalSource {
   return !!value && (SIGNAL_SOURCES as readonly string[]).includes(value);
 }
 
-export default async function SignalsPage(props: PageProps<"/signals">) {
-  const searchParams = await props.searchParams;
+/** Exported separately from the default page export so `/intake`'s Signals tab can render this
+ * exact content as a tab panel without duplicating any data-fetching — see that page's own doc
+ * comment. */
+export async function SignalsPageContent(searchParams: { [key: string]: string | string[] | undefined }) {
   const status = isSignalStatus(searchParams.status as string | undefined) ? (searchParams.status as SignalStatus) : undefined;
   const source = isSignalSource(searchParams.source as string | undefined) ? (searchParams.source as SignalSource) : undefined;
   const q = (searchParams.q as string | undefined) || undefined;
@@ -242,4 +244,9 @@ export default async function SignalsPage(props: PageProps<"/signals">) {
       </div>
     </>
   );
+}
+
+export default async function SignalsPage(props: PageProps<"/signals">) {
+  const searchParams = await props.searchParams;
+  return SignalsPageContent(searchParams);
 }

@@ -45,3 +45,9 @@ export interface ApprovalRequest {
   decidedBy: string | null;
   decidedAt: string | null;
 }
+
+/** `GET /approvals`'s row shape — one row per approval request across every accessible case,
+ * backing the top-level Approvals register page. */
+export interface ApprovalRegisterRow extends ApprovalRequest {
+  case: { referenceCode: string; title: string };
+}

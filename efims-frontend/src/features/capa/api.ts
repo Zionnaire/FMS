@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError, backendFetch } from "@/lib/backend-client";
-import type { CapaAction, CapaActionStatus, CapaActionType, CapaValidation, CapaValidationOutcome, RootCauseAnalysis } from "./types";
+import type { CapaAction, CapaActionStatus, CapaActionType, CapaRegisterRow, CapaValidation, CapaValidationOutcome, RootCauseAnalysis } from "./types";
 
 const base = (caseId: string) => `/cases/${caseId}`;
 
@@ -75,4 +75,10 @@ export async function getOwnedCapaQueue(accessToken: string): Promise<CapaAction
  * (`CapaService.validate` enforces that independence server-side too, not just by omission here). */
 export async function getCapaValidationQueue(accessToken: string): Promise<CapaAction[]> {
   return backendFetch<CapaAction[]>("/capa/queue/validation", { accessToken });
+}
+
+/** General cross-case register for the top-level "Remediation" nav page — every CAPA action
+ * across every accessible case, not the owner/validator-personalized queues above. */
+export async function getCapaRegister(accessToken: string): Promise<CapaRegisterRow[]> {
+  return backendFetch<CapaRegisterRow[]>("/capa", { accessToken });
 }

@@ -47,6 +47,18 @@ export interface Interview {
   createdAt: string;
 }
 
+/** `GET /investigations`'s row shape — one row per case with a plan (the latest version), not
+ * one row per plan version. Backs the top-level Investigations register page. */
+export interface InvestigationRegisterRow {
+  caseId: string;
+  referenceCode: string;
+  caseTitle: string;
+  planStatus: InvestigationPlanStatus;
+  objectives: string;
+  openIssueCount: number;
+  lastActivityAt: string;
+}
+
 export interface Finding {
   id: string;
   tenantId: string;

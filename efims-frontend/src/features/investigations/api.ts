@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError, backendFetch } from "@/lib/backend-client";
-import type { Finding, IntervieweeRole, InvestigationIssue, InvestigationPlan, InvestigationPlanStatus, IssueStatus, Interview } from "./types";
+import type { Finding, IntervieweeRole, InvestigationIssue, InvestigationPlan, InvestigationPlanStatus, InvestigationRegisterRow, IssueStatus, Interview } from "./types";
 
 const base = (caseId: string) => `/cases/${caseId}`;
 
@@ -60,4 +60,10 @@ export async function recordFinding(
 
 export async function listFindings(accessToken: string, caseId: string): Promise<Finding[]> {
   return backendFetch(`${base(caseId)}/findings`, { accessToken });
+}
+
+/** General cross-case register for the top-level "Investigations" nav page — one row per case
+ * that has a plan, across every case the caller can access. */
+export async function getInvestigationsRegister(accessToken: string): Promise<InvestigationRegisterRow[]> {
+  return backendFetch<InvestigationRegisterRow[]>("/investigations", { accessToken });
 }

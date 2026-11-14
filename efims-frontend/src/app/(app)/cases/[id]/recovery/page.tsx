@@ -3,6 +3,7 @@ import { listLosses, listRecoveries, listWriteOffs, getRecoverySummary } from "@
 import { listApprovals } from "@/features/workflow/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LossForm, RecoveryForm, WriteOffForm } from "./recovery-forms";
+import { RecoveryPredictionPanel } from "./recovery-prediction-panel";
 
 function formatNgn(amount: string): string {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(Number(amount));
@@ -60,6 +61,11 @@ export default async function CaseRecoveryPage(props: PageProps<"/cases/[id]/rec
         <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Recoveries</p><ul className="space-y-1.5">{recoveries.map((r) => (<li key={r.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(r.amount))} — {r.method.replaceAll("_", " ")}</li>))}</ul></div>
         <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Write-offs</p><ul className="space-y-1.5">{writeOffs.map((w) => (<li key={w.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(w.amount))} — {w.justification}</li>))}</ul></div>
       </div>
+
+      <Card className="rounded-2xl border-outline-variant shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-tertiary">auto_awesome</span>AI recovery prediction</CardTitle></CardHeader>
+        <CardContent><RecoveryPredictionPanel caseId={id} /></CardContent>
+      </Card>
     </>
   );
 }

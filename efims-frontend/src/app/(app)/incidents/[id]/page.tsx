@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/features/auth/session";
 import { getIncident } from "@/features/incidents/api";
 import { relateIncidentsAction, mergeIncidentAction } from "@/features/incidents/actions";
+import { RiskFactorsForm } from "./risk-factors-form";
 import { assessIncidentAction, escalateIncidentAction } from "@/features/triage/actions";
 import { getCurrentTriage, getTriageHistory } from "@/features/triage/api";
 import { SEVERITY_TIERS } from "@/features/triage/types";
@@ -99,6 +100,18 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
               </Link>
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-outline-variant shadow-card">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold text-on-surface">Risk factors</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-3 text-xs text-on-surface-variant">
+            Structured facts the AI severity model uses — fill in what you know; every field is optional.
+          </p>
+          <RiskFactorsForm incidentId={id} incident={incident} />
         </CardContent>
       </Card>
 

@@ -49,6 +49,12 @@ export interface SeveritySuggestion {
   confidence: number;
   citedFactors: string[];
   rationale: string;
+  /** Which engine actually answered — the EFIMS AI Service's structured model (primary) or Groq
+   * (automatic fallback on unreachability). Always present as of the AI-service integration. */
+  source: "structured-ml" | "groq-fallback";
+  predictionId: string | null;
+  requiresHumanReview: boolean;
+  allClassProbabilities?: Record<SeverityTier, number>;
 }
 
 /** CD-08 Phase 2 advisory suggestion — fetched on demand (a button, not an automatic page-load

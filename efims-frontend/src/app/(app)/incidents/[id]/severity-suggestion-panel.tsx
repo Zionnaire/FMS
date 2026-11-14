@@ -50,10 +50,19 @@ export function SeveritySuggestionPanel({ incidentId }: { incidentId: string }) 
       {state.error && <p className="text-error">{state.error}</p>}
       {state.result && (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={state.result.suggestedSeverity} tone={state.result.suggestedSeverity === "S1" ? "critical" : "warning"} />
             <span className="text-on-surface-variant">{Math.round(state.result.confidence * 100)}% confidence</span>
+            <span className="rounded-full bg-surface-container px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
+              {state.result.source === "structured-ml" ? "Structured model" : "Groq (fallback)"}
+            </span>
           </div>
+          {state.result.requiresHumanReview && (
+            <p className="flex items-center gap-1 text-[11px] font-semibold text-error">
+              <span className="material-symbols-outlined text-xs">flag</span>
+              Flagged for human review — treat this suggestion with extra caution.
+            </p>
+          )}
           <p className="text-on-surface">{state.result.rationale}</p>
           {state.result.citedFactors.length > 0 && (
             <ul className="flex flex-wrap gap-1.5 pt-0.5">
