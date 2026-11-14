@@ -8,6 +8,8 @@ import { CASE_ROLES, FLAG_ROLES } from '../../common/constants/roles';
 import { ApprovalService } from '../workflow/approval.service';
 import { AddCaseUserFlagDto } from './dto/add-case-user-flag.dto';
 import { AssignCaseTeamDto } from './dto/assign-case-team.dto';
+import { BulkAssignCasesDto } from './dto/bulk-assign-cases.dto';
+import { BulkEscalateCasesDto } from './dto/bulk-escalate-cases.dto';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { LinkIncidentDto } from './dto/link-incident.dto';
 import { ListCasesDto } from './dto/list-cases.dto';
@@ -46,14 +48,30 @@ export class CasesController {
       dto.compartment,
       dto.sensitivityLevel,
       dto.q,
+      dto.sevFilter,
     );
   }
 
   /** Registered ahead of `:id` on purpose — Nest/Express matches routes in registration order,
-   * so "GET /cases/stats" would otherwise be parsed as `:id = "stats"` and fail ParseUUIDPipe. */
+   * so "GET /cases/stats" would otherwise be parsed as `:id = "stats"` and fail ParseUUIDPipe.
+   * Same reasoning for `bulk-assign`/`bulk-escalate` below. */
   @Get('stats')
   stats(@CurrentUser() actor: AuthenticatedUser) {
     return this.casesService.stats(actor);
+  }
+
+  @Post('bulk-assign')
+  @UseGuards(RolesGuard)
+  @Roles(...CASE_ROLES)
+  bulkAssignTeam(@CurrentUser() actor: AuthenticatedUser, @Body() dto: BulkAssignCasesDto) {
+    return this.casesService.bulkAssignTeam(actor, dto);
+  }
+
+  @Post('bulk-escalate')
+  @UseGuards(RolesGuard)
+  @Roles(...CASE_ROLES)
+  bulkEscalate(@CurrentUser() actor: AuthenticatedUser, @Body() dto: BulkEscalateCasesDto) {
+    return this.casesService.bulkEscalate(actor, dto);
   }
 
   @Get(':id')
@@ -169,5 +187,25 @@ export class CasesController {
   ) {
     await this.casesService.getById(actor, id);
     return this.approvalService.decide(actor, id, approvalId, dto);
+  }
+}
+
+/** Separate, root-level controller for the top-level Approvals nav page's cross-case register
+ * (added for the register-pages pass). Lives here, not in `workflow`, because `ApprovalService`
+ * deliberately has no `CasesService` dependency (see its own doc comment) — this is the one place
+ * that legitimately has both services available to compute `getVisibleCaseIds` and hand it to
+ * `ApprovalService.listAll`. No `@Roles()` gate, same reasoning as `EvidenceQueueController`/
+ * `ContainmentQueueController`: access is enforced purely via that visible-case-ID filtering. */
+@Controller('approvals')
+export class ApprovalsQueueController {
+  constructor(
+    private readonly casesService: CasesService,
+    private readonly approvalService: ApprovalService,
+  ) {}
+
+  @Get()
+  async listAll(@CurrentUser() actor: AuthenticatedUser) {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    return this.approvalService.listAll(visibleCaseIds);
   }
 }

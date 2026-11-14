@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Notification, NotificationChannel, NotificationPriority, Prisma } from '@prisma/client';
+import { Notification, NotificationChannel, NotificationPriority, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RealtimeService } from '../../infrastructure/realtime/realtime.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
@@ -10,10 +10,14 @@ import {
   APPROVAL_REQUESTED_EVENT,
   ApprovalDecidedEvent,
   ApprovalRequestedEvent,
+  CASE_ESCALATED_EVENT,
   CASE_STATUS_CHANGED_EVENT,
+  CaseEscalatedEvent,
   CaseStatusChangedEvent,
   SLA_CLOCK_BREACHED_EVENT,
   SlaClockBreachedEvent,
+  TASK_ASSIGNED_EVENT,
+  TaskAssignedEvent,
 } from '../../common/events/domain-events';
 import { TeamsService } from '../identity/teams.service';
 import { UsersService } from '../identity/users.service';
@@ -153,6 +157,52 @@ export class NotificationsService {
           body: `An SLA clock on incident ${event.incidentId} has passed its target deadline.`,
           metadata: { incidentId: event.incidentId, clockId: event.clockId, targetDeadline: event.targetDeadline },
         });
+      }
+    });
+  }
+
+  @OnEvent(TASK_ASSIGNED_EVENT)
+  async handleTaskAssigned(event: TaskAssignedEvent): Promise<void> {
+    if (event.assigneeUserId === event.assignedBy) {
+      return;
+    }
+    await this.safely('task.assigned', async () => {
+      await this.createAndDeliver(event.tenantId, event.assigneeUserId, {
+        type: 'task.assigned',
+        priority: NotificationPriority.NORMAL,
+        title: 'Task assigned to you',
+        body: event.dueAt ? `"${event.title}" is due ${new Date(event.dueAt).toLocaleDateString()}.` : `"${event.title}" was assigned to you.`,
+        metadata: { caseId: event.caseId, taskId: event.taskId, dueAt: event.dueAt },
+      });
+    });
+  }
+
+  @OnEvent(CASE_ESCALATED_EVENT)
+  async handleCaseEscalated(event: CaseEscalatedEvent): Promise<void> {
+    await this.safely('case.escalated', async () => {
+      for (const c of event.cases) {
+        if (!c.assignedTeamId) continue; // nothing to notify — no team, no lead
+
+        const [memberIds, leadIds] = await Promise.all([
+          this.teamsService.listMemberIds(c.assignedTeamId),
+          this.usersService.listActiveUserIdsByRole(Role.TEAM_LEAD),
+        ]);
+        const leadIdSet = new Set(leadIds);
+        const teamLeadMemberIds = memberIds.filter((id) => leadIdSet.has(id));
+        // Falls back to the whole team if none of its current members hold TEAM_LEAD — a case
+        // with an assigned team but no identifiable lead shouldn't silently notify no one.
+        const recipientIds = teamLeadMemberIds.length > 0 ? teamLeadMemberIds : memberIds;
+
+        for (const userId of recipientIds) {
+          if (userId === event.escalatedBy) continue;
+          await this.createAndDeliver(event.tenantId, userId, {
+            type: 'case.escalated',
+            priority: NotificationPriority.HIGH,
+            title: 'Case escalated',
+            body: `Case ${c.referenceCode} was escalated: ${event.reason}`,
+            metadata: { caseId: c.caseId, referenceCode: c.referenceCode, reason: event.reason },
+          });
+        }
       }
     });
   }

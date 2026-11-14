@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuditOutcome, Compartment, Prisma, Role } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AuditService } from '../audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -121,10 +121,15 @@ export class UsersService {
    * `identity` reach `user_compartment_grants` through this method, never through Prisma
    * directly. Deliberately returns just the compartment list, not a full UserProfile, so
    * callers can't casually depend on unrelated user fields. */
-  async getGrantedCompartments(userId: string): Promise<Compartment[]> {
-    const grants = await this.prisma.forCurrentTenant((tx) =>
-      tx.userCompartmentGrant.findMany({ where: { userId, ...activeGrantWhere() }, select: { compartment: true } }),
-    );
+  /** Optional `tx`: `CasesService.getVisibleCases` (and anything else doing several reads as one
+   * logical access-check unit) passes its own already-open transaction here instead of letting
+   * this method open a second one — each `forCurrentTenant` call is a real `BEGIN`/`SET_CONFIG`/
+   * `COMMIT` round trip against Neon, found to matter live (see `CasesService.getVisibleCases`'s
+   * own doc comment for the measured before/after). Still perfectly usable standalone. */
+  async getGrantedCompartments(userId: string, tx?: TenantScopedClient): Promise<Compartment[]> {
+    const query = (client: TenantScopedClient) =>
+      client.userCompartmentGrant.findMany({ where: { userId, ...activeGrantWhere() }, select: { compartment: true } });
+    const grants = tx ? await query(tx) : await this.prisma.forCurrentTenant(query);
     return grants.map((g) => g.compartment);
   }
 

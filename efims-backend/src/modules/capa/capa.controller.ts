@@ -131,4 +131,11 @@ export class CapaQueueController {
   queuePendingValidation(@CurrentUser() actor: AuthenticatedUser) {
     return this.capaService.queuePendingValidation(actor);
   }
+
+  /** General register for the top-level Remediation nav page — every CAPA action across every
+   * accessible case, not the owner/validator-personalized queues above. */
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser) {
+    return this.capaService.listAll(actor);
+  }
 }

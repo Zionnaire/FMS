@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuditOutcome, SlaClock, SlaClockStatus } from '@prisma/client';
-import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { SLA_CLOCK_BREACHED_EVENT, SlaClockBreachedEvent } from '../../common/events/domain-events';
 import { AuditService } from '../audit/audit.service';
@@ -168,6 +168,28 @@ export class SlaClockService {
     }
 
     return this.withComputedStatus(clock);
+  }
+
+  /** Batched "which of these incidents has a currently-breached clock" — added for
+   * `CasesService.list`/`stats`'s per-case overdue rollup (there is no case-level SLA clock,
+   * only one per incident — see this class's own doc comment). This module owns `SlaClock`, so
+   * this is the one place allowed to query it directly, same reasoning as `TriageService.
+   * getLatestSeverityByIncidentIds`. No visibility check here: the caller is responsible for
+   * only passing incident ids its own actor can already see. Same one-line breach formula
+   * `withComputedStatus` already uses, just applied to a batch and reduced to the breached ids.
+   *
+   * Optional `tx`: see `TriageService.getLatestSeverityByIncidentIds`'s own doc comment — same
+   * "share the caller's transaction instead of opening a second one" reasoning. */
+  async getBreachedIncidentIds(incidentIds: string[], tx?: TenantScopedClient): Promise<Set<string>> {
+    if (incidentIds.length === 0) return new Set();
+    const query = (client: TenantScopedClient) =>
+      client.slaClock.findMany({
+        where: { incidentId: { in: incidentIds }, status: { not: SlaClockStatus.STOPPED } },
+        select: { incidentId: true, targetDeadline: true },
+      });
+    const clocks = tx ? await query(tx) : await this.prisma.forCurrentTenant(query);
+    const now = Date.now();
+    return new Set(clocks.filter((c) => now > c.targetDeadline.getTime()).map((c) => c.incidentId));
   }
 
   private withComputedStatus(clock: SlaClock): SlaClockWithStatus {

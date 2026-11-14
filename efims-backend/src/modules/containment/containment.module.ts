@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CasesModule } from '../cases/cases.module';
 import { WorkflowModule } from '../workflow/workflow.module';
-import { ContainmentController } from './containment.controller';
+import { ContainmentController, ContainmentQueueController } from './containment.controller';
 import { ContainmentService } from './containment.service';
 
 /** Imports both `CasesModule` (case access checks) and `WorkflowModule` (`ApprovalService.
@@ -10,7 +10,7 @@ import { ContainmentService } from './containment.service';
  * `containment`, so there's no circularity to design around. */
 @Module({
   imports: [CasesModule, WorkflowModule],
-  controllers: [ContainmentController],
+  controllers: [ContainmentController, ContainmentQueueController],
   providers: [ContainmentService],
   exports: [ContainmentService],
 })

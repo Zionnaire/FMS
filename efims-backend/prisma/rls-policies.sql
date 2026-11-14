@@ -153,6 +153,13 @@ REVOKE UPDATE, DELETE ON capa_validations FROM efims_app;
 -- append-only like write_off_entries.
 GRANT SELECT, INSERT, UPDATE ON regulatory_obligations TO efims_app;
 REVOKE DELETE ON regulatory_obligations FROM efims_app;
+
+-- tasks module: a freestanding to-do needs UPDATE (complete/cancel mutate status/completedAt/
+-- cancelledReason/cancelledAt on the same row, same pattern as capa_actions), no DELETE —
+-- cancelling a task is a status transition, not row removal, same reasoning as every other
+-- "never hard-delete, always transition status" table in this file.
+GRANT SELECT, INSERT, UPDATE ON tasks TO efims_app;
+REVOKE DELETE ON tasks FROM efims_app;
 GRANT SELECT, INSERT ON regulatory_submissions TO efims_app;
 REVOKE UPDATE, DELETE ON regulatory_submissions FROM efims_app;
 
@@ -190,7 +197,7 @@ DO $$
 DECLARE
   t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions']
+  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);

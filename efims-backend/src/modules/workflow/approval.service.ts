@@ -181,6 +181,24 @@ export class ApprovalService {
     return updated;
   }
 
+  /** General cross-case register for the top-level "Approvals" nav page — every approval request
+   * across every accessible case. Takes the actor's visible case IDs as a parameter rather than
+   * computing them itself: this service deliberately has no `CasesService` dependency (see the
+   * class doc comment above on why), so the one new root-level controller for this route lives in
+   * `CasesModule` instead — it already legitimately has both `CasesService` and `ApprovalService`
+   * via its existing `WorkflowModule` import — and calls `getVisibleCaseIds` there before handing
+   * the result to this method. */
+  async listAll(visibleCaseIds: string[]): Promise<(ApprovalRequest & { case: { referenceCode: string; title: string } })[]> {
+    if (visibleCaseIds.length === 0) return [];
+    return this.prisma.forCurrentTenant((tx) =>
+      tx.approvalRequest.findMany({
+        where: { caseId: { in: visibleCaseIds } },
+        include: { case: { select: { referenceCode: true, title: true } } },
+        orderBy: { requestedAt: 'desc' },
+      }),
+    );
+  }
+
   /** Used by `CasesService.updateStatus` to validate a specific approval before allowing a
    * transition to CLOSED — the one concrete integration point this module wires up (see the
    * module doc comment in schema.prisma on why this isn't a general state-machine engine). */

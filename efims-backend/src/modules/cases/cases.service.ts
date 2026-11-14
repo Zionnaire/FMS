@@ -1,21 +1,27 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApprovalAction, ApprovalStatus, AuditOutcome, Case, CaseStatus, CaseStatusHistory, CaseUserFlag, CaseUserRelationType, Compartment, Prisma } from '@prisma/client';
+import { ApprovalAction, ApprovalStatus, AuditOutcome, Case, CaseStatus, CaseStatusHistory, CaseUserFlag, CaseUserRelationType, Compartment, Prisma, SeverityTier } from '@prisma/client';
 import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
-import { CASE_STATUS_CHANGED_EVENT, CaseStatusChangedEvent } from '../../common/events/domain-events';
+import { CASE_ESCALATED_EVENT, CASE_STATUS_CHANGED_EVENT, CaseEscalatedEvent, CaseStatusChangedEvent } from '../../common/events/domain-events';
 import { ELEVATED_ROLES } from '../../common/constants/roles';
 import { AuditService } from '../audit/audit.service';
 import { TeamsService } from '../identity/teams.service';
 import { UsersService } from '../identity/users.service';
 import { IncidentsService } from '../incidents/incidents.service';
+import { SlaClockService } from '../workflow/sla-clock.service';
+import { TriageService } from '../triage/triage.service';
 import { ApprovalService } from '../workflow/approval.service';
 import { AddCaseUserFlagDto } from './dto/add-case-user-flag.dto';
 import { AssignCaseTeamDto } from './dto/assign-case-team.dto';
+import { BulkAssignCasesDto } from './dto/bulk-assign-cases.dto';
+import { BulkEscalateCasesDto } from './dto/bulk-escalate-cases.dto';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { LinkIncidentDto } from './dto/link-incident.dto';
 import { UpdateCaseStatusDto } from './dto/update-case-status.dto';
+
+const SEVERITY_RANK: Record<SeverityTier, number> = { S1: 4, S2: 3, S3: 2, S4: 1 };
 
 /** `ELEVATED_ROLES` now lives in `common/constants/roles.ts` — see that file's own doc comment.
  * Bypasses architecture.md §4.3's team-match condition — cross-cutting oversight functions that
@@ -28,7 +34,20 @@ import { UpdateCaseStatusDto } from './dto/update-case-status.dto';
 /** `list()`'s row shape — the bare `Case` plus two cheap joins (`_count`/`assignedTeam.name`)
  * the cases list page needs to render without an N+1 per row. `getById` still returns a bare
  * `Case`; the detail page already has its own team/incident lookups where it needs them. */
-export type CaseListItem = Case & { linkedIncidentsCount: number; assignedTeamName: string | null };
+export type CaseListItem = Case & {
+  linkedIncidentsCount: number;
+  assignedTeamName: string | null;
+  /** Not a `Case`-owned field — the highest severity among this case's linked incidents' latest
+   * `TriageAssessment`, via `TriageService.getLatestSeverityByIncidentIds` (non-negotiable #2:
+   * this module never queries `triage_assessments` directly). `null` if no linked incident has
+   * been assessed yet. */
+  effectiveSeverity: SeverityTier | null;
+  /** Not a `Case`-owned field — true if any linked incident's `SlaClock` is currently breached,
+   * via `SlaClockService.getBreachedIncidentIds` (same non-negotiable #2 reasoning — this module
+   * never queries `sla_clocks` directly). There is no case-level SLA clock, only one per
+   * incident. */
+  isOverdue: boolean;
+};
 
 /** Tenant-wide, access-filtered (same 7-condition rule as `list`/`getById` — never a raw table
  * count) summary for the cases list page's KPI row. All amounts are NGN — see RecoveryService's
@@ -37,6 +56,11 @@ export type CaseListItem = Case & { linkedIncidentsCount: number; assignedTeamNa
 export interface CaseStats {
   total: number;
   byStatus: Record<CaseStatus, number>;
+  /** Computed over the full visible set, not just the current page — see `computeSeverityAndOverdue`'s
+   * own doc comment on why this is explicitly scoped to this codebase's current seed-data scale,
+   * not optimized for bank-scale case volume. */
+  bySeverity: Record<SeverityTier, number>;
+  overdueCount: number;
   highSensitivityCount: number;
   pendingApprovals: number;
   totalLoss: string;
@@ -65,8 +89,61 @@ export class CasesService {
     private readonly teamsService: TeamsService,
     private readonly incidentsService: IncidentsService,
     private readonly approvalService: ApprovalService,
+    private readonly triageService: TriageService,
+    private readonly slaClockService: SlaClockService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /** Shared by `list()` (one page) and `stats()` (the full visible set) — resolves each case's
+   * linked incident ids with one direct `Incident` read (the same precedent `getSummary`'s own
+   * linked-incident list already established; `Incident`'s own basic fields are tolerated for a
+   * cross-module read, unlike `TriageAssessment`/`SlaClock` — see `CaseListItem`'s own doc
+   * comment for why those two specifically go through their owning module's service), then one
+   * batched call each to `TriageService`/`SlaClockService` — all three sharing ONE transaction
+   * (see those two methods' own doc comments on the optional `tx` parameter they take for
+   * exactly this). `PrismaService.forCurrentTenant` opens a real `BEGIN`/`SET_CONFIG`/`COMMIT`
+   * round trip against Neon per call — found live, not a guess: an earlier version of this
+   * method opened 3 separate transactions for what's really one read-only unit of work, and a
+   * single `GET /cases?sevFilter=...` page load measured 10-13s end to end as a direct result.
+   * One shared transaction cuts that to 1 round trip for this rollup specifically. Explicitly
+   * not optimized beyond that (still one query per table inside the shared transaction,
+   * regardless of case count) — fine at this codebase's current seed-data scale, not a silent
+   * performance trap being left for someone else to discover at real bank scale. */
+  private async computeSeverityAndOverdue(
+    caseIds: string[],
+  ): Promise<Map<string, { effectiveSeverity: SeverityTier | null; isOverdue: boolean }>> {
+    if (caseIds.length === 0) return new Map();
+
+    const { incidentIdsByCaseId, severityByIncidentId, breachedIncidentIds } = await this.prisma.forCurrentTenant(async (tx) => {
+      const incidents = await tx.incident.findMany({ where: { caseId: { in: caseIds } }, select: { id: true, caseId: true } });
+      const byCaseId = new Map<string, string[]>();
+      for (const i of incidents) {
+        if (!i.caseId) continue;
+        byCaseId.set(i.caseId, [...(byCaseId.get(i.caseId) ?? []), i.id]);
+      }
+      const allIncidentIds = incidents.map((i) => i.id);
+
+      const severity = await this.triageService.getLatestSeverityByIncidentIds(allIncidentIds, tx);
+      const breached = await this.slaClockService.getBreachedIncidentIds(allIncidentIds, tx);
+      return { incidentIdsByCaseId: byCaseId, severityByIncidentId: severity, breachedIncidentIds: breached };
+    });
+
+    const result = new Map<string, { effectiveSeverity: SeverityTier | null; isOverdue: boolean }>();
+    for (const caseId of caseIds) {
+      const linkedIds = incidentIdsByCaseId.get(caseId) ?? [];
+      let effectiveSeverity: SeverityTier | null = null;
+      let isOverdue = false;
+      for (const incidentId of linkedIds) {
+        const severity = severityByIncidentId.get(incidentId);
+        if (severity && (!effectiveSeverity || SEVERITY_RANK[severity] > SEVERITY_RANK[effectiveSeverity])) {
+          effectiveSeverity = severity;
+        }
+        if (breachedIncidentIds.has(incidentId)) isOverdue = true;
+      }
+      result.set(caseId, { effectiveSeverity, isOverdue });
+    }
+    return result;
+  }
 
   async create(actor: AuthenticatedUser, dto: CreateCaseDto): Promise<Case> {
     if (dto.assignedTeamId) {
@@ -148,6 +225,7 @@ export class CasesService {
     compartment?: Compartment,
     sensitivityLevel?: number,
     q?: string,
+    sevFilter?: 's1-s2' | 'overdue',
   ): Promise<{ cases: CaseListItem[]; total: number }> {
     let visible = await this.getVisibleCases(actor, status);
     if (compartment) visible = visible.filter((c) => c.compartment === compartment);
@@ -157,24 +235,47 @@ export class CasesService {
       visible = visible.filter((c) => c.title.toLowerCase().includes(needle) || c.referenceCode.toLowerCase().includes(needle));
     }
 
-    const page = visible.slice(offset, offset + limit);
-    // Tenant-scoped, small (teams are hand-provisioned, not user-scale) — cheaper to list once
-    // and map in JS than to add a findByIds lookup to TeamsService for this one call site.
-    const teams = page.some((c) => c.assignedTeamId) ? await this.teamsService.list() : [];
-    const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+    // Computed over the full (pre-pagination) visible set whenever `sevFilter` needs it, so
+    // filtering/counting is correct — see `computeSeverityAndOverdue`'s own doc comment on why
+    // this is explicitly scoped to this codebase's current seed-data scale.
+    const severityAndOverdueByCaseId = sevFilter
+      ? await this.computeSeverityAndOverdue(visible.map((c) => c.id))
+      : new Map<string, { effectiveSeverity: SeverityTier | null; isOverdue: boolean }>();
+    if (sevFilter === 's1-s2') {
+      visible = visible.filter((c) => {
+        const sev = severityAndOverdueByCaseId.get(c.id)?.effectiveSeverity;
+        return sev === 'S1' || sev === 'S2';
+      });
+    } else if (sevFilter === 'overdue') {
+      visible = visible.filter((c) => severityAndOverdueByCaseId.get(c.id)?.isOverdue);
+    }
 
-    const counts = page.length
-      ? await this.prisma.forCurrentTenant((tx) =>
-          tx.case.findMany({ where: { id: { in: page.map((c) => c.id) } }, select: { id: true, _count: { select: { incidents: true } } } }),
-        )
-      : [];
+    const page = visible.slice(offset, offset + limit);
+    const needsTeams = page.some((c) => c.assignedTeamId);
+    // Both share ONE transaction instead of two — same "cut the Neon round trips" reasoning as
+    // `getVisibleCases`'s own doc comment. Tenant-scoped, small (teams are hand-provisioned, not
+    // user-scale) — cheaper to list once and map in JS than to add a findByIds lookup to
+    // TeamsService for this one call site.
+    const { teams, counts } = await this.prisma.forCurrentTenant(async (tx) => {
+      const teams = needsTeams ? await this.teamsService.list(tx) : [];
+      const counts = page.length
+        ? await tx.case.findMany({ where: { id: { in: page.map((c) => c.id) } }, select: { id: true, _count: { select: { incidents: true } } } })
+        : [];
+      return { teams, counts };
+    });
+    const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
     const incidentCountById = new Map(counts.map((c) => [c.id, c._count.incidents]));
+    // Only recompute for the page if we didn't already compute it over the whole visible set
+    // above (no `sevFilter` means the map is still empty).
+    const pageSeverityAndOverdue = sevFilter ? severityAndOverdueByCaseId : await this.computeSeverityAndOverdue(page.map((c) => c.id));
 
     return {
       cases: page.map((c) => ({
         ...c,
         linkedIncidentsCount: incidentCountById.get(c.id) ?? 0,
         assignedTeamName: c.assignedTeamId ? (teamNameById.get(c.assignedTeamId) ?? null) : null,
+        effectiveSeverity: pageSeverityAndOverdue.get(c.id)?.effectiveSeverity ?? null,
+        isOverdue: pageSeverityAndOverdue.get(c.id)?.isOverdue ?? false,
       })),
       total: visible.length,
     };
@@ -190,6 +291,14 @@ export class CasesService {
     const byStatus: Record<CaseStatus, number> = { OPEN: 0, UNDER_INVESTIGATION: 0, ON_HOLD: 0, CLOSED: 0 };
     for (const c of visible) byStatus[c.status]++;
     const highSensitivityCount = visible.filter((c) => c.sensitivityLevel === 4).length;
+
+    const severityAndOverdueByCaseId = await this.computeSeverityAndOverdue(visibleIds);
+    const bySeverity: Record<SeverityTier, number> = { S1: 0, S2: 0, S3: 0, S4: 0 };
+    let overdueCount = 0;
+    for (const { effectiveSeverity, isOverdue } of severityAndOverdueByCaseId.values()) {
+      if (effectiveSeverity) bySeverity[effectiveSeverity]++;
+      if (isOverdue) overdueCount++;
+    }
 
     const [lossAgg, recoveryAgg, pendingApprovals] = visibleIds.length
       ? await this.prisma.forCurrentTenant((tx) =>
@@ -207,6 +316,8 @@ export class CasesService {
     return {
       total: visible.length,
       byStatus,
+      bySeverity,
+      overdueCount,
       highSensitivityCount,
       pendingApprovals,
       totalLoss: totalLoss.toFixed(2),
@@ -219,15 +330,25 @@ export class CasesService {
   /** Shared access-filtering batch path behind both `list()` and `stats()` — see `list()`'s
    * original doc comment (still accurate) on why this batches the cross-module lookups instead of
    * querying per case, and why pagination/filtering happens in-memory over this already
-   * access-filtered set rather than at the SQL layer. */
+   * access-filtered set rather than at the SQL layer.
+   *
+   * All 4 reads below now share ONE transaction instead of opening 4 — found live, not a guess:
+   * every single case-access check in this entire codebase runs through this method (`list`,
+   * `stats`, `getVisibleCaseIds`, which every evidence/recovery/capa/investigations/tasks/
+   * approvals/containment/regulatory cross-case register also calls), and measuring it after
+   * adding `computeSeverityAndOverdue` showed an unfiltered `/cases` page load — no severity
+   * rollup involved beyond the current page — still cost ~9s. `PrismaService.forCurrentTenant`
+   * opens a real `BEGIN`/`SET_CONFIG`/`COMMIT` round trip against Neon per call, and this method
+   * was doing 4 of them sequentially for what's really one read-only access-check unit of work.
+   * One shared transaction cuts that to 1 round trip, app-wide. */
   private async getVisibleCases(actor: AuthenticatedUser, status?: CaseStatus): Promise<Case[]> {
-    const all = await this.prisma.forCurrentTenant((tx) =>
-      tx.case.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: 'desc' } }),
-    );
-
-    const grantedCompartments = await this.usersService.getGrantedCompartments(actor.sub);
-    const userTeamIds = await this.teamsService.getUserTeamIds(actor.sub);
-    const deniedCaseIds = await this.getFlaggedCaseIds(actor.sub);
+    const { all, grantedCompartments, userTeamIds, deniedCaseIds } = await this.prisma.forCurrentTenant(async (tx) => {
+      const all = await tx.case.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: 'desc' } });
+      const grantedCompartments = await this.usersService.getGrantedCompartments(actor.sub, tx);
+      const userTeamIds = await this.teamsService.getUserTeamIds(actor.sub, tx);
+      const deniedCaseIds = await this.getFlaggedCaseIds(actor.sub, tx);
+      return { all, grantedCompartments, userTeamIds, deniedCaseIds };
+    });
 
     return all.filter((c) => this.isAccessible(actor, c, grantedCompartments, userTeamIds, deniedCaseIds) === null);
   }
@@ -252,15 +373,25 @@ export class CasesService {
   /** Cheap per-case enrichment for the case-detail header's stats ribbon — deliberately a
    * separate method from `getById` rather than changing that method's return shape, since a
    * dozen call sites in this file already depend on `getById` resolving to a bare `Case`. Reuses
-   * `getById`'s own access check first. */
-  async getSummary(actor: AuthenticatedUser, id: string): Promise<{ linkedIncidentsCount: number; flagsCount: number; assignedTeamName: string | null }> {
+   * `getById`'s own access check first. `linkedIncidents` (added for the case-detail right rail's
+   * per-incident SLA panel — there is no case-level SLA clock, only `SlaClock.incidentId`, see
+   * `SlaClockService`'s own doc comment) is the actual id/referenceCode list, not just a count. */
+  async getSummary(
+    actor: AuthenticatedUser,
+    id: string,
+  ): Promise<{
+    linkedIncidentsCount: number;
+    linkedIncidents: { id: string; referenceCode: string }[];
+    flagsCount: number;
+    assignedTeamName: string | null;
+  }> {
     const caseRecord = await this.getById(actor, id);
-    const [counted, flagsCount, team] = await Promise.all([
-      this.prisma.forCurrentTenant((tx) => tx.case.findUnique({ where: { id }, select: { _count: { select: { incidents: true } } } })),
+    const [linkedIncidents, flagsCount, team] = await Promise.all([
+      this.prisma.forCurrentTenant((tx) => tx.incident.findMany({ where: { caseId: id }, select: { id: true, referenceCode: true } })),
       this.prisma.forCurrentTenant((tx) => tx.caseUserFlag.count({ where: { caseId: id } })),
       caseRecord.assignedTeamId ? this.teamsService.assertExists(caseRecord.assignedTeamId) : Promise.resolve(null),
     ]);
-    return { linkedIncidentsCount: counted?._count.incidents ?? 0, flagsCount, assignedTeamName: team?.name ?? null };
+    return { linkedIncidentsCount: linkedIncidents.length, linkedIncidents, flagsCount, assignedTeamName: team?.name ?? null };
   }
 
   /**
@@ -341,6 +472,64 @@ export class CasesService {
     });
 
     return updated;
+  }
+
+  /** Loops the existing, unchanged `assignTeam` per case — reused, not duplicated — continuing
+   * past a per-item failure (stale id, access denied, bad team) rather than failing the whole
+   * batch. An honest partial-success shape: a queue selection of 6 where 1 case went stale
+   * shouldn't fail the other 5. */
+  async bulkAssignTeam(actor: AuthenticatedUser, dto: BulkAssignCasesDto): Promise<{ succeeded: string[]; failed: { caseId: string; reason: string }[] }> {
+    const succeeded: string[] = [];
+    const failed: { caseId: string; reason: string }[] = [];
+    for (const caseId of dto.caseIds) {
+      try {
+        await this.assignTeam(actor, caseId, { teamId: dto.teamId });
+        succeeded.push(caseId);
+      } catch (err) {
+        failed.push({ caseId, reason: err instanceof Error ? err.message : 'Unknown error' });
+      }
+    }
+    return { succeeded, failed };
+  }
+
+  /** Loops `updateStatus` per case, moving each to `UNDER_INVESTIGATION` — "escalate" reuses the
+   * one real status transition that already means "this needs active work now" (there's no
+   * separate `Case`-owned escalation concept). A case already `UNDER_INVESTIGATION` is treated as
+   * already-satisfied (included in `succeeded`), not a failure: `updateStatus` itself throws on
+   * "already this status", correct for one deliberate transition but wrong for a bulk action over
+   * a queue selection that naturally includes some already-escalated cases. Emits one
+   * `CASE_ESCALATED_EVENT` for the whole batch (not per case) so `NotificationsService` resolves
+   * every case's team lead from a single event. */
+  async bulkEscalate(actor: AuthenticatedUser, dto: BulkEscalateCasesDto): Promise<{ succeeded: string[]; failed: { caseId: string; reason: string }[] }> {
+    const succeeded: string[] = [];
+    const failed: { caseId: string; reason: string }[] = [];
+    const escalated: CaseEscalatedEvent['cases'] = [];
+
+    for (const caseId of dto.caseIds) {
+      try {
+        const current = await this.getById(actor, caseId);
+        if (current.status === CaseStatus.UNDER_INVESTIGATION) {
+          succeeded.push(caseId);
+          continue;
+        }
+        const updated = await this.updateStatus(actor, caseId, { status: CaseStatus.UNDER_INVESTIGATION, reason: dto.reason });
+        succeeded.push(caseId);
+        escalated.push({ caseId, referenceCode: updated.referenceCode, assignedTeamId: updated.assignedTeamId });
+      } catch (err) {
+        failed.push({ caseId, reason: err instanceof Error ? err.message : 'Unknown error' });
+      }
+    }
+
+    if (escalated.length > 0) {
+      this.eventEmitter.emit(CASE_ESCALATED_EVENT, {
+        tenantId: actor.tenantId,
+        escalatedBy: actor.sub,
+        reason: dto.reason,
+        cases: escalated,
+      } satisfies CaseEscalatedEvent);
+    }
+
+    return { succeeded, failed };
   }
 
   async linkIncident(actor: AuthenticatedUser, id: string, dto: LinkIncidentDto): Promise<void> {
@@ -510,10 +699,11 @@ export class CasesService {
     return null;
   }
 
-  private async getFlaggedCaseIds(userId: string): Promise<Set<string>> {
-    const flags = await this.prisma.forCurrentTenant((tx) =>
-      tx.caseUserFlag.findMany({ where: { userId }, select: { caseId: true } }),
-    );
+  /** Optional `tx`: see `getVisibleCases`'s own doc comment — same "share the caller's
+   * transaction instead of opening a second one" reasoning. */
+  private async getFlaggedCaseIds(userId: string, tx?: TenantScopedClient): Promise<Set<string>> {
+    const query = (client: TenantScopedClient) => client.caseUserFlag.findMany({ where: { userId }, select: { caseId: true } });
+    const flags = tx ? await query(tx) : await this.prisma.forCurrentTenant(query);
     return new Set(flags.map((f) => f.caseId));
   }
 

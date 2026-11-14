@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ApprovalAction, AuditOutcome, LossEntry, Prisma, RecoveryEntry, WriteOffEntry } from '@prisma/client';
+import { ApprovalAction, AuditOutcome, ContainmentStatus, LossEntry, Prisma, RecoveryEntry, WriteOffEntry } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AuditService } from '../audit/audit.service';
 import { CasesService } from '../cases/cases.service';
+import { MlGatewayService, RecoverySuggestion } from '../ml-gateway/ml-gateway.service';
 import { ApprovalService } from '../workflow/approval.service';
+import { PredictRecoveryDto } from './dto/predict-recovery.dto';
 import { RecordLossDto } from './dto/record-loss.dto';
 import { RecordRecoveryDto } from './dto/record-recovery.dto';
 import { RecordWriteOffDto } from './dto/record-write-off.dto';
@@ -34,6 +36,7 @@ export class RecoveryService {
     private readonly auditService: AuditService,
     private readonly casesService: CasesService,
     private readonly approvalService: ApprovalService,
+    private readonly mlGatewayService: MlGatewayService,
   ) {}
 
   async recordLoss(actor: AuthenticatedUser, caseId: string, dto: RecordLossDto): Promise<LossEntry> {
@@ -146,6 +149,46 @@ export class RecoveryService {
     return this.prisma.forCurrentTenant((tx) => tx.writeOffEntry.findMany({ where: { caseId }, orderBy: { recordedAt: 'desc' } }));
   }
 
+  /** The EFIMS AI Service's recovery-probability predictor (`ml-gateway`'s new `predictRecovery`),
+   * advisory-only — never writes anything, same discipline as `getSummary` below. Derives
+   * `gross_actual_loss_ngn` and `containment_confirmed` from real case data rather than trusting
+   * a client-supplied value for something already known; `severity`/`fraud_type`/`channel`/
+   * `days_to_detection` come from the request body since nothing in EFIMS models them yet (see
+   * `PredictRecoveryDto`'s own doc comment). */
+  async predictRecovery(actor: AuthenticatedUser, caseId: string, dto: PredictRecoveryDto): Promise<RecoverySuggestion> {
+    await this.casesService.getById(actor, caseId);
+
+    const [lossAgg, confirmedContainment] = await this.prisma.forCurrentTenant((tx) =>
+      Promise.all([
+        tx.lossEntry.aggregate({ where: { caseId }, _sum: { amount: true } }),
+        tx.containmentRequest.findFirst({ where: { caseId, status: ContainmentStatus.CONFIRMED } }),
+      ]),
+    );
+    const grossActualLossNgn = (lossAgg._sum.amount ?? new Prisma.Decimal(0)).toNumber();
+
+    const suggestion = await this.mlGatewayService.predictRecovery({
+      caseId,
+      grossActualLossNgn,
+      severity: dto.severity,
+      fraudType: dto.fraudType,
+      channel: dto.channel,
+      daysToDetection: dto.daysToDetection,
+      containmentConfirmed: !!confirmedContainment,
+    });
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'recovery.recovery_prediction.request',
+      entityType: 'Case',
+      entityId: caseId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { recoveryProbability: suggestion.recoveryProbability, predictionId: suggestion.predictionId },
+    });
+
+    return suggestion;
+  }
+
   /** Computed on every call, never stored — see schema.prisma's own doc comment on why
    * "reconciliation" is deliberately not a stored entity. */
   async getSummary(actor: AuthenticatedUser, caseId: string): Promise<RecoverySummary> {
@@ -202,6 +245,49 @@ export class RecoveryService {
         return { caseId: l.caseId, outstanding: outstanding.toFixed(2) };
       })
       .filter((row) => Number(row.outstanding) > 0)
+      .sort((a, b) => Number(b.outstanding) - Number(a.outstanding));
+  }
+
+  /** General cross-case register for the top-level "Recoveries" nav page — every case with any
+   * loss/recovery/write-off activity, not `queue()`'s "still outstanding" subset above. Same
+   * per-table `groupBy` shape as `queue()`, just without the `outstanding > 0` filter. */
+  async listAll(actor: AuthenticatedUser): Promise<
+    { caseId: string; referenceCode: string; caseTitle: string; totalLoss: string; totalRecovered: string; totalWrittenOff: string; outstanding: string }[]
+  > {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+
+    const [lossByCase, recoveredByCase, writtenOffByCase, cases] = await this.prisma.forCurrentTenant((tx) =>
+      Promise.all([
+        tx.lossEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
+        tx.recoveryEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
+        tx.writeOffEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
+        tx.case.findMany({ where: { id: { in: visibleCaseIds } }, select: { id: true, referenceCode: true, title: true } }),
+      ]),
+    );
+
+    const caseById = new Map(cases.map((c) => [c.id, c]));
+    const recoveredByCaseId = new Map(recoveredByCase.map((r) => [r.caseId, r._sum.amount ?? new Prisma.Decimal(0)]));
+    const writtenOffByCaseId = new Map(writtenOffByCase.map((w) => [w.caseId, w._sum.amount ?? new Prisma.Decimal(0)]));
+
+    return lossByCase
+      .filter((l) => caseById.has(l.caseId))
+      .map((l) => {
+        const loss = l._sum.amount ?? new Prisma.Decimal(0);
+        const recovered = recoveredByCaseId.get(l.caseId) ?? new Prisma.Decimal(0);
+        const writtenOff = writtenOffByCaseId.get(l.caseId) ?? new Prisma.Decimal(0);
+        const outstanding = loss.sub(recovered).sub(writtenOff);
+        const caseInfo = caseById.get(l.caseId)!;
+        return {
+          caseId: l.caseId,
+          referenceCode: caseInfo.referenceCode,
+          caseTitle: caseInfo.title,
+          totalLoss: loss.toFixed(2),
+          totalRecovered: recovered.toFixed(2),
+          totalWrittenOff: writtenOff.toFixed(2),
+          outstanding: outstanding.toFixed(2),
+        };
+      })
       .sort((a, b) => Number(b.outstanding) - Number(a.outstanding));
   }
 }

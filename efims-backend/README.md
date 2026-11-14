@@ -843,6 +843,51 @@ no case access denied (403), and RLS tenant isolation reconfirmed directly again
 `regulatory_obligations`/`regulatory_submissions`, despite real rows existing from this same test
 pass).
 
+## ml-gateway flow this module implements
+
+CLAUDE.md non-negotiable #4: the only module allowed to call any external AI/ML provider. Two
+providers, two different roles — see `ml-gateway.service.ts`'s own doc comment for the full
+reasoning:
+
+- **EFIMS AI Service** (`ml-service-client.ts`) — a separate Python/FastAPI application (not part
+  of this repo), reached over plain HTTP at `ML_SERVICE_BASE_URL` (default
+  `http://127.0.0.1:8000`), 5s timeout. The source of truth for severity prediction (primary
+  engine), transaction anomaly scoring, and recovery-probability prediction. Its own
+  documentation is explicit that its models are trained on synthetic data and are "not for real
+  case decisions" yet (severity S1 has only 3 training examples; recovery's cross-validated
+  ROC-AUC is 0.627) — carried over here verbatim, not smoothed over.
+- **Groq** (`openai` SDK pointed at Groq's base URL) — kept only as (a) an automatic fallback for
+  severity if the EFIMS AI Service is unreachable, and (b) the sole engine for duplicate/
+  correlation detection, which the EFIMS AI Service doesn't cover at all.
+
+Every method is read-only and advisory — returns a suggestion object, never writes anywhere,
+never fires an action itself:
+
+- `MlGatewayService.suggestSeverity` — tries the EFIMS AI Service first (requires the incident's 8
+  risk-factor fields — `financialExposureNgn`/`customerImpactCount`/`ongoingThreat`/
+  `insiderInvolvement`/`dataCompromise`/`regulatoryRelevance`/`channel`/`reportedByType`, captured
+  via `PATCH /incidents/:id/risk-factors` — all set; otherwise skips straight to Groq rather than
+  sending the model fabricated defaults), falls back to Groq only on unreachability. A 422 from
+  the structured model (our own request mapping is wrong) surfaces as a 400 instead of silently
+  falling back. Response carries `source: 'structured-ml' | 'groq-fallback'`. Called from
+  `TriageController`'s `GET /incidents/:incidentId/severity-suggestion`.
+- `MlGatewayController`'s `POST /ml-gateway/anomaly/score` — standalone, not case-scoped (nothing
+  in EFIMS models a `Transaction`); gated `EXCEPT_REPORTER_ROLES`, audited as
+  `entityType: 'AdHocQuery'` since there's no real entity to tie a one-off scoring request to.
+- `RecoveryController`'s `POST /cases/:caseId/recovery/predict` — derives
+  `gross_actual_loss_ngn`/`containment_confirmed` from real case data (never trusts a
+  client-supplied value for something already known); the four fields EFIMS doesn't model
+  (`severity`/`fraud_type`/`channel`/`daysToDetection`) come from the request body.
+- `MlGatewayService.findSimilarIncidents` — unchanged, Groq-only (CD-08 Phase 2's original
+  duplicate/correlation detection).
+
+Verified against a throwaway local mock implementing the EFIMS AI Service's exact documented
+contract (this session had only the reference document, not the ML developer's actual running
+service) — every response shape, plus the documented 422/503/500 error cases, and the Groq
+fallback path specifically (confirmed firing when the mock was stopped mid-test). The real service
+needs no code change on this side once available, since the client is built against the
+documented contract, not the mock.
+
 ## What's deliberately not here yet
 
 - No password-reset / invite-by-email flow — `POST /users` takes a plaintext temporary password

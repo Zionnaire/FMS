@@ -106,3 +106,17 @@ export class InvestigationsController {
     return this.investigationsService.listFindings(actor, caseId);
   }
 }
+
+/** Separate, root-level controller for the top-level Investigations nav page's cross-case
+ * register (added for the register-pages pass) — same reasoning as `EvidenceQueueController`/
+ * `ContainmentQueueController`: no `@Roles()` gate, access enforced purely via `getVisibleCaseIds`
+ * filtering inside `listAll`. */
+@Controller('investigations')
+export class InvestigationsQueueController {
+  constructor(private readonly investigationsService: InvestigationsService) {}
+
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser) {
+    return this.investigationsService.listAll(actor);
+  }
+}

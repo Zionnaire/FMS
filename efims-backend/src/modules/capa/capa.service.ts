@@ -282,6 +282,20 @@ export class CapaService {
     );
   }
 
+  /** General cross-case register for the top-level "Remediation" nav page — every CAPA action
+   * across every accessible case, not the owner/validator-personalized queues above. */
+  async listAll(actor: AuthenticatedUser): Promise<(CapaAction & { case: { referenceCode: string; title: string } })[]> {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+    return this.prisma.forCurrentTenant((tx) =>
+      tx.capaAction.findMany({
+        where: { caseId: { in: visibleCaseIds } },
+        include: { case: { select: { referenceCode: true, title: true } } },
+        orderBy: { dueDate: 'asc' },
+      }),
+    );
+  }
+
   private async assertActionOnCase(actor: AuthenticatedUser, caseId: string, actionId: string): Promise<CapaAction> {
     await this.casesService.getById(actor, caseId);
     const action = await this.prisma.forCurrentTenant((tx) => tx.capaAction.findUnique({ where: { id: actionId } }));

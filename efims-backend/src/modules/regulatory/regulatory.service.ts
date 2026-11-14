@@ -174,6 +174,22 @@ export class RegulatoryService {
     return updated;
   }
 
+  /** General cross-case register for the top-level "Regulatory reports" nav page — every
+   * obligation across every accessible case, same discipline as `EvidenceService.listAll`/
+   * `ContainmentService.listAll`. */
+  async listAll(actor: AuthenticatedUser): Promise<(RegulatoryObligation & { case: { referenceCode: string; title: string } })[]> {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+
+    return this.prisma.forCurrentTenant((tx) =>
+      tx.regulatoryObligation.findMany({
+        where: { caseId: { in: visibleCaseIds } },
+        include: { case: { select: { referenceCode: true, title: true } } },
+        orderBy: { deadline: 'asc' },
+      }),
+    );
+  }
+
   private async assertObligationOnCase(actor: AuthenticatedUser, caseId: string, obligationId: string): Promise<RegulatoryObligation> {
     await this.casesService.getById(actor, caseId);
     const obligation = await this.prisma.forCurrentTenant((tx) => tx.regulatoryObligation.findUnique({ where: { id: obligationId } }));

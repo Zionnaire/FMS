@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -93,5 +93,13 @@ export class EvidenceQueueController {
   @Get('queue')
   queue(@CurrentUser() actor: AuthenticatedUser) {
     return this.evidenceService.queue(actor);
+  }
+
+  /** General register for the top-level Evidence nav page — every item across every accessible
+   * case, not the curated `queue()` subset. `legalHold=true` backs the Retention & Legal Holds
+   * settings page. */
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser, @Query('legalHold') legalHold?: string) {
+    return this.evidenceService.listAll(actor, legalHold === undefined ? undefined : legalHold === 'true');
   }
 }

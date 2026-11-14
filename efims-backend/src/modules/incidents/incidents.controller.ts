@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Patch, Post, Body, Query } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
@@ -6,6 +6,7 @@ import { IncidentsService } from './incidents.service';
 import { ListIncidentsDto } from './dto/list-incidents.dto';
 import { MergeIncidentDto } from './dto/merge-incident.dto';
 import { RelateIncidentsDto } from './dto/relate-incidents.dto';
+import { UpdateRiskFactorsDto } from './dto/update-risk-factors.dto';
 import { WhistleblowerVaultService } from './whistleblower-vault.service';
 
 /**
@@ -75,6 +76,17 @@ export class IncidentsController {
     @Body() dto: MergeIncidentDto,
   ) {
     return this.incidentsService.merge(actor, id, dto);
+  }
+
+  /** Structured facts the EFIMS AI Service's severity model needs — see
+   * `IncidentsService.updateRiskFactors`'s own doc comment. */
+  @Patch(':id/risk-factors')
+  updateRiskFactors(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateRiskFactorsDto,
+  ) {
+    return this.incidentsService.updateRiskFactors(actor, id, dto);
   }
 
   /** Reads the reporter identity for the whistleblower Signal that raised this incident, not

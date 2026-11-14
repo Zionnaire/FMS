@@ -6,6 +6,157 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-11 — Real EFIMS AI Service integration (replaces Groq as primary severity engine)
+
+User's ML developer delivered a real, separately-running Python/FastAPI service ("EFIMS AI
+Service v1.0") exposing three trained models over HTTP: severity prediction, transaction anomaly
+scoring, and recovery-probability prediction — full contract (request/response shapes, accepted
+enum values, error codes, human-review thresholds) in a reference document, not the running
+service itself. User's explicit direction: this service becomes the source of truth for
+everything it covers; Groq is kept only as an automatic severity fallback and as the sole engine
+for duplicate/correlation detection (which the new service doesn't cover at all). Non-negotiable
+#4 reworded accordingly — "only caller of Groq" was never accurate for a two-provider world.
+
+**Schema**: `Incident` gained 8 new, all-nullable risk-factor fields (`financialExposureNgn`,
+`customerImpactCount`, `ongoingThreat`, `insiderInvolvement`, `dataCompromise`,
+`regulatoryRelevance`, `channel`, `reportedByType` — migration `20261111191838_incident_ai_risk_
+factors`) — the structured facts the severity model needs that nothing in EFIMS captured before.
+Captured once (new `PATCH /incidents/:id/risk-factors` route) rather than re-entered on every
+suggestion request.
+
+**`ml-gateway`**: new `ml-service-client.ts` (plain `fetch`, 5s timeout, typed against the
+vendor's exact JSON shapes) alongside the existing Groq (`openai` SDK) client.
+`MlGatewayService.suggestSeverity` is now an orchestrator — tries the structured model first
+(skips straight to Groq if any risk-factor field is missing, rather than sending fabricated
+defaults), falls back to Groq only on unreachability (a 422 — our own mapping bug — surfaces as a
+400 instead, deliberately not swallowed by the fallback). Response carries `source: 'structured-
+ml' | 'groq-fallback'` so an analyst always knows which engine answered. Two new pass-through
+capabilities, no Groq equivalent for either: `scoreAnomaly` (new `MlGatewayController`, `POST
+/ml-gateway/anomaly/score`, not case-scoped — a standalone investigative tool, audited as
+`entityType: 'AdHocQuery'`) and `predictRecovery` (new `RecoveryService.predictRecovery`, `POST
+/cases/:caseId/recovery/predict` — derives `gross_actual_loss_ngn`/`containment_confirmed` from
+real case data rather than trusting client input, takes the four fields EFIMS doesn't model
+—severity/fraud_type/channel/days_to_detection — from the request).
+
+**Carried over verbatim from the vendor's own documentation**, per this project's standing rule to
+never represent a capability as more reliable than its own docs say: trained on synthetic data,
+not for real case decisions yet; severity S1 has only 3 training examples; recovery's
+cross-validated ROC-AUC is 0.627; fairness checks are inconclusive.
+
+**Mock server for verification**: this session doesn't have the ML dev's actual Python project,
+only the reference document — a throwaway local mock implementing the exact documented contract
+(including 422/503/500 cases) was used to verify the integration end-to-end; the real service,
+once running, needs no code change on this side since the client is built against the documented
+contract, not the mock.
+
+**Open items sent back to the ML dev**: field-mapping gaps (`channel`/`reported_by_type` are new
+EFIMS fields with no prior canonical values; `incident_type`/`source` don't share a vocabulary
+with the vendor's fixed lists); clarified that CORS is the wrong control for a server-to-server
+integration (EFIMS never calls this from the browser) — a network-level allow-list is what
+actually matters once this is reachable beyond localhost; asked about the auth header format,
+the feedback-loop mechanism for analyst accept/override decisions, and confirmation of a real
+Docker build before relying on one for deployment.
+
+Full task list and verification detail: see this session's plan file / PR description.
+
+---
+
+## 2026-11-11 — Hybrid design pass (Contra/SimpliRisk-inspired), 7 phases
+
+User shared Contra/SimpliRisk screenshots plus `EFIMS_Hybrid_Design_Spec.md` and an update-
+instructions document scripting a "Step 0: report, then wait" reconciliation. Unlike the earlier
+TanStack/Emerald-Porcelain documents (rejected 2026-10-14), this one is explicitly additive — same
+stack, same sidebar/routes, same Botanical/Vanguard identity, layering patterns inside existing
+pages. Did a real Step-0 audit (3 parallel research passes) rather than guessing, surfaced several
+places the spec's own assumptions didn't match the real app (no single shared "Overview" page —
+`/` is a 20-role dispatcher; no case-level SLA clock, only one per incident; a generic "mark task
+done" button is unsafe for 3 of 4 candidate source entities), and got 3 explicit scoping decisions
+from the user before writing any code: build a real `Task` entity (not a pure synthesized view);
+don't refactor the 20 role dashboards into the spec's 8 shared archetypes this pass; finish the
+already-in-flight register-pages work first.
+
+**Phase 1** — carried forward the prior plan's still-open sidenav restructure (exact Monitor/
+Manage/Govern grouping the user confirmed) and Settings consolidation (`/settings/integrations`,
+an honest "not connected" status page per source system; `/settings/retention`, a real register of
+legal-hold evidence + a read-only CD-05 summary). New `/intake` page renders the *existing*
+`/signals`/`/incidents` page content as tab panels by exporting each page's body as a named
+`*PageContent` function and giving each `page.tsx` a thin default-export wrapper — no
+data-fetching duplicated, `/signals`/`/incidents` keep working unchanged for deep links.
+
+**Phase 2** — new `Task` Prisma model + `src/modules/tasks/` (migration `20261110161528_tasks`,
+RLS policy added to `rls-policies.sql`). Deliberately NOT a parallel mutable copy of `CapaAction`/
+`InvestigationIssue`/`ApprovalRequest`/`ContainmentRequest`'s own lifecycles — those four each have
+real business rules (CD-04 gates, segregation of duties, confirmation-gating) a generic "mark
+done" action must never bypass. `Task` only persists freestanding to-dos; `TasksService.listAll`
+is the cross-case register for those. New `TASK_ASSIGNED_EVENT` wired into `NotificationsService`
+exactly like `APPROVAL_REQUESTED_EVENT`'s precedent — confirmed live, a real notification arrived
+for a different user on task creation, not just self-assignment.
+
+**Phase 3** — `/cases` gained a Cases | Tasks tab pair (reusing `/referrals`'s own Link+searchParam
+tab pattern). The Tasks tab is a **union**, not a single source: real `Task` rows plus read-derived
+rows from CAPA (open/in-progress), approvals (pending), and containment (requested) — each
+derived row's "open" action always routes to the real case-detail tab, never a generic complete
+button. `InvestigationIssue` excluded from v1 (no cross-case register endpoint for it yet,
+genuinely least task-shaped of the four — no owner, no due date) — a stated fast-follow, not a
+silent gap. Mine/Overdue/All filters only — dropped the spec's "team"/"blocked" filter ideas since
+neither concept exists anywhere in this codebase (would've been dead controls).
+
+**Phase 4** — case-detail right rail (`cases/[id]/right-rail.tsx`), `layout.tsx`'s `{children}`
+slot wrapped in a `grid-cols-[1fr_320px]` with the rail as a sibling column — no change needed to
+any of the 7 tab pages' own internal grids. Linked-incident SLA panel reuses the existing
+per-incident `getCurrentSlaClock` (no case-level clock was invented); `CasesService.getSummary`
+extended to return actual linked-incident ids/reference codes, not just a count. "Recent activity"
+deliberately left out: the only candidate filter (`GET /audit-events?entityId=`) only matches
+direct Case-entity events, not the richer CAPA/approval/evidence activity a reader would expect —
+shipping a misleadingly partial feed would be worse than omitting it.
+
+**Phase 5** — Executive dashboard only gained Operations | Analytics tabs (first real consumer of
+the installed-but-unused shadcn `Tabs` primitive) — the other 16 `QueueDashboard`-driven roles
+don't, per the "no dashboard consolidation this pass" decision and the spec's own "no dead
+controls" rule (a population-level Analytics tab on a single-role queue view would be exactly
+that). Analytics tab keeps the existing severity-trend chart and adds a second real chart
+(`components/charts/recovery-bar-chart.tsx`, Recharts `BarChart`) — verified loss vs. reconciled
+recovery per case, fed entirely by the already-shipped `/recovery` register endpoint, no new
+backend stats route needed.
+
+**Phase 6** — small, representative color-token touch-up (`audit/page.tsx`, `cases/page.tsx`):
+swapped `text-primary` to neutral `text-on-surface` on the two KPI sub-stats that render a status
+count (Audit's SUCCESS count, Cases' CLOSED count) rather than a genuine headline total. Audit
+itself came back clean: `status-badge.tsx` already routes "positive" through a separate `tertiary`
+token, never `primary` — the brand-color-means-status risk the spec worried about mostly wasn't
+real here.
+
+**Phase 7** — `/configuration/[key]` gained Baseline | Proposed amendment | Comparison | History
+tabs (baseline = latest RATIFIED history entry if any; proposed amendment = current DRAFT if one
+exists; comparison = a plain key-by-key diff of the two `value` objects) plus a persistent
+"Unratified — working default only" badge, confirmed live on CD_02 (not yet ratified for this
+tenant). New site-wide `UnratifiedConfigurationBanner` in `(app)/layout.tsx`, shown to every
+authenticated role (not just Configuration roles) while any of CD-01–08 is unratified — directly
+reinforces non-negotiable #9 instead of only stating it in docs.
+
+**Verification**: tsc/lint clean on both apps after every phase. Live-verified via several
+Playwright passes against the real running dev servers (never restarted mid-test except once,
+deliberately, after both genuinely crashed — see below): all 17 sidenav routes, the Tasks tab's
+merge/filters/inline complete action (confirmed a real backend round-trip, not just local state),
+the right rail on cases with and without linked incidents, the Executive Analytics tab vs. a
+QueueDashboard role's unchanged dashboard, the color swap via computed styles, and the CD-02
+unratified badge. One real environment incident along the way: both dev servers crashed mid-session
+(`EADDRINUSE` in the backend log, consistent with many rapid `nest start --watch` recompiles under
+heavy concurrent file edits) — restarted once, confirmed healthy, not a code defect. Two apparent
+test failures during the final pass were both test-script bugs, not app bugs: a `networkidle`
+wait condition that doesn't fit a page with a live Socket.IO connection (fixed by re-checking with
+`waitUntil: 'load'` — `/audit` loads in ~12s, just slow, zero console errors), and a case-link
+selector that matched the "New case" button's `/cases/new` href instead of a real case id (the
+"UUID is expected" errors it produced were the correct, expected validation response, not a bug).
+
+**Next**: `InvestigationIssue` in the Tasks union once a cross-case register exists for it; the
+full states/accessibility pass (empty/loading/forbidden/conflict/offline/read-only across every
+view) stays explicitly deferred as its own cross-cutting pass, not scattered across this one; the
+2026-11-02 production-readiness backlog (automated tests, `ml-gateway`'s existence now closes one
+item but most of that list is untouched) is still the real next priority whenever the user picks it.
+
+---
+
 ## 2026-11-10 — design system blend ("Botanical Precision") + the first real `ml-gateway`
 
 User pushed back hard on the 2026-11-02 audit's framing: unconvinced the product actually solves

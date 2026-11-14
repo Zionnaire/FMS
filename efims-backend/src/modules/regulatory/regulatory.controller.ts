@@ -85,3 +85,17 @@ export class RegulatoryController {
     return this.regulatoryService.waive(actor, caseId, obligationId, dto);
   }
 }
+
+/** Separate, root-level controller for the top-level Regulatory reports nav page's cross-case
+ * register (added for the register-pages pass) — same reasoning as `EvidenceQueueController`/
+ * `ContainmentQueueController`: no `@Roles()` gate, access enforced purely via `getVisibleCaseIds`
+ * filtering inside `listAll`. */
+@Controller('regulatory-obligations')
+export class RegulatoryQueueController {
+  constructor(private readonly regulatoryService: RegulatoryService) {}
+
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser) {
+    return this.regulatoryService.listAll(actor);
+  }
+}

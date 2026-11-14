@@ -1,12 +1,51 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import {
+  AnomalyScoreRequest,
+  AnomalyScoreResponse,
+  MlServiceClient,
+  MlServiceHealth,
+  MlServiceValidationError,
+  RecoveryPredictRequest,
+  RecoveryPredictResponse,
+  SeverityPredictRequest,
+  SeverityPredictResponse,
+} from './ml-service-client';
 
 export interface SeveritySuggestion {
   suggestedSeverity: 'S1' | 'S2' | 'S3' | 'S4';
   confidence: number;
   citedFactors: string[];
   rationale: string;
+  /** Which engine actually answered — surfaced to the UI so an analyst always knows whether the
+   * primary structured model or the Groq fallback produced a given suggestion. Never hidden:
+   * CD-08's "advisory, human decides" guardrail applies identically either way, but which model
+   * is speaking is itself something a human reviewer should be able to see. */
+  source: 'structured-ml' | 'groq-fallback';
+  predictionId: string | null;
+  requiresHumanReview: boolean;
+  allClassProbabilities?: Record<'S1' | 'S2' | 'S3' | 'S4', number>;
+}
+
+export interface SeveritySuggestionInput {
+  incidentId: string;
+  category: string;
+  type: string;
+  title: string;
+  description: string;
+  signalSummary?: string;
+  /** EFIMS's own `SignalSource` enum value, if this incident originated from a signal — mapped
+   * to the EFIMS AI Service's own vocabulary below. */
+  signalSource?: string | null;
+  financialExposureNgn?: number | null;
+  customerImpactCount?: number | null;
+  ongoingThreat?: boolean | null;
+  insiderInvolvement?: boolean | null;
+  dataCompromise?: boolean | null;
+  regulatoryRelevance?: boolean | null;
+  channel?: string | null;
+  reportedByType?: string | null;
 }
 
 export interface SimilarIncidentCandidateInput {
@@ -24,56 +63,188 @@ export interface SimilarIncidentResult {
   citedFactors: string[];
 }
 
+export interface AnomalyScoreInput {
+  transactionId: string;
+  amountNgn: number;
+  channel: string;
+  transactionType: string;
+  velocityIndicator: 'Normal' | 'Elevated' | 'High';
+  ipRiskScore: number;
+  deviceRiskScore: number;
+  isReversal: boolean;
+  isChargeback: boolean;
+  accountRiskRating: 'Low' | 'Medium' | 'High';
+}
+
+export interface AnomalySuggestion {
+  predictionId: string;
+  confidence: number;
+  requiresHumanReview: boolean;
+  anomalyScore: number;
+  isSuspicious: boolean;
+  anomalyType: string | null;
+  behaviouralSignals: string[];
+  disclaimer: string;
+}
+
+export interface RecoveryPredictionInput {
+  caseId: string;
+  grossActualLossNgn: number;
+  severity: 'S1' | 'S2' | 'S3' | 'S4';
+  fraudType: string;
+  channel: string;
+  daysToDetection: number;
+  containmentConfirmed: boolean;
+}
+
+export interface RecoverySuggestion {
+  predictionId: string;
+  confidence: number;
+  requiresHumanReview: boolean;
+  recoveryProbability: number;
+  recoverySuccessPrediction: boolean;
+  keyFactors: string[];
+  recommendedActions: string[];
+  disclaimer: string;
+}
+
+/** EFIMS's `SignalSource` enum -> the EFIMS AI Service's own fixed vocabulary (CD-01 is
+ * tenant-configured free text; this one small enum is the one EFIMS field with a real fixed set
+ * worth a lookup table — see the plan's "field-mapping gaps" note for why the rest are passed
+ * through as-is rather than force-mapped). */
+const SIGNAL_SOURCE_TO_VENDOR: Record<string, string> = {
+  RULE_ENGINE: 'Automated Detection',
+  CUSTOMER_COMPLAINT: 'Customer Complaint',
+  STAFF_REPORT: 'Staff Report',
+  WHISTLEBLOWER: 'Whistleblowing',
+  THIRD_PARTY: 'External Referral',
+  MANUAL_ENTRY: 'Manual Discovery',
+};
+
+function shortFactorLabel(feature: string, direction: 'increases_risk' | 'decreases_risk'): string {
+  const label = feature.replace(/_encoded$/, '').replaceAll('_', ' ');
+  return `${label} (${direction === 'increases_risk' ? '+' : '−'})`;
+}
+
 /**
- * The ONLY module allowed to call Groq anywhere in this codebase (CLAUDE.md non-negotiable #4).
- * Every method here is read-only and advisory: it returns a suggestion object and never writes
- * to any table, never calls another module's write path, never fires an autonomous action. This
- * is the mechanical enforcement of that non-negotiable, not just a comment — there is no method
- * on this service, and never should be, that accepts a "just do it" call.
+ * The ONLY module allowed to call an external AI/ML provider anywhere in this codebase (CLAUDE.md
+ * non-negotiable #4). Every method here is read-only and advisory: it returns a suggestion object
+ * and never writes to any table, never calls another module's write path, never fires an
+ * autonomous action — the mechanical enforcement of that non-negotiable, not just a comment.
  *
- * Builds exactly CD-08's Phase 2 (docs/configuration-decisions.md): severity-suggestion and
- * duplicate-detection, with its guardrail implemented literally — "Advisory score + confidence +
- * cited factors only; human sets final severity." Nothing further up CD-08's roadmap (narrative
- * generation, anomaly detection, case summarization) is attempted here.
- *
- * Groq's API is OpenAI-compatible, so the `openai` SDK is reused, pointed at Groq's base URL
- * instead of OpenAI's — no separate Groq-specific client exists or is needed.
+ * Two providers, two different roles:
+ * - **EFIMS AI Service** (a separate Python/FastAPI application the user's ML developer supplied,
+ *   `ml-service-client.ts`) — the SOURCE OF TRUTH for everything it covers: severity prediction
+ *   (primary), transaction anomaly scoring, and recovery-probability prediction. Its own
+ *   documentation is explicit that its models are trained on synthetic data and are "not for real
+ *   case decisions" yet (severity S1 has only 3 training examples; recovery's cross-validated
+ *   ROC-AUC is 0.627) — carried over here verbatim rather than smoothed over, per this project's
+ *   standing rule to never represent a capability as more reliable than its own docs say.
+ * - **Groq** (LLM, `openai` SDK pointed at Groq's base URL) — kept only as (a) an automatic
+ *   fallback for severity if the EFIMS AI Service is unreachable, and (b) the sole engine for
+ *   duplicate/correlation detection, which the EFIMS AI Service doesn't cover at all.
  */
 @Injectable()
 export class MlGatewayService {
   private readonly logger = new Logger(MlGatewayService.name);
-  private readonly client: OpenAI | null;
-  private readonly model: string;
+  private readonly groqClient: OpenAI | null;
+  private readonly groqModel: string;
+  private readonly mlServiceClient: MlServiceClient;
 
   constructor(private readonly config: ConfigService) {
     const apiKey = this.config.get<string>('GROQ_API_KEY');
-    this.model = this.config.get<string>('GROQ_MODEL', 'llama-3.3-70b-versatile');
+    this.groqModel = this.config.get<string>('GROQ_MODEL', 'llama-3.3-70b-versatile');
     // Deliberately doesn't throw at startup if unconfigured — a missing AI credential shouldn't
     // take down the whole backend; every method below fails loudly and specifically (503) only
-    // when actually called, which is also the only place CD-08's advisory surface is reached.
-    this.client = apiKey && apiKey !== 'dev-only-change-me-groq' ? new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' }) : null;
+    // when actually called.
+    this.groqClient = apiKey && apiKey !== 'dev-only-change-me-groq' ? new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' }) : null;
+    this.mlServiceClient = new MlServiceClient(this.config.get<string>('ML_SERVICE_BASE_URL', 'http://127.0.0.1:8000'));
   }
 
-  private assertConfigured(): OpenAI {
-    if (!this.client) {
+  private assertGroqConfigured(): OpenAI {
+    if (!this.groqClient) {
       throw new ServiceUnavailableException('ml-gateway is not configured (GROQ_API_KEY missing) — AI suggestions are unavailable');
     }
-    return this.client;
+    return this.groqClient;
   }
 
-  /** CD-08 Phase 2, item one. Reads the incident's own description/category/type (and, when
-   * linked, the originating signal's summary) against CD-02's literal tier criteria, and returns
-   * a suggestion — never a decision. The caller (`TriageService`) never writes this value
-   * anywhere; it's surfaced to the human assessing the incident alongside their own severity
-   * picker, exactly as CD-08 requires. */
-  async suggestSeverity(input: {
-    category: string;
-    type: string;
-    title: string;
-    description: string;
-    signalSummary?: string;
-  }): Promise<SeveritySuggestion> {
-    const client = this.assertConfigured();
+  async getMlServiceHealth(): Promise<MlServiceHealth> {
+    try {
+      return await this.mlServiceClient.getHealth();
+    } catch (err) {
+      throw new ServiceUnavailableException((err as Error).message);
+    }
+  }
+
+  /** Primary severity engine (EFIMS AI Service's structured model), automatic Groq fallback on
+   * unreachability. Requires the incident's risk-factor fields to all be set (see schema.prisma's
+   * doc comment on `Incident`'s new nullable columns) — if any are missing, this skips straight
+   * to Groq rather than sending the structured model fabricated/default values it was never
+   * designed to receive. A 422 from the structured model (our own request mapping is wrong) is
+   * NOT treated as "unreachable" — it surfaces as a 400, since falling back would hide a real bug
+   * in this mapping layer. */
+  async suggestSeverity(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
+    const hasAllRiskFactors =
+      input.financialExposureNgn != null &&
+      input.customerImpactCount != null &&
+      input.ongoingThreat != null &&
+      input.insiderInvolvement != null &&
+      input.dataCompromise != null &&
+      input.regulatoryRelevance != null &&
+      !!input.channel &&
+      !!input.reportedByType;
+
+    if (hasAllRiskFactors) {
+      try {
+        return await this.suggestSeverityViaMlService(input);
+      } catch (err) {
+        if (err instanceof MlServiceValidationError) {
+          throw new BadRequestException(`EFIMS AI Service rejected the severity request: ${JSON.stringify(err.detail)}`);
+        }
+        this.logger.warn(`Falling back to Groq for severity suggestion (incident ${input.incidentId}): ${(err as Error).message}`);
+      }
+    } else {
+      this.logger.debug(`Incident ${input.incidentId} is missing risk-factor fields — using Groq severity suggestion directly`);
+    }
+
+    return this.suggestSeverityViaGroq(input);
+  }
+
+  private async suggestSeverityViaMlService(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
+    const request: SeverityPredictRequest = {
+      incident_id: input.incidentId,
+      financial_exposure_ngn: input.financialExposureNgn!,
+      customer_impact_count: input.customerImpactCount!,
+      ongoing_threat: input.ongoingThreat!,
+      insider_involvement: input.insiderInvolvement!,
+      data_compromise: input.dataCompromise!,
+      regulatory_relevance: input.regulatoryRelevance!,
+      source: (input.signalSource && SIGNAL_SOURCE_TO_VENDOR[input.signalSource]) || 'Manual Discovery',
+      channel: input.channel!,
+      incident_type: input.type,
+      reported_by_type: input.reportedByType!,
+      narrative: input.description,
+    };
+
+    const response: SeverityPredictResponse = await this.mlServiceClient.predictSeverity(request);
+
+    return {
+      suggestedSeverity: response.severity_prediction,
+      confidence: response.confidence_score,
+      citedFactors: response.top_factors.map((f) => shortFactorLabel(f.feature, f.direction)),
+      rationale: `Structured model (${response.model_version}) suggests ${response.severity_prediction} at ${Math.round(response.confidence_score * 100)}% confidence.`,
+      source: 'structured-ml',
+      predictionId: response.prediction_id,
+      requiresHumanReview: response.requires_human_review,
+      allClassProbabilities: response.all_class_probabilities,
+    };
+  }
+
+  /** CD-08 Phase 2, item one — the original Groq-only implementation, now the fallback path.
+   * Reads the incident's own description/category/type (and, when linked, the originating
+   * signal's summary) against CD-02's literal tier criteria. */
+  private async suggestSeverityViaGroq(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
+    const client = this.assertGroqConfigured();
 
     const prompt = `You are an advisory severity-triage assistant for a bank's fraud/incident management system. You NEVER make the final decision — a human always does. Your job is only to suggest a severity tier with your reasoning, citing the specific factors that led to your suggestion.
 
@@ -94,7 +265,7 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
 {"suggestedSeverity": "S1"|"S2"|"S3"|"S4", "confidence": <number 0-1>, "citedFactors": [<short strings, 2-4 factors>], "rationale": "<1-2 sentences>"}`;
 
     const completion = await client.chat.completions.create({
-      model: this.model,
+      model: this.groqModel,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       response_format: { type: 'json_object' },
@@ -106,12 +277,15 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
     }
 
     try {
-      const parsed = JSON.parse(raw) as SeveritySuggestion;
+      const parsed = JSON.parse(raw) as { suggestedSeverity: SeveritySuggestion['suggestedSeverity']; confidence: number; citedFactors: string[]; rationale: string };
       return {
         suggestedSeverity: parsed.suggestedSeverity,
         confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0)),
         citedFactors: Array.isArray(parsed.citedFactors) ? parsed.citedFactors.slice(0, 6) : [],
         rationale: String(parsed.rationale ?? ''),
+        source: 'groq-fallback',
+        predictionId: null,
+        requiresHumanReview: true,
       };
     } catch (err) {
       this.logger.error('Failed to parse Groq severity-suggestion response', err as Error);
@@ -119,17 +293,92 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
     }
   }
 
+  /** New capability — the EFIMS AI Service's transaction anomaly scorer. No Groq equivalent
+   * exists; on unreachability this surfaces as 503, same convention `ml-gateway` already uses for
+   * an unconfigured Groq client. */
+  async scoreAnomaly(input: AnomalyScoreInput): Promise<AnomalySuggestion> {
+    const request: AnomalyScoreRequest = {
+      transaction_id: input.transactionId,
+      amount_ngn: input.amountNgn,
+      channel: input.channel,
+      transaction_type: input.transactionType,
+      velocity_indicator: input.velocityIndicator,
+      ip_risk_score: input.ipRiskScore,
+      device_risk_score: input.deviceRiskScore,
+      is_reversal: input.isReversal,
+      is_chargeback: input.isChargeback,
+      account_risk_rating: input.accountRiskRating,
+    };
+
+    let response: AnomalyScoreResponse;
+    try {
+      response = await this.mlServiceClient.scoreAnomaly(request);
+    } catch (err) {
+      if (err instanceof MlServiceValidationError) {
+        throw new BadRequestException(`EFIMS AI Service rejected the anomaly request: ${JSON.stringify(err.detail)}`);
+      }
+      throw new ServiceUnavailableException((err as Error).message);
+    }
+
+    return {
+      predictionId: response.prediction_id,
+      confidence: response.confidence_score,
+      requiresHumanReview: response.requires_human_review,
+      anomalyScore: response.anomaly_score,
+      isSuspicious: response.is_suspicious,
+      anomalyType: response.anomaly_type,
+      behaviouralSignals: response.behavioural_signals,
+      disclaimer: response.disclaimer,
+    };
+  }
+
+  /** New capability — the EFIMS AI Service's recovery-probability predictor. No Groq equivalent
+   * exists; on unreachability this surfaces as 503. */
+  async predictRecovery(input: RecoveryPredictionInput): Promise<RecoverySuggestion> {
+    const request: RecoveryPredictRequest = {
+      case_id: input.caseId,
+      gross_actual_loss_ngn: input.grossActualLossNgn,
+      severity: input.severity,
+      fraud_type: input.fraudType,
+      channel: input.channel,
+      days_to_detection: input.daysToDetection,
+      containment_confirmed: input.containmentConfirmed,
+    };
+
+    let response: RecoveryPredictResponse;
+    try {
+      response = await this.mlServiceClient.predictRecovery(request);
+    } catch (err) {
+      if (err instanceof MlServiceValidationError) {
+        throw new BadRequestException(`EFIMS AI Service rejected the recovery request: ${JSON.stringify(err.detail)}`);
+      }
+      throw new ServiceUnavailableException((err as Error).message);
+    }
+
+    return {
+      predictionId: response.prediction_id,
+      confidence: response.confidence_score,
+      requiresHumanReview: response.requires_human_review,
+      recoveryProbability: response.recovery_probability,
+      recoverySuccessPrediction: response.recovery_success_prediction,
+      keyFactors: response.key_recovery_factors.map((f) => shortFactorLabel(f.feature, f.direction)),
+      recommendedActions: response.recommended_recovery_actions,
+      disclaimer: response.disclaimer,
+    };
+  }
+
   /** CD-08 Phase 2, item two. Compares one incident against a small candidate set (already
    * access-filtered by the caller — `IncidentsService` — before this method ever sees them) and
-   * returns a scored similarity list. The caller wires the result to its own already-existing,
-   * already-tested merge/link/reject actions — this method only ever finds and scores, never
-   * merges or links anything itself. */
+   * returns a scored similarity list. Groq-only — the EFIMS AI Service has no overlapping
+   * capability, so there's nothing to prefer it over here. The caller wires the result to its own
+   * already-existing, already-tested merge/link/reject actions — this method only ever finds and
+   * scores, never merges or links anything itself. */
   async findSimilarIncidents(
     target: SimilarIncidentCandidateInput,
     candidates: SimilarIncidentCandidateInput[],
   ): Promise<SimilarIncidentResult[]> {
     if (candidates.length === 0) return [];
-    const client = this.assertConfigured();
+    const client = this.assertGroqConfigured();
 
     const prompt = `You are an advisory duplicate/correlation assistant for a bank's fraud/incident management system. You NEVER merge, link, or reject anything yourself — a human always decides. Your job is only to score how similar each candidate incident is to the target incident, citing the specific overlapping factors (e.g. same category/type, similar description, matching keywords).
 
@@ -145,7 +394,7 @@ Respond with ONLY a JSON object, no other text, in this exact shape (omit any ca
 {"matches": [{"index": <candidate index above>, "score": <number 0-1>, "citedFactors": [<short strings>]}]}`;
 
     const completion = await client.chat.completions.create({
-      model: this.model,
+      model: this.groqModel,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       response_format: { type: 'json_object' },

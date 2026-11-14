@@ -145,9 +145,21 @@ Analysis**, which is required to finalize these.
 | Phase | AI capability released | Guardrail |
 |---|---|---|
 | Phase 2 | Severity-suggestion, duplicate-detection | Advisory score + confidence + cited factors only; human sets final severity |
-| Phase 3 | Narrative/entity extraction from free text | Every extracted fact is source-cited back to the original text |
+| Phase 3 | Narrative/entity extraction from free text | Every extracted fact is source-cited back to the original text — **not yet released** |
 | Phase 4 | Anomaly/typology detection, recovery-propensity model | Feeds triage/prioritization only — never auto-closes, auto-escalates, or auto-files a regulatory report |
 | Phase 5 | Case summarisation / AI assistant | Citations mandatory; UI must warn against treating summaries as authoritative until verified |
+
+**2026-11-11 update** — Phase 4 released ahead of Phase 3 (not out of order by mistake: the ML
+developer's "EFIMS AI Service" delivered anomaly scoring and recovery prediction directly, with no
+narrative-extraction capability in the same package). Phase 2's severity-suggestion engine was
+also re-architected the same day: the EFIMS AI Service's structured-data severity model is now the
+primary engine, with the original Groq-based LLM suggestion kept only as an automatic fallback if
+the structured model is unreachable — both still advisory-only, both still require the human to
+set the final severity. Per that service's own documentation: it is trained on synthetic data and
+explicitly "not for real case decisions" yet; severity S1 has only 3 training examples; recovery's
+cross-validated ROC-AUC is 0.627; fairness checks are inconclusive. This CD-08 release does not
+change that caveat — it is carried over here, not smoothed over, so this register never
+represents the capability as more reliable than its own vendor documentation says.
 
 No use case in any phase performs an autonomous adverse action (containment, write-off,
 disciplinary action, regulatory submission) without a human approval step — this is enforced

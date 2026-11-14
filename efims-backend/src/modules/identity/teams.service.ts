@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuditOutcome, Team } from '@prisma/client';
-import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AuditService } from '../audit/audit.service';
 
@@ -18,8 +18,11 @@ export class TeamsService {
     private readonly auditService: AuditService,
   ) {}
 
-  async list(): Promise<Team[]> {
-    return this.prisma.forCurrentTenant((tx) => tx.team.findMany({ orderBy: { name: 'asc' } }));
+  /** Optional `tx`: see `getUserTeamIds`'s own doc comment — same "share the caller's
+   * transaction instead of opening a second one" reasoning. */
+  async list(tx?: TenantScopedClient): Promise<Team[]> {
+    const query = (client: TenantScopedClient) => client.team.findMany({ orderBy: { name: 'asc' } });
+    return tx ? query(tx) : this.prisma.forCurrentTenant(query);
   }
 
   /** Cross-module existence check — used by `triage`'s TriageService to validate a routing
@@ -48,10 +51,11 @@ export class TeamsService {
    * filter many cases against team membership without an N+1 query per case (a lesson learned
    * live, the hard way, during this project's own database verification — see
    * docs/CHANGELOG.md's 2026-09-21 "First live database verification" entry). */
-  async getUserTeamIds(userId: string): Promise<string[]> {
-    const memberships = await this.prisma.forCurrentTenant((tx) =>
-      tx.teamMembership.findMany({ where: { userId }, select: { teamId: true } }),
-    );
+  /** Optional `tx`: see `UsersService.getGrantedCompartments`'s own doc comment — same
+   * "share the caller's transaction instead of opening a second one" reasoning. */
+  async getUserTeamIds(userId: string, tx?: TenantScopedClient): Promise<string[]> {
+    const query = (client: TenantScopedClient) => client.teamMembership.findMany({ where: { userId }, select: { teamId: true } });
+    const memberships = tx ? await query(tx) : await this.prisma.forCurrentTenant(query);
     return memberships.map((m) => m.teamId);
   }
 

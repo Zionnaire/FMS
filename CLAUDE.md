@@ -17,7 +17,7 @@ This file is the always-loaded entry point. Full detail lives in `docs/`:
 - **Frontend:** Next.js (App Router) + TypeScript + Tailwind + shadcn/ui. Talks to backend only via REST. No direct DB or AI access.
 - **Backend:** NestJS/TypeScript, modular monolith (not microservices) on Render.
 - **Database:** PostgreSQL (Render-managed), Row-Level Security enforcing tenant isolation at the engine level.
-- **AI:** Groq, called only through the backend's `ml-gateway` module — no other code path may call it.
+- **AI:** The EFIMS AI Service (a separate Python/FastAPI application, severity/anomaly/recovery models) is the primary provider; Groq is kept as an automatic severity fallback plus the sole engine for duplicate/correlation detection. Both called only through the backend's `ml-gateway` module — no other code path may call either.
 - **Deferred until a phase needs them:** Redis, Kafka/RabbitMQ, Temporal, OpenSearch, Neo4j, Kubernetes. See `docs/architecture.md` §6 for trigger conditions.
 
 ## Non-negotiables (carried into every phase, not just MVP)
@@ -25,7 +25,7 @@ This file is the always-loaded entry point. Full detail lives in `docs/`:
 1. **Signal → Incident → Case** are three distinct entities, never collapsed into one table/concept.
 2. **Modules talk only through their own public service interface or an in-process event emitter** — never by reaching into another module's tables directly.
 3. **`audit` module is write-only from the outside** — append-only, no update/delete path for any audit row, including via raw SQL.
-4. **`ml-gateway` is the only caller of Groq.** No autonomous adverse action (containment, write-off, disciplinary action, regulatory submission) ever fires without a human approval step.
+4. **`ml-gateway` is the only module allowed to call any external AI/ML provider.** The EFIMS AI Service is the source of truth for everything it covers (severity, anomaly scoring, recovery prediction); Groq is kept only as (a) an automatic fallback for severity if the EFIMS AI Service is unreachable, and (b) the sole engine for duplicate/correlation detection, which the EFIMS AI Service doesn't cover. No autonomous adverse action (containment, write-off, disciplinary action, regulatory submission) ever fires without a human approval step, and no AI suggestion from either provider is ever auto-applied — every one is advisory only.
 5. **Tenant isolation is enforced twice**: application-layer tenant-context middleware sets the active tenant per request, and Postgres RLS is the backstop (`tenant_id = current_setting('app.current_tenant')` on every tenant-scoped table).
 6. **Case access requires ALL of:** tenant match, role permission, team match (or elevated role), user not a subject/conflict on the case, user clearance ≥ case sensitivity, case compartment ∈ user's authorised compartments. Any denial is itself written as an audit event.
 7. **Compartments from day one:** `STANDARD`, `AML_MLRO`, `WHISTLEBLOWING` (reporter identity in a separate vault from case content), `LEGAL_PRIVILEGE`, `HR`, `EXECUTIVE`.

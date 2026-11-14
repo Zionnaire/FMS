@@ -79,3 +79,17 @@ export class ContainmentController {
     return this.containmentService.cancel(actor, caseId, requestId, dto);
   }
 }
+
+/** Separate, root-level controller for the top-level Containment nav page's cross-case register
+ * (added for the register-pages pass) — same reasoning as `EvidenceQueueController`/
+ * `RecoveryQueueController`/`CapaQueueController`: no `@Roles()` gate, access enforced purely via
+ * `getVisibleCaseIds` filtering inside `listAll`. */
+@Controller('containment-requests')
+export class ContainmentQueueController {
+  constructor(private readonly containmentService: ContainmentService) {}
+
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser) {
+    return this.containmentService.listAll(actor);
+  }
+}

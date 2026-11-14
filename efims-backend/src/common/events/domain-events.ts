@@ -16,6 +16,8 @@ export const APPROVAL_REQUESTED_EVENT = 'approval.requested';
 export const APPROVAL_DECIDED_EVENT = 'approval.decided';
 export const CASE_STATUS_CHANGED_EVENT = 'case.status_changed';
 export const SLA_CLOCK_BREACHED_EVENT = 'sla_clock.breached';
+export const TASK_ASSIGNED_EVENT = 'task.assigned';
+export const CASE_ESCALATED_EVENT = 'case.escalated';
 
 export interface ApprovalRequestedEvent {
   tenantId: string;
@@ -55,4 +57,27 @@ export interface SlaClockBreachedEvent {
   clockId: string;
   incidentId: string;
   targetDeadline: string;
+}
+
+export interface TaskAssignedEvent {
+  tenantId: string;
+  taskId: string;
+  caseId: string;
+  title: string;
+  assigneeUserId: string;
+  dueAt: string | null;
+  assignedBy: string;
+}
+
+/** Fired once per `CasesService.bulkEscalate` call (not once per case) — carries every case in
+ * the batch so `NotificationsService`'s handler can resolve each one's team lead(s) without N
+ * separate event round-trips. Deliberately a distinct event from `CaseStatusChangedEvent`: that
+ * one fires on every status change and only reacts to `CLOSED`; a bulk-escalate is a deliberate
+ * "this needs attention now" action, not every incidental move to `UNDER_INVESTIGATION` (e.g. a
+ * case owner routinely progressing their own case shouldn't notify a team lead every time). */
+export interface CaseEscalatedEvent {
+  tenantId: string;
+  escalatedBy: string;
+  reason: string;
+  cases: { caseId: string; referenceCode: string; assignedTeamId: string | null }[];
 }

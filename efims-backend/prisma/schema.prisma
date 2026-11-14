@@ -62,6 +62,7 @@ model Tenant {
   regulatoryObligations RegulatoryObligation[]
   regulatorySubmissions RegulatorySubmission[]
   accessChangeRequests  AccessChangeRequest[]
+  tasks                 Task[]
 
   @@map("tenants")
 }
@@ -546,6 +547,23 @@ model Incident {
   mergedIntoIncident   Incident?  @relation("IncidentMerge", fields: [mergedIntoIncidentId], references: [id])
   mergedIncidents      Incident[] @relation("IncidentMerge")
 
+  /// Structured risk factors for the EFIMS AI Service's severity model (`ml-gateway`'s primary
+  /// severity-suggestion engine as of the AI-service integration — see that module's own doc
+  /// comment). All nullable: captured once at report/edit time so an analyst never re-enters
+  /// them per suggestion request, but no existing incident is retroactively required to have
+  /// them, and nothing else in this app depends on them being set. `channel`/`reportedByType`
+  /// are plain strings, not enums — they mirror an external vendor's own fixed vocabulary, which
+  /// isn't this schema's to own; the UI constrains input via a `<select>`, the model degrades
+  /// gracefully (per the vendor's own doc) on anything outside that list rather than erroring.
+  financialExposureNgn Decimal? @db.Decimal(18, 2)
+  customerImpactCount  Int?
+  ongoingThreat        Boolean?
+  insiderInvolvement   Boolean?
+  dataCompromise       Boolean?
+  regulatoryRelevance  Boolean?
+  channel              String?
+  reportedByType       String?
+
   /// Set only by `IncidentsService.linkToCase`, called only from `cases`' CasesService — the
   /// same "public method on the owning module's service, never a direct cross-module write"
   /// pattern as `markUnderReview`. Many incidents may link to one case (architecture.md §4.1's
@@ -744,6 +762,7 @@ model Case {
   rootCauseAnalyses     RootCauseAnalysis[]
   capaActions           CapaAction[]
   regulatoryObligations RegulatoryObligation[]
+  tasks                 Task[]
 
   @@unique([tenantId, referenceCode])
   @@index([tenantId, status])
@@ -1133,6 +1152,57 @@ model InvestigationIssue {
 
   @@index([tenantId, caseId])
   @@map("investigation_issues")
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// A freestanding, case-scoped to-do item ("call the cardholder by Friday") — deliberately NOT a
+/// parallel mutable copy of CapaAction/InvestigationIssue/ApprovalRequest/ContainmentRequest's own
+/// lifecycles. Those four each have real business rules (CD-04 approval gates, segregation of
+/// duties, confirmation-gating) that a generic "mark done" action must never be allowed to bypass,
+/// so the cross-case Tasks register (`TasksService.listAll`) is a UNION at read time: real `Task`
+/// rows from this table, plus derived rows synthesized from those four entities' own existing
+/// registers — see `TasksService`'s own doc comment. Only a freestanding `Task` row can actually be
+/// completed/cancelled from the Tasks view; a derived row's "open" action always routes to the real
+/// case-detail tab where the real, rule-respecting action lives.
+model Task {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  title       String
+  description String?
+  status      TaskStatus   @default(OPEN)
+  priority    TaskPriority @default(MEDIUM)
+
+  /// Plain string, not a `User` relation — same convention as `CapaAction.ownerId`, validated via
+  /// UsersService.assertUserExists in the service layer, not a DB-level FK.
+  assigneeUserId String
+  dueAt          DateTime?
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  completedAt     DateTime?
+  cancelledReason String?
+  cancelledAt     DateTime?
+
+  @@index([tenantId, caseId])
+  @@index([tenantId, assigneeUserId])
+  @@map("tasks")
 }
 
 enum IntervieweeRole {

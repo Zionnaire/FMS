@@ -213,6 +213,23 @@ export class EvidenceService {
     );
   }
 
+  /** General cross-case register (added for the top-level "Evidence" nav page) — every evidence
+   * item across every case this actor can access, not the `queue()` method's curated
+   * "needs-attention" subset above. Optional `legalHold` filter backs the Retention & Legal Holds
+   * settings page, which needs exactly the items currently under hold. */
+  async listAll(actor: AuthenticatedUser, legalHold?: boolean): Promise<(EvidenceItem & { case: { referenceCode: string; title: string } })[]> {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+
+    return this.prisma.forCurrentTenant((tx) =>
+      tx.evidenceItem.findMany({
+        where: { caseId: { in: visibleCaseIds }, legalHold },
+        include: { case: { select: { referenceCode: true, title: true } } },
+        orderBy: { collectedAt: 'desc' },
+      }),
+    );
+  }
+
   private async assertItemOnCase(actor: AuthenticatedUser, caseId: string, evidenceId: string): Promise<EvidenceItem> {
     await this.casesService.getById(actor, caseId);
     const item = await this.prisma.forCurrentTenant((tx) => tx.evidenceItem.findUnique({ where: { id: evidenceId } }));

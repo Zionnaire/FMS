@@ -161,6 +161,22 @@ export class ContainmentService {
     return updated;
   }
 
+  /** General cross-case register for the top-level "Containment" nav page — every containment
+   * request across every accessible case, same shape/discipline as `EvidenceService.listAll`/
+   * `CapaService.listAll`. */
+  async listAll(actor: AuthenticatedUser): Promise<(ContainmentRequest & { case: { referenceCode: string; title: string } })[]> {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+
+    return this.prisma.forCurrentTenant((tx) =>
+      tx.containmentRequest.findMany({
+        where: { caseId: { in: visibleCaseIds } },
+        include: { case: { select: { referenceCode: true, title: true } } },
+        orderBy: { requestedAt: 'desc' },
+      }),
+    );
+  }
+
   private async assertRequestOnCase(caseId: string, requestId: string): Promise<ContainmentRequest> {
     const request = await this.prisma.forCurrentTenant((tx) => tx.containmentRequest.findUnique({ where: { id: requestId } }));
     if (!request || request.caseId !== caseId) {

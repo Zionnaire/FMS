@@ -216,4 +216,59 @@ export class InvestigationsService {
     await this.casesService.getById(actor, caseId);
     return this.prisma.forCurrentTenant((tx) => tx.finding.findMany({ where: { caseId }, orderBy: { createdAt: 'desc' } }));
   }
+
+  /** General cross-case register for the top-level "Investigations" nav page — one row per case
+   * that has a plan (not every plan version), showing its latest plan plus how many issues are
+   * still open. Aggregated, like `RecoveryService.listAll`/`queue`, rather than a flat per-entity
+   * list like `EvidenceService.listAll`: a plan is versioned, so "the case's investigation state"
+   * is its latest version, not a row per version. */
+  async listAll(actor: AuthenticatedUser): Promise<
+    {
+      caseId: string;
+      referenceCode: string;
+      caseTitle: string;
+      planStatus: InvestigationPlanStatus;
+      objectives: string;
+      openIssueCount: number;
+      lastActivityAt: Date;
+    }[]
+  > {
+    const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
+    if (visibleCaseIds.length === 0) return [];
+
+    const [latestPlans, openIssueCounts, cases] = await this.prisma.forCurrentTenant((tx) =>
+      Promise.all([
+        tx.investigationPlan.findMany({
+          where: { caseId: { in: visibleCaseIds } },
+          orderBy: [{ caseId: 'asc' }, { version: 'desc' }],
+          distinct: ['caseId'],
+        }),
+        tx.investigationIssue.groupBy({
+          by: ['caseId'],
+          where: { caseId: { in: visibleCaseIds }, status: { not: IssueStatus.RESOLVED } },
+          _count: { _all: true },
+        }),
+        tx.case.findMany({ where: { id: { in: visibleCaseIds } }, select: { id: true, referenceCode: true, title: true } }),
+      ]),
+    );
+
+    const caseById = new Map(cases.map((c) => [c.id, c]));
+    const openIssueCountByCaseId = new Map(openIssueCounts.map((o) => [o.caseId, o._count._all]));
+
+    return latestPlans
+      .filter((p) => caseById.has(p.caseId))
+      .map((p) => {
+        const caseInfo = caseById.get(p.caseId)!;
+        return {
+          caseId: p.caseId,
+          referenceCode: caseInfo.referenceCode,
+          caseTitle: caseInfo.title,
+          planStatus: p.status,
+          objectives: p.objectives,
+          openIssueCount: openIssueCountByCaseId.get(p.caseId) ?? 0,
+          lastActivityAt: p.createdAt,
+        };
+      })
+      .sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime());
+  }
 }

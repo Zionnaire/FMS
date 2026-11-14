@@ -10,6 +10,7 @@ import { UsersService } from '../identity/users.service';
 import { MlGatewayService, SimilarIncidentResult } from '../ml-gateway/ml-gateway.service';
 import { MergeIncidentDto } from './dto/merge-incident.dto';
 import { RelateIncidentsDto } from './dto/relate-incidents.dto';
+import { UpdateRiskFactorsDto } from './dto/update-risk-factors.dto';
 
 /** Tenant-wide, compartment-filtered (same visibility rule as `list`/`getById` — never a raw
  * table count) summary for the incidents list page's KPI row. */
@@ -266,6 +267,43 @@ export class IncidentsService {
       entityId: id,
       outcome: AuditOutcome.SUCCESS,
     });
+  }
+
+  /** Captures the structured facts the EFIMS AI Service's severity model needs (see
+   * schema.prisma's `Incident` doc comment) — a partial update, same `getById` visibility
+   * discipline as every other write in this module. Not a status transition and not gated to any
+   * narrower role list, same convention `relate`/`merge` already use in this controller (the
+   * compartment-visibility check inside `getById` is the one that actually matters). */
+  async updateRiskFactors(actor: AuthenticatedUser, id: string, dto: UpdateRiskFactorsDto): Promise<Incident> {
+    await this.getById(actor, id);
+
+    const updated = await this.prisma.forCurrentTenant((tx) =>
+      tx.incident.update({
+        where: { id },
+        data: {
+          financialExposureNgn: dto.financialExposureNgn,
+          customerImpactCount: dto.customerImpactCount,
+          ongoingThreat: dto.ongoingThreat,
+          insiderInvolvement: dto.insiderInvolvement,
+          dataCompromise: dto.dataCompromise,
+          regulatoryRelevance: dto.regulatoryRelevance,
+          channel: dto.channel,
+          reportedByType: dto.reportedByType,
+        },
+      }),
+    );
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'incidents.incident.update_risk_factors',
+      entityType: 'Incident',
+      entityId: id,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: dto as unknown as Prisma.InputJsonValue,
+    });
+
+    return updated;
   }
 
   /**

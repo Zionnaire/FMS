@@ -86,3 +86,9 @@ export const AUDIT_READ_ROLES: Role[] = [
 /** Configuration draft/ratify — governance roles. `CONFIG_ADMIN` is the role this list exists
  * for, added alongside the existing `ADMIN`/`EXECUTIVE` pair rather than replacing them. */
 export const CONFIG_ROLES: Role[] = [Role.ADMIN, Role.EXECUTIVE, Role.CONFIG_ADMIN];
+
+/** Every role except `INCIDENT_REPORTER` — the backend equivalent of the frontend sidenav's own
+ * `EXCEPT_REPORTER` constant ("own reports only, no enterprise case browsing"). Exists for
+ * investigative utilities that aren't case-scoped and so don't fit any narrower list above, e.g.
+ * the standalone transaction-risk-scoring tool (`ml-gateway`'s `MlGatewayController`). */
+export const EXCEPT_REPORTER_ROLES: Role[] = Object.values(Role).filter((r) => r !== Role.INCIDENT_REPORTER);

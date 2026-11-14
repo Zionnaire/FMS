@@ -4,6 +4,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { CASE_ROLES } from '../../common/constants/roles';
+import { PredictRecoveryDto } from './dto/predict-recovery.dto';
 import { RecordLossDto } from './dto/record-loss.dto';
 import { RecordRecoveryDto } from './dto/record-recovery.dto';
 import { RecordWriteOffDto } from './dto/record-write-off.dto';
@@ -69,6 +70,17 @@ export class RecoveryController {
   getSummary(@CurrentUser() actor: AuthenticatedUser, @Param('caseId', ParseUUIDPipe) caseId: string) {
     return this.recoveryService.getSummary(actor, caseId);
   }
+
+  @Post('predict')
+  @UseGuards(RolesGuard)
+  @Roles(...CASE_ROLES)
+  predictRecovery(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Body() dto: PredictRecoveryDto,
+  ) {
+    return this.recoveryService.predictRecovery(actor, caseId, dto);
+  }
 }
 
 /** Separate, root-level controller for the Recovery/Finance Officer dashboard's cross-case queue
@@ -80,5 +92,12 @@ export class RecoveryQueueController {
   @Get('queue')
   queue(@CurrentUser() actor: AuthenticatedUser) {
     return this.recoveryService.queue(actor);
+  }
+
+  /** General register for the top-level Recoveries nav page — every case with financial
+   * activity, not `queue()`'s "still outstanding" subset. */
+  @Get()
+  listAll(@CurrentUser() actor: AuthenticatedUser) {
+    return this.recoveryService.listAll(actor);
   }
 }

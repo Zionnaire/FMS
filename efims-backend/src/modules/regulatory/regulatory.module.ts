@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CasesModule } from '../cases/cases.module';
 import { WorkflowModule } from '../workflow/workflow.module';
-import { RegulatoryController } from './regulatory.controller';
+import { RegulatoryController, RegulatoryQueueController } from './regulatory.controller';
 import { RegulatoryService } from './regulatory.service';
 
 /** Imports both `CasesModule` (case access checks) and `WorkflowModule` (`ApprovalService.
@@ -9,7 +9,7 @@ import { RegulatoryService } from './regulatory.service';
  * same shape as `ContainmentModule`/`RecoveryModule`. */
 @Module({
   imports: [CasesModule, WorkflowModule],
-  controllers: [RegulatoryController],
+  controllers: [RegulatoryController, RegulatoryQueueController],
   providers: [RegulatoryService],
   exports: [RegulatoryService],
 })

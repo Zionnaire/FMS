@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuditOutcome, CdKey, TriageAssessment } from '@prisma/client';
-import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AuditService } from '../audit/audit.service';
 import { ConfigurationService } from '../configuration/configuration.service';
@@ -37,10 +37,19 @@ export class TriageService {
   async suggestSeverity(actor: AuthenticatedUser, incidentId: string): Promise<SeveritySuggestion> {
     const incident = await this.incidentsService.getById(actor, incidentId);
     const suggestion = await this.mlGatewayService.suggestSeverity({
+      incidentId: incident.referenceCode,
       category: incident.category,
       type: incident.type,
       title: incident.title,
       description: incident.description,
+      financialExposureNgn: incident.financialExposureNgn?.toNumber() ?? null,
+      customerImpactCount: incident.customerImpactCount,
+      ongoingThreat: incident.ongoingThreat,
+      insiderInvolvement: incident.insiderInvolvement,
+      dataCompromise: incident.dataCompromise,
+      regulatoryRelevance: incident.regulatoryRelevance,
+      channel: incident.channel,
+      reportedByType: incident.reportedByType,
     });
 
     await this.auditService.record({
@@ -50,7 +59,12 @@ export class TriageService {
       entityType: 'Incident',
       entityId: incidentId,
       outcome: AuditOutcome.SUCCESS,
-      metadata: { suggestedSeverity: suggestion.suggestedSeverity, confidence: suggestion.confidence },
+      metadata: {
+        suggestedSeverity: suggestion.suggestedSeverity,
+        confidence: suggestion.confidence,
+        source: suggestion.source,
+        predictionId: suggestion.predictionId,
+      },
     });
 
     return suggestion;
@@ -135,6 +149,34 @@ export class TriageService {
     return Array.from(byDay.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, counts]) => ({ date, ...counts }));
+  }
+
+  /** Batched "latest assessment's severity per incident" — added for `CasesService.list`/`stats`'s
+   * per-case effective-severity rollup (there is no `Case`-owned severity field; it's read from
+   * each case's linked incidents' latest `TriageAssessment`). This module owns `TriageAssessment`,
+   * so this is the one place allowed to query it directly, same non-negotiable #2 reasoning as
+   * `severityTrend` above — `CasesService` passes incident ids it already legitimately knows
+   * (via its own direct `Incident.caseId` read, the same precedent `getSummary`'s linked-incident
+   * list already established), never queries this table itself. No visibility check here: the
+   * caller is responsible for only passing incident ids its own actor can already see.
+   *
+   * Optional `tx`: `CasesService.computeSeverityAndOverdue` calls this alongside
+   * `SlaClockService.getBreachedIncidentIds` and its own `Incident` read — passing its own
+   * already-open transaction here (rather than letting this method open a second one) cuts that
+   * rollup from 3 separate Neon round trips to 1, each of which is a real `BEGIN`/`SET_CONFIG`/
+   * `COMMIT` dance per `PrismaService.forCurrentTenant`'s own doc comment, not free. Still
+   * perfectly usable standalone (opens its own transaction) for any other caller. */
+  async getLatestSeverityByIncidentIds(incidentIds: string[], tx?: TenantScopedClient): Promise<Map<string, TriageAssessment['severity']>> {
+    if (incidentIds.length === 0) return new Map();
+    const query = (client: TenantScopedClient) =>
+      client.triageAssessment.findMany({
+        where: { incidentId: { in: incidentIds } },
+        orderBy: [{ incidentId: 'asc' }, { assessedAt: 'desc' }],
+        distinct: ['incidentId'],
+        select: { incidentId: true, severity: true },
+      });
+    const latest = tx ? await query(tx) : await this.prisma.forCurrentTenant(query);
+    return new Map(latest.map((a) => [a.incidentId, a.severity]));
   }
 
   private async getCurrentOrNull(incidentId: string): Promise<TriageAssessment | null> {
