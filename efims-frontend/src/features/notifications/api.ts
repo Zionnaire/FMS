@@ -17,3 +17,16 @@ export async function listNotifications(
 export async function markNotificationRead(accessToken: string, id: string): Promise<Notification> {
   return backendFetch<Notification>(`/notifications/${id}/read`, { method: "POST", accessToken });
 }
+
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+export async function subscribeToPush(accessToken: string, subscription: PushSubscriptionPayload): Promise<void> {
+  await backendFetch("/notifications/push-subscriptions", { method: "POST", body: subscription, accessToken });
+}
+
+export async function unsubscribeFromPush(accessToken: string, endpoint: string): Promise<void> {
+  await backendFetch("/notifications/push-subscriptions", { method: "DELETE", body: { endpoint }, accessToken });
+}

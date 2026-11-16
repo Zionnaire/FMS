@@ -44,7 +44,7 @@ export default async function SignalDetailPage(props: PageProps<"/signals/[id]">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold text-primary">{signal.source.replaceAll("_", " ")}</p>
-          <h1 className="font-headline text-2xl font-semibold text-on-surface">{signal.summary}</h1>
+          <h1 className="text-2xl font-bold text-on-surface">{signal.summary}</h1>
         </div>
         <StatusBadge status={signal.status} tone={signal.status === "NEW" ? "warning" : signal.status === "REJECTED" ? "critical" : "positive"} />
       </div>

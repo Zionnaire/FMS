@@ -17,7 +17,7 @@ export default async function AccessChangeRequestsPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Access change requests</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Access change requests</h1>
         <p className="mt-1 text-xs text-on-surface-variant">{pending.length} pending decision{pending.length === 1 ? "" : "s"} — maker-checker: the requester cannot decide their own request.</p>
       </div>
 

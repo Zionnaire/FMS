@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { listSignals } from "@/features/signals/api";
 import { StatusBadge } from "@/components/shell/status-badge";
 
@@ -16,19 +17,19 @@ export async function ReporterDashboard({ accessToken }: { accessToken: string }
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">My reports</h1>
+          <h1 className="text-2xl font-bold text-on-surface">My reports</h1>
           <p className="mt-1 text-xs text-on-surface-variant">{total} report{total === 1 ? "" : "s"} you&apos;ve submitted.</p>
         </div>
         <Link
           href="/signals/new"
-          className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container"
+          className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90"
         >
-          <span className="material-symbols-outlined text-base">add_box</span>
+          <Plus size={16} strokeWidth={2.5} />
           Report incident
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         {signals.length === 0 ? (
           <div className="p-8 text-center text-sm text-on-surface-variant">
             You haven&apos;t submitted a report yet — use &quot;Report incident&quot; to file one.

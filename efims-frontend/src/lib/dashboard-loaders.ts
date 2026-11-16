@@ -1,6 +1,13 @@
+import {
+  Flag, CheckCircle2, XCircle, EyeOff, Briefcase, Unlock, Search, Hourglass, ShieldAlert,
+  CheckCircle, Landmark, Lock, Fingerprint, Gavel, AlertTriangle, Link2, Receipt,
+  ClipboardCheck, BadgeCheck, Users, AlertCircle, Info,
+} from "lucide-react";
 import type { DashboardData, DashboardRow } from "@/components/dashboards/queue-dashboard";
 import type { Role, SessionUser } from "@/features/auth/types";
 import type { CaseListItem, CaseStats } from "@/features/cases/types";
+import { SEVERITY_TIERS } from "@/features/cases/types";
+import { SEVERITY_COLOR } from "@/lib/severity-colors";
 import { listSignals, getSignalStats } from "@/features/signals/api";
 import { listIncidents, getIncidentStats } from "@/features/incidents/api";
 import { listCases, getCaseStats } from "@/features/cases/api";
@@ -52,28 +59,34 @@ function fetchInstitutionalRaw(accessToken: string) {
 
 /** The institution-wide "pulse" strip above a case-based role's own queue — same real,
  * access-scoped data every such role already fetches for its own KPIs, just framed as shared
- * context (matches the "Overview" mockup's layout: tenant-wide trend + needs-attention panel
- * above a personal/team queue). `getRegulatoryRegister` and `getSeverityTrend` are both already
- * tenant-scoped-to-this-actor's-access the same way every other backend call in this app is —
- * nothing here is broadened beyond what the role could already see via its existing KPIs. Pure
- * formatting only — the fetch itself happens in `fetchInstitutionalRaw`, inside the caller's own
- * `Promise.all`. */
+ * context (matches the Institutional Intelligence reference's layout: tenant-wide trend +
+ * severity mix + "matters requiring attention" panel above a personal/team queue).
+ * `getRegulatoryRegister` and `getSeverityTrend` are both already tenant-scoped-to-this-actor's-
+ * access the same way every other backend call in this app is — nothing here is broadened beyond
+ * what the role could already see via its existing KPIs. Pure formatting only — the fetch itself
+ * happens in `fetchInstitutionalRaw`, inside the caller's own `Promise.all`. */
 function buildInstitutionalContext(
   stats: CaseStats,
   severityTrend: Awaited<ReturnType<typeof getSeverityTrend>>,
   regulatoryRegister: Awaited<ReturnType<typeof getRegulatoryRegister>>,
-): Pick<DashboardData, "trend" | "needsAttention"> {
+): Pick<DashboardData, "trend" | "severityMix" | "needsAttention"> {
   const pendingObligations = regulatoryRegister.filter((r) => r.status === "PENDING").length;
   return {
     trend: {
       title: "Incident activity — last 12 weeks",
       points: severityTrend.map((d) => ({ date: d.date, value: d.S1 + d.S2 + d.S3 + d.S4 })),
     },
+    severityMix: SEVERITY_TIERS.map((tier) => ({
+      key: tier,
+      label: `Severity ${tier}`,
+      value: stats.bySeverity[tier],
+      ...SEVERITY_COLOR[tier],
+    })),
     needsAttention: {
       items: [
-        { title: "Overdue case SLAs", subtitle: "Cases", count: stats.overdueCount },
-        { title: "Pending decision reviews", subtitle: "Approvals", count: stats.pendingApprovals },
-        { title: "Reporting obligations", subtitle: "Reports", count: pendingObligations },
+        { title: "Overdue case SLAs", subtitle: "Cases", count: stats.overdueCount, icon: AlertCircle, color: "var(--color-error)" },
+        { title: "Pending decision reviews", subtitle: "Approvals", count: stats.pendingApprovals, icon: AlertTriangle, color: "var(--color-warning-status)" },
+        { title: "Reporting obligations", subtitle: "Reports", count: pendingObligations, icon: Info, color: "var(--color-info)" },
       ],
       reviewHref: "/approvals",
       reviewLabel: "Review decision queue",
@@ -90,11 +103,10 @@ function buildInstitutionalContext(
  * show.
  *
  * 2026-11-13: the 8 case-based roles below additionally opt into `richTable` (real severity/
- * team/compartment/SLA columns, filterable, paginated) and the shared `trend`/`needsAttention`
- * strip — see `buildInstitutionalContext`'s own doc comment. The other 8 roles (signals,
- * evidence, recovery, CAPA, incident-only) keep the plain flat list: their rows are a different
- * entity shape with no honest severity/team/SLA to show, so forcing those columns on would mean
- * inventing data. */
+ * team/compartment/SLA columns, filterable, paginated) and the shared `trend`/`severityMix`/
+ * `needsAttention` strip. The other 8 roles (signals, evidence, recovery, CAPA, incident-only)
+ * keep the plain flat list: their rows are a different entity shape with no honest severity/
+ * team/SLA to show, so forcing those columns on would mean inventing data. */
 export type DashboardLoader = (accessToken: string, user: SessionUser) => Promise<DashboardData>;
 
 export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
@@ -107,10 +119,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Intake priorities",
       subtitle: `${stats.byStatus.NEW} signal${stats.byStatus.NEW === 1 ? "" : "s"} awaiting a triage decision.`,
       kpis: [
-        { label: "New signals", value: stats.byStatus.NEW, tone: "hero" },
-        { label: "Validated", value: stats.byStatus.VALIDATED, dotColor: "var(--color-tertiary)" },
-        { label: "Rejected", value: stats.byStatus.REJECTED, dotColor: "var(--color-error)" },
-        { label: "Whistleblower", value: stats.whistleblowerCount, dotColor: "var(--color-secondary)" },
+        { label: "New signals", value: stats.byStatus.NEW, icon: Flag, color: "var(--color-tertiary)" },
+        { label: "Validated", value: stats.byStatus.VALIDATED, icon: CheckCircle2, color: "var(--color-success)" },
+        { label: "Rejected", value: stats.byStatus.REJECTED, icon: XCircle, color: "var(--color-error)" },
+        { label: "Whistleblower", value: stats.whistleblowerCount, icon: EyeOff, color: "var(--color-secondary)" },
       ],
       queueTitle: "Awaiting triage",
       rows: signals.map((s) => ({
@@ -139,10 +151,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "My case desk",
       subtitle: `${mine.length} case${mine.length === 1 ? "" : "s"} you opened, out of ${stats.total} accessible.`,
       kpis: [
-        { label: "My cases", value: mine.length, tone: "hero" },
-        { label: "Open", value: stats.byStatus.OPEN, dotColor: "var(--color-tertiary)" },
-        { label: "Under investigation", value: stats.byStatus.UNDER_INVESTIGATION, dotColor: "var(--color-secondary)" },
-        { label: "Pending approvals", value: stats.pendingApprovals, dotColor: "var(--color-error)" },
+        { label: "My cases", value: mine.length, icon: Briefcase, color: "var(--color-tertiary)" },
+        { label: "Open", value: stats.byStatus.OPEN, icon: Unlock, color: "var(--color-info)" },
+        { label: "Under investigation", value: stats.byStatus.UNDER_INVESTIGATION, icon: Search, color: "var(--color-secondary)" },
+        { label: "Pending approvals", value: stats.pendingApprovals, icon: Hourglass, color: "var(--color-warning-status)" },
       ],
       ...context,
       queueTitle: "Cases I opened",
@@ -164,10 +176,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Investigation desk",
       subtitle: `${stats.byStatus.UNDER_INVESTIGATION} case${stats.byStatus.UNDER_INVESTIGATION === 1 ? "" : "s"} currently under investigation.`,
       kpis: [
-        { label: "Under investigation", value: stats.byStatus.UNDER_INVESTIGATION, tone: "hero" },
-        { label: "Total accessible", value: stats.total, dotColor: "var(--color-secondary)" },
-        { label: "High sensitivity", value: stats.highSensitivityCount, dotColor: "var(--color-tertiary)" },
-        { label: "Pending approvals", value: stats.pendingApprovals, dotColor: "var(--color-error)" },
+        { label: "Under investigation", value: stats.byStatus.UNDER_INVESTIGATION, icon: Search, color: "var(--color-tertiary)" },
+        { label: "Total accessible", value: stats.total, icon: Briefcase, color: "var(--color-secondary)" },
+        { label: "High sensitivity", value: stats.highSensitivityCount, icon: ShieldAlert, color: "var(--color-warning-status)" },
+        { label: "Pending approvals", value: stats.pendingApprovals, icon: Hourglass, color: "var(--color-error)" },
       ],
       ...context,
       queueTitle: "Active investigations",
@@ -189,10 +201,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Team operations",
       subtitle: `${stats.total} accessible case${stats.total === 1 ? "" : "s"} across your team.`,
       kpis: [
-        { label: "Open", value: stats.byStatus.OPEN, tone: "hero" },
-        { label: "Pending approvals", value: stats.pendingApprovals, dotColor: "var(--color-error)" },
-        { label: "High sensitivity", value: stats.highSensitivityCount, dotColor: "var(--color-tertiary)" },
-        { label: "Closed", value: stats.byStatus.CLOSED, dotColor: "var(--color-secondary)" },
+        { label: "Open", value: stats.byStatus.OPEN, icon: Unlock, color: "var(--color-tertiary)" },
+        { label: "Pending approvals", value: stats.pendingApprovals, icon: Hourglass, color: "var(--color-warning-status)" },
+        { label: "High sensitivity", value: stats.highSensitivityCount, icon: ShieldAlert, color: "var(--color-error)" },
+        { label: "Closed", value: stats.byStatus.CLOSED, icon: CheckCircle, color: "var(--color-success)" },
       ],
       ...context,
       queueTitle: "Team case queue",
@@ -214,10 +226,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Fraud risk oversight",
       subtitle: `${formatNgn(stats.outstanding)} outstanding exposure across ${stats.total} accessible case${stats.total === 1 ? "" : "s"}.`,
       kpis: [
-        { label: "Outstanding exposure", value: formatNgn(stats.outstanding), tone: "hero" },
-        { label: "Pending approvals", value: stats.pendingApprovals, dotColor: "var(--color-error)" },
-        { label: "High sensitivity", value: stats.highSensitivityCount, dotColor: "var(--color-tertiary)" },
-        { label: "Total cases", value: stats.total, dotColor: "var(--color-secondary)" },
+        { label: "Outstanding exposure", value: formatNgn(stats.outstanding), icon: Landmark, color: "var(--color-tertiary)" },
+        { label: "Pending approvals", value: stats.pendingApprovals, icon: Hourglass, color: "var(--color-warning-status)" },
+        { label: "High sensitivity", value: stats.highSensitivityCount, icon: ShieldAlert, color: "var(--color-error)" },
+        { label: "Total cases", value: stats.total, icon: Briefcase, color: "var(--color-secondary)" },
       ],
       ...context,
       queueTitle: "Case portfolio",
@@ -236,9 +248,9 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Custody operations",
       subtitle: `${items.length} evidence item${items.length === 1 ? "" : "s"} need attention across your accessible cases.`,
       kpis: [
-        { label: "Needs attention", value: items.length, tone: "hero" },
-        { label: "Never verified", value: unverified, dotColor: "var(--color-error)" },
-        { label: "Under legal hold", value: onHold, dotColor: "var(--color-secondary)" },
+        { label: "Needs attention", value: items.length, icon: Lock, color: "var(--color-tertiary)" },
+        { label: "Never verified", value: unverified, icon: Fingerprint, color: "var(--color-error)" },
+        { label: "Under legal hold", value: onHold, icon: Gavel, color: "var(--color-secondary)" },
       ],
       queueTitle: "Evidence needing attention",
       rows: items.map((i) => ({
@@ -260,10 +272,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Security incident desk",
       subtitle: `${incidents.length} cyber/information-security incident${incidents.length === 1 ? "" : "s"} in view.`,
       kpis: [
-        { label: "Cyber incidents", value: incidents.length, tone: "hero" },
-        { label: "Total accessible", value: stats.total, dotColor: "var(--color-secondary)" },
-        { label: "Linked to case", value: stats.linkedToCaseCount, dotColor: "var(--color-tertiary)" },
-        { label: "Restricted", value: stats.restrictedCompartmentCount, dotColor: "var(--color-error)" },
+        { label: "Cyber incidents", value: incidents.length, icon: ShieldAlert, color: "var(--color-tertiary)" },
+        { label: "Total accessible", value: stats.total, icon: AlertTriangle, color: "var(--color-secondary)" },
+        { label: "Linked to case", value: stats.linkedToCaseCount, icon: Link2, color: "var(--color-info)" },
+        { label: "Restricted", value: stats.restrictedCompartmentCount, icon: Lock, color: "var(--color-error)" },
       ],
       queueTitle: "Cyber / information security incidents",
       rows: incidents.map((i) => ({
@@ -285,10 +297,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Operations desk",
       subtitle: `${incidents.length} operational incident${incidents.length === 1 ? "" : "s"} in view.`,
       kpis: [
-        { label: "Operational incidents", value: incidents.length, tone: "hero" },
-        { label: "Total accessible", value: stats.total, dotColor: "var(--color-secondary)" },
-        { label: "Linked to case", value: stats.linkedToCaseCount, dotColor: "var(--color-tertiary)" },
-        { label: "Open", value: stats.byStatus.OPEN, dotColor: "var(--color-error)" },
+        { label: "Operational incidents", value: incidents.length, icon: AlertTriangle, color: "var(--color-tertiary)" },
+        { label: "Total accessible", value: stats.total, icon: Briefcase, color: "var(--color-secondary)" },
+        { label: "Linked to case", value: stats.linkedToCaseCount, icon: Link2, color: "var(--color-info)" },
+        { label: "Open", value: stats.byStatus.OPEN, icon: Unlock, color: "var(--color-warning-status)" },
       ],
       queueTitle: "Operational incidents",
       rows: incidents.map((i) => ({
@@ -308,8 +320,8 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Recovery ledger desk",
       subtitle: `${rows.length} case${rows.length === 1 ? "" : "s"} with outstanding exposure.`,
       kpis: [
-        { label: "Total outstanding", value: formatNgn(totalOutstanding.toFixed(2)), tone: "hero" },
-        { label: "Cases with exposure", value: rows.length, dotColor: "var(--color-secondary)" },
+        { label: "Total outstanding", value: formatNgn(totalOutstanding.toFixed(2)), icon: Landmark, color: "var(--color-tertiary)" },
+        { label: "Cases with exposure", value: rows.length, icon: Receipt, color: "var(--color-secondary)" },
       ],
       queueTitle: "Outstanding exposure by case",
       rows: rows.map((r) => ({
@@ -329,8 +341,8 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "My corrective actions",
       subtitle: `${actions.length} open or in-progress action${actions.length === 1 ? "" : "s"} you own.`,
       kpis: [
-        { label: "My actions", value: actions.length, tone: "hero" },
-        { label: "Overdue", value: overdue, dotColor: "var(--color-error)" },
+        { label: "My actions", value: actions.length, icon: ClipboardCheck, color: "var(--color-tertiary)" },
+        { label: "Overdue", value: overdue, icon: AlertTriangle, color: "var(--color-error)" },
       ],
       queueTitle: "My open CAPA actions",
       rows: actions.map((a) => ({
@@ -349,7 +361,7 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
     return {
       title: "Validation inbox",
       subtitle: `${actions.length} completed action${actions.length === 1 ? "" : "s"} awaiting independent validation.`,
-      kpis: [{ label: "Awaiting validation", value: actions.length, tone: "hero" }],
+      kpis: [{ label: "Awaiting validation", value: actions.length, icon: BadgeCheck, color: "var(--color-tertiary)" }],
       queueTitle: "Pending validation",
       rows: actions.map((a) => ({
         href: `/cases/${a.caseId}/capa`,
@@ -373,9 +385,9 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Statutory reporting desk",
       subtitle: `${cases.length} AML/MLRO case${cases.length === 1 ? "" : "s"}, ${stats.pendingApprovals} approval${stats.pendingApprovals === 1 ? "" : "s"} pending.`,
       kpis: [
-        { label: "AML/MLRO cases", value: cases.length, tone: "hero" },
-        { label: "Pending approvals", value: stats.pendingApprovals, dotColor: "var(--color-error)" },
-        { label: "Total accessible", value: stats.total, dotColor: "var(--color-secondary)" },
+        { label: "AML/MLRO cases", value: cases.length, icon: Landmark, color: "var(--color-tertiary)" },
+        { label: "Pending approvals", value: stats.pendingApprovals, icon: Hourglass, color: "var(--color-warning-status)" },
+        { label: "Total accessible", value: stats.total, icon: Briefcase, color: "var(--color-secondary)" },
       ],
       ...context,
       queueTitle: "AML/MLRO compartment cases",
@@ -395,7 +407,7 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
     return {
       title: "Legal review desk",
       subtitle: `${cases.length} legally-privileged case${cases.length === 1 ? "" : "s"} accessible to you.`,
-      kpis: [{ label: "Privileged cases", value: cases.length, tone: "hero" }],
+      kpis: [{ label: "Privileged cases", value: cases.length, icon: Gavel, color: "var(--color-tertiary)" }],
       ...context,
       queueTitle: "Legal privilege compartment",
       rows: toRichRows(cases, (c) => `/cases/${c.id}`),
@@ -414,7 +426,7 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
     return {
       title: "Restricted HR desk",
       subtitle: `${cases.length} HR-compartment case${cases.length === 1 ? "" : "s"} accessible to you.`,
-      kpis: [{ label: "HR cases", value: cases.length, tone: "hero" }],
+      kpis: [{ label: "HR cases", value: cases.length, icon: Users, color: "var(--color-tertiary)" }],
       ...context,
       queueTitle: "HR compartment",
       rows: toRichRows(cases, (c) => `/cases/${c.id}`),
@@ -428,7 +440,7 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
     return {
       title: "Protected intake desk",
       subtitle: `${total} whistleblower report${total === 1 ? "" : "s"} — metadata only, identity held in a separate vault.`,
-      kpis: [{ label: "Whistleblower reports", value: total, tone: "hero" }],
+      kpis: [{ label: "Whistleblower reports", value: total, icon: EyeOff, color: "var(--color-tertiary)" }],
       queueTitle: "Protected disclosures",
       rows: signals.map((s) => ({
         href: `/signals/${s.id}`,
@@ -451,10 +463,10 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
       title: "Assurance review",
       subtitle: `${caseStats.total} case${caseStats.total === 1 ? "" : "s"} in scope for review.`,
       kpis: [
-        { label: "Cases in scope", value: caseStats.total, tone: "hero" },
-        { label: "Pending approvals", value: caseStats.pendingApprovals, dotColor: "var(--color-error)" },
-        { label: "High sensitivity", value: caseStats.highSensitivityCount, dotColor: "var(--color-tertiary)" },
-        { label: "Closed", value: caseStats.byStatus.CLOSED, dotColor: "var(--color-secondary)" },
+        { label: "Cases in scope", value: caseStats.total, icon: ClipboardCheck, color: "var(--color-tertiary)" },
+        { label: "Pending approvals", value: caseStats.pendingApprovals, icon: Hourglass, color: "var(--color-warning-status)" },
+        { label: "High sensitivity", value: caseStats.highSensitivityCount, icon: ShieldAlert, color: "var(--color-error)" },
+        { label: "Closed", value: caseStats.byStatus.CLOSED, icon: CheckCircle, color: "var(--color-success)" },
       ],
       ...context,
       queueTitle: "Case register",

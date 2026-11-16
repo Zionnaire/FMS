@@ -13,7 +13,7 @@ export default async function UsersPage() {
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">Users</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Users</h1>
           <p className="mt-1 text-xs text-on-surface-variant">{users.length} active user{users.length === 1 ? "" : "s"} in this tenant.</p>
         </div>
         {isAdmin && (

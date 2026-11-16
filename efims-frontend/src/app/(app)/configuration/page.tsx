@@ -12,7 +12,7 @@ export default async function ConfigurationPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Configuration</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Configuration</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           CD-01 through CD-08 — working defaults for build purposes, not yet formally ratified policy (non-negotiable #9).
         </p>

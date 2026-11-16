@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { X, Shield, Link2, Eye, ArrowRight } from "lucide-react";
 import type { CaseListItem, CaseStatus, SeverityTier } from "@/features/cases/types";
 import { bulkAssignCasesAction, bulkEscalateCasesAction } from "@/features/cases/actions";
 import type { Team } from "@/features/teams/types";
@@ -62,7 +63,7 @@ function BulkAssignPanel({ caseIds, teams, open, onClose, onSuccess }: { caseIds
           <select
             name="teamId"
             required
-            className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary focus:outline-none"
+            className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-tertiary focus:outline-none"
           >
             <option value="">Select a team…</option>
             {teams.map((t) => (
@@ -111,7 +112,7 @@ function BulkEscalatePanel({ caseIds, open, onClose, onSuccess }: { caseIds: str
             minLength={5}
             rows={3}
             placeholder="Why these cases need active attention now…"
-            className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3.5 py-2 text-xs text-on-surface placeholder:text-outline/70 focus:ring-1 focus:ring-primary focus:outline-none"
+            className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-low px-3.5 py-2 text-xs text-on-surface placeholder:text-outline/70 focus:ring-1 focus:ring-tertiary focus:outline-none"
           />
         </div>
         <ErrorBanner state={state} />
@@ -163,7 +164,7 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
             <button
               type="button"
               onClick={() => setAssignOpen(true)}
-              className="rounded-full bg-surface-container px-3 py-1.5 text-[11px] font-semibold text-on-surface-variant transition-colors hover:text-primary"
+              className="rounded-full bg-surface-container px-3 py-1.5 text-[11px] font-semibold text-on-surface-variant transition-colors hover:text-tertiary"
             >
               Assign to team
             </button>
@@ -175,7 +176,7 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
               Escalate
             </button>
             <button type="button" onClick={clearSelection} className="rounded-full p-1.5 text-on-surface-variant hover:text-on-surface" title="Clear selection">
-              <span className="material-symbols-outlined text-base">close</span>
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -191,7 +192,7 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
                 ref={(el) => { if (el) el.indeterminate = someChecked; }}
                 onChange={toggleAll}
                 aria-label="Select all cases on this page"
-                className="h-3.5 w-3.5 cursor-pointer rounded border-outline-variant accent-primary"
+                className="h-3.5 w-3.5 cursor-pointer rounded border-outline-variant accent-tertiary"
               />
             </TableHead>
             <TableHead>Case ID &amp; title</TableHead>
@@ -218,13 +219,13 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
                   checked={checkedIds.has(c.id)}
                   onChange={() => toggleOne(c.id)}
                   aria-label={`Select ${c.referenceCode}`}
-                  className="h-3.5 w-3.5 cursor-pointer rounded border-outline-variant accent-primary"
+                  className="h-3.5 w-3.5 cursor-pointer rounded border-outline-variant accent-tertiary"
                 />
               </TableCell>
               <TableCell>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <Mono className="rounded bg-surface-container px-2 py-0.5 text-xs text-primary">{c.referenceCode}</Mono>
+                    <Mono className="rounded bg-surface-container px-2 py-0.5 text-xs text-on-surface">{c.referenceCode}</Mono>
                     {c.isOverdue && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2 py-0.5 text-[10px] font-bold text-on-error-container">
                         Overdue
@@ -247,13 +248,13 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
               <TableCell><Badge variant="outline" className="border-outline-variant text-[11px] text-on-surface-variant">{c.compartment}</Badge></TableCell>
               <TableCell>
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${c.sensitivityLevel === 4 ? "bg-error-container text-on-error-container" : "bg-surface-container text-on-surface-variant"}`}>
-                  <span className="material-symbols-outlined text-xs">shield</span>
+                  <Shield size={12} />
                   Tier {c.sensitivityLevel}
                 </span>
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
-                  <span className="material-symbols-outlined text-xs">link</span>
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-tertiary">
+                  <Link2 size={12} />
                   {c.linkedIncidentsCount} linked
                 </div>
               </TableCell>
@@ -263,10 +264,10 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
                 <Link
                   href={`/cases/${c.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container"
+                  className="inline-flex rounded-full p-1.5 text-tertiary transition-colors hover:bg-surface-container"
                   title="Open case"
                 >
-                  <span className="material-symbols-outlined text-base">visibility</span>
+                  <Eye size={16} />
                 </Link>
               </TableCell>
             </TableRow>
@@ -297,10 +298,10 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
           selected && (
             <Link
               href={`/cases/${selected.id}`}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-tertiary px-4 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90"
             >
               Open full case
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <ArrowRight size={16} />
             </Link>
           )
         }
@@ -311,7 +312,7 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
               <StatusBadge status={selected.status} tone={STATUS_TONE[selected.status]} />
               <Badge variant="outline" className="border-outline-variant text-on-surface-variant">{selected.compartment}</Badge>
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-container px-2.5 py-1 text-xs font-bold text-on-surface-variant">
-                <span className="material-symbols-outlined text-sm">shield</span>
+                <Shield size={14} />
                 Tier {selected.sensitivityLevel}
               </span>
               {selected.effectiveSeverity && (

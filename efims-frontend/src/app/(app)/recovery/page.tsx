@@ -1,3 +1,4 @@
+import { Landmark, PiggyBank, MinusCircle, Hourglass, FilterX } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getRecoveryRegister } from "@/features/recovery/api";
 import { RecoveryTable } from "./recovery-table";
@@ -30,64 +31,58 @@ export default async function RecoveryPage(props: PageProps<"/recovery">) {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Recoveries</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Recoveries</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           {allRows.length} case{allRows.length === 1 ? "" : "s"} with financial activity across every case you can access.
         </p>
       </div>
 
-      {/* KPI hero row */}
+      {/* KPI row */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="flex flex-col justify-between rounded-2xl border border-primary/20 bg-primary-container p-5 text-on-primary shadow-hero">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-secondary-fixed uppercase">Total recorded loss</span>
-            <span className="material-symbols-outlined text-secondary-fixed">account_balance</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-tertiary) 16%, white)" }}>
+              <Landmark size={20} strokeWidth={2} className="text-tertiary" />
+            </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Total recorded loss</span>
           </div>
-          <div className="mt-3">
-            <span className="font-headline text-2xl font-bold text-surface-bright">{formatNgn(String(totalLoss))}</span>
-          </div>
+          <span className="text-2xl leading-none font-bold text-on-surface">{formatNgn(String(totalLoss))}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Recovered</span>
-            <span className="rounded-xl bg-tertiary-fixed p-2 text-tertiary">
-              <span className="material-symbols-outlined text-base">savings</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 16%, white)" }}>
+              <PiggyBank size={20} strokeWidth={2} className="text-success" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Recovered</span>
           </div>
-          <div className="mt-3">
-            <span className="font-headline text-xl font-bold text-primary">{formatNgn(String(totalRecovered))}</span>
-          </div>
+          <span className="text-xl leading-none font-bold text-on-surface">{formatNgn(String(totalRecovered))}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Written off</span>
-            <span className="rounded-xl bg-surface-container p-2 text-on-surface-variant">
-              <span className="material-symbols-outlined text-base">remove_circle</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-secondary) 16%, white)" }}>
+              <MinusCircle size={20} strokeWidth={2} className="text-secondary" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Written off</span>
           </div>
-          <div className="mt-3">
-            <span className="font-headline text-xl font-bold text-primary">{formatNgn(String(totalWrittenOff))}</span>
-          </div>
+          <span className="text-xl leading-none font-bold text-on-surface">{formatNgn(String(totalWrittenOff))}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Outstanding</span>
-            <span className="rounded-xl bg-error-container p-2 text-on-error-container">
-              <span className="material-symbols-outlined text-base">hourglass_top</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-error) 16%, white)" }}>
+              <Hourglass size={20} strokeWidth={2} className="text-error" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Outstanding</span>
           </div>
-          <div className="mt-3">
-            <span className="font-headline text-xl font-bold text-error">{formatNgn(String(totalOutstanding))}</span>
-          </div>
-          <p className="mt-1 text-xs text-on-surface-variant">{outstandingCaseCount} case{outstandingCaseCount === 1 ? "" : "s"} still exposed</p>
+          <span className="text-xl leading-none font-bold text-on-surface">{formatNgn(String(totalOutstanding))}</span>
+          <p className="text-xs text-on-surface-variant">{outstandingCaseCount} case{outstandingCaseCount === 1 ? "" : "s"} still exposed</p>
         </div>
       </div>
 
       {/* Filter controls */}
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant/20 pb-3">
           <a
             href={`/recovery${q ? `?${preserved.toString()}` : ""}`}
@@ -116,18 +111,18 @@ export default async function RecoveryPage(props: PageProps<"/recovery">) {
             />
           </div>
           <div className="flex items-end gap-2">
-            <button type="submit" className="w-full rounded-full bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <button type="submit" className="w-full rounded-full bg-tertiary px-3 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90">
               Apply filters
             </button>
             <a href="/recovery" className="flex items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-primary">
-              <span className="material-symbols-outlined text-base">filter_alt_off</span>
+              <FilterX size={16} strokeWidth={2} />
             </a>
           </div>
         </form>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <RecoveryTable rows={rows} />
       </div>
     </>

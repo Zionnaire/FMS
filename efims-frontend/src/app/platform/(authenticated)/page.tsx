@@ -20,7 +20,7 @@ export default async function PlatformDashboardPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Tenants</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Tenants</h1>
         <p className="mt-1 text-xs text-on-surface-variant">{tenants.length} bank tenant{tenants.length === 1 ? "" : "s"} on this platform.</p>
       </div>
 

@@ -5,19 +5,28 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * EFIMS design tokens — "Botanical Precision" (2026-11-09), a deliberate blend decided live
- * against a side-by-side comparison artifact: Vanguard Precision's cooler structural neutrals
- * (surfaces, secondary/tertiary accents, elevation) + Botanical Executive's spruce-green kept as
- * the one warm primary accent + Playfair Display headlines kept (not swapped to Inter, per
- * explicit user choice). Mirrors mockups/design-tokens/efims-vanguard-precision.md's PROSE
- * component-spec hex values (Tailwind slate/teal), not its YAML frontmatter, which uses a
- * different, inconsistent blue-tinted Material palette the rest of that document never actually
- * uses — same "prose vs. frontmatter mismatch, pick the one everything else agrees with" call
- * Botanical Executive's own file already made for itself.
+ * EFIMS design tokens — "Institutional Intelligence" (2026-11-14), a full replacement of the
+ * prior "Botanical Precision" blend per an explicit "total revamping" directive, not an
+ * incremental evolution of it. Navy ink + teal interactive accent, replacing spruce-green/slate;
+ * Inter replaces Plus Jakarta Sans as the interface typeface (see layout.tsx); IBM Plex Mono
+ * replaces JetBrains Mono for references/identifiers/timestamps. Playfair Display stays loaded
+ * but its role shrinks drastically — restrained use on major editorial headings only, not every
+ * page's default h1, per the new directive's own typography rule.
  *
- * Severity tokens below also fix a real bug found 2026-11-09: S2 and S3 were previously the
- * identical color (#f59e0b) in the prior "Botanical Executive" token set. Vanguard Precision's
- * 4-distinct-severity-color spec is adopted verbatim to fix this, not patched as a one-off.
+ * Every CSS variable NAME below is unchanged from the prior palette on purpose — ~160 call sites
+ * across the app reference `var(--color-primary)` etc., and renaming them would mean touching
+ * every one of those files just to re-theme. Only the hex values change here; the semantic
+ * indirection layer this app already had (brand tokens vs. raw hex) is exactly what makes a
+ * whole-app palette replacement a single-file change instead of a mechanical sweep.
+ *
+ * Severity tokens are UNCHANGED (S1 #ef4444 / S2 #f97316 / S3 #f59e0b / S4 #64748b) — the new
+ * directive is explicit that severity-to-color mappings are not to be reinvented without
+ * institutional sign-off, and this 4-distinct-color set already satisfies that bar (fixed from a
+ * real S2=S3 bug on 2026-11-09, used consistently everywhere since). New `success`/`warning`/
+ * `info` status tokens are added below — the old palette had no dedicated slots for these;
+ * `StatusBadge` previously reused brand tokens (`tertiary-fixed`, `secondary-container`) as a
+ * stand-in, which this replaces with real, purpose-built tokens matching the new spec's
+ * "Success green / Attention amber / Info blue" table.
  */
 @theme inline {
   --font-sans: var(--font-plus-jakarta-sans);
@@ -85,6 +94,16 @@
   --color-severity-s4: var(--efims-severity-s4);
   --color-severity-s4-container: var(--efims-severity-s4-container);
 
+  /* Status tokens (added 2026-11-14, Institutional Intelligence) — real, purpose-built slots for
+     success/warning/info, replacing StatusBadge's prior reuse of brand tokens as a stand-in. */
+  --color-success: var(--efims-success);
+  --color-success-container: var(--efims-success-container);
+  --color-warning-status: var(--efims-warning-status);
+  --color-warning-status-container: var(--efims-warning-status-container);
+  --color-info: var(--efims-info);
+  --color-info-container: var(--efims-info-container);
+  --color-text-muted: var(--efims-text-muted);
+
   /* shadcn semantic slots — mapped onto the Botanical Executive tokens above so every shadcn/ui
      primitive (Button, Card, Badge, ...) already renders in the EFIMS palette with no per-usage
      overrides. */
@@ -112,7 +131,7 @@
      inputs, nav items) use `-md`/`-lg` instead of `-2xl`/`-full`, per Vanguard Precision's more
      restrained card/input radius logic. This is a per-page-markup convention (literal Tailwind
      classes), not a token-value change — see the roll-out pass across existing pages. */
-  --radius-sm: 0.25rem; /* 4px */
+  --radius-sm: 0.375rem; /* 6px, per the new spec's "small controls: 6px" */
   --radius-md: 0.5rem; /* 8px */
   --radius-lg: 0.75rem; /* 12px */
   --radius-xl: 1rem; /* 16px, un-extended default in the mockups */
@@ -130,68 +149,66 @@
 }
 
 :root {
-  /* Primary — Botanical Executive's spruce-green, kept unchanged. This is the one warm accent
-     deliberately retained in the blend; it's a self-contained dark tile so it reads fine against
-     the new cooler surfaces below regardless. */
-  --efims-primary: #072320;
+  /* Primary — "Primary ink", the new navy brand tone (sidebar, primary brand, major headings).
+     Full replacement of the prior spruce-green; this IS the one color every one of the ~160
+     existing `var(--color-primary)` call sites now resolves to. */
+  --efims-primary: #172b45;
   --efims-on-primary: #ffffff;
-  --efims-primary-container: #1e3835;
-  --efims-on-primary-container: #86a19d;
-  --efims-inverse-primary: #b0ccc8;
-  --efims-primary-fixed: #cbe8e4;
-  --efims-primary-fixed-dim: #b0ccc8;
-  --efims-on-primary-fixed: #04201d;
-  --efims-on-primary-fixed-variant: #314c48;
+  --efims-primary-container: #213b5c;
+  --efims-on-primary-container: #9fb2c9;
+  --efims-inverse-primary: #9fb2c9;
+  --efims-primary-fixed: #e4eaf1;
+  --efims-primary-fixed-dim: #c3d0dd;
+  --efims-on-primary-fixed: #172b45;
+  --efims-on-primary-fixed-variant: #3a4f6b;
 
-  /* Secondary/tertiary — Vanguard Precision's cooler slate/blue pairing, replacing Botanical's
-     warm terracotta secondary + near-black tertiary. Vanguard's prose names no distinct
-     "secondary" brand accent of its own (only primary teal + tertiary blue), so secondary here is
-     a neutral slate chip color consistent with the rest of the cooler palette; tertiary is
-     Vanguard's literal "Open/In Progress" status blue (#2563EB), reused as the general cool
-     accent. */
-  --efims-secondary: #475569;
+  /* Secondary — neutral slate (unchanged role: chip/neutral accents), retuned to the new
+     palette's "text secondary" gray rather than Vanguard's slightly cooler slate. Tertiary is
+     now the new palette's one real interactive accent, "Intelligence teal" — buttons, the active
+     nav pill, links, primary chart lines. This replaces tertiary's old role as a generic
+     "Open/In Progress" status blue; that status-blue role moves to the new dedicated `info`
+     token below instead, so it isn't silently entangled with the brand accent anymore. */
+  --efims-secondary: #64748b;
   --efims-on-secondary: #ffffff;
-  --efims-secondary-container: #e2e8f0;
-  --efims-on-secondary-container: #334155;
-  --efims-secondary-fixed: #e2e8f0;
-  --efims-secondary-fixed-dim: #cbd5e1;
-  --efims-on-secondary-fixed: #1e293b;
-  --efims-on-secondary-fixed-variant: #334155;
+  --efims-secondary-container: #eef2f5;
+  --efims-on-secondary-container: #475569;
+  --efims-secondary-fixed: #eef2f5;
+  --efims-secondary-fixed-dim: #dfe5eb;
+  --efims-on-secondary-fixed: #172b45;
+  --efims-on-secondary-fixed-variant: #475569;
 
-  --efims-tertiary: #2563eb;
+  --efims-tertiary: #167d83;
   --efims-on-tertiary: #ffffff;
-  --efims-tertiary-container: #eff6ff;
-  --efims-on-tertiary-container: #1e40af;
-  --efims-tertiary-fixed: #dbeafe;
-  --efims-tertiary-fixed-dim: #bfdbfe;
-  --efims-on-tertiary-fixed: #1e3a8a;
-  --efims-on-tertiary-fixed-variant: #1e40af;
+  --efims-tertiary-container: #e3f2f3;
+  --efims-on-tertiary-container: #11676d;
+  --efims-tertiary-fixed: #c6e8ea;
+  --efims-tertiary-fixed-dim: #9bd4d8;
+  --efims-on-tertiary-fixed: #0a3c3f;
+  --efims-on-tertiary-fixed-variant: #11676d;
 
-  --efims-error: #ba1a1a;
+  --efims-error: #b94343;
   --efims-on-error: #ffffff;
-  --efims-error-container: #ffdad6;
-  --efims-on-error-container: #93000a;
+  --efims-error-container: #f9e6e6;
+  --efims-on-error-container: #8c2f2f;
 
-  /* Surfaces — Vanguard Precision's slate scale, replacing Botanical's warm porcelain-cream.
-     This is the main "cooler structural neutrals" half of the blend. */
-  --efims-surface: #f8fafc;
-  --efims-on-surface: #0f172a;
-  --efims-on-surface-variant: #475569;
-  --efims-surface-bright: #f8fafc;
-  --efims-surface-dim: #e2e8f0;
+  /* Surfaces — "Canvas"/"Surface"/"Surface muted"/"Border" from the new spec. */
+  --efims-surface: #f4f6f8;
+  --efims-on-surface: #172b45;
+  --efims-on-surface-variant: #64748b;
+  --efims-surface-bright: #ffffff;
+  --efims-surface-dim: #dfe5eb;
   --efims-surface-container-lowest: #ffffff;
-  --efims-surface-container-low: #f1f5f9;
-  --efims-surface-container: #eef2f6;
-  --efims-surface-container-high: #e2e8f0;
-  --efims-surface-container-highest: #cbd5e1;
-  --efims-surface-variant: #e2e8f0;
-  --efims-inverse-surface: #0f172a;
-  --efims-inverse-on-surface: #f8fafc;
-  --efims-outline: #94a3b8;
-  --efims-outline-variant: #e2e8f0;
+  --efims-surface-container-low: #eef2f5;
+  --efims-surface-container: #eef2f5;
+  --efims-surface-container-high: #e4e9ed;
+  --efims-surface-container-highest: #dfe5eb;
+  --efims-surface-variant: #e4e9ed;
+  --efims-inverse-surface: #172b45;
+  --efims-inverse-on-surface: #f4f6f8;
+  --efims-outline: #c7d0d9;
+  --efims-outline-variant: #dfe5eb;
 
-  /* Severity — Vanguard Precision's 4 distinct colors, fixing the real S2=S3 bug (both were
-     #f59e0b in the prior token set). */
+  /* Severity — UNCHANGED, see the file-level doc comment above for why. */
   --efims-severity-s1: #ef4444;
   --efims-severity-s1-container: #fef2f2;
   --efims-severity-s2: #f97316;
@@ -200,6 +217,15 @@
   --efims-severity-s3-container: #fffbeb;
   --efims-severity-s4: #64748b;
   --efims-severity-s4-container: #f1f5f9;
+
+  /* Status — new dedicated slots (see file-level doc comment). */
+  --efims-success: #25845a;
+  --efims-success-container: #e5f3ec;
+  --efims-warning-status: #d99a32;
+  --efims-warning-status-container: #fbf1e2;
+  --efims-info: #3975b9;
+  --efims-info-container: #e8f0fa;
+  --efims-text-muted: #8a97a6;
 
   --radius: 0.5rem;
 }
@@ -216,9 +242,18 @@
   }
 }
 
-.material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 1;
+/* Accessibility — reduced motion. The sidebar slide-in/out transition and any spinner animation
+   (e.g. Loader2's `animate-spin`) are the two motion patterns this app actually has; both are
+   disabled outright for a user who has asked the OS for reduced motion, rather than just slowed
+   down, since a spinner's entire communicative value is the spin itself — there's no reduced
+   version of it worth keeping. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

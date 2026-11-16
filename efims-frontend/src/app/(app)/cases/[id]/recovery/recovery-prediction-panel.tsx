@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Flag } from "lucide-react";
 import type { RecoverySuggestion } from "@/features/recovery/types";
 import { RECOVERY_CHANNELS, RECOVERY_FRAUD_TYPES } from "@/features/recovery/types";
 import { SEVERITY_TIERS } from "@/features/triage/types";
@@ -88,7 +89,7 @@ export function RecoveryPredictionPanel({ caseId }: { caseId: string }) {
           </div>
           {state.result.requiresHumanReview && (
             <p className="flex items-center gap-1 text-[11px] font-semibold text-error">
-              <span className="material-symbols-outlined text-xs">flag</span>
+              <Flag size={12} />
               Flagged for human review.
             </p>
           )}

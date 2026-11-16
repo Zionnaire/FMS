@@ -1,3 +1,4 @@
+import { SlidersHorizontal, Flag, History } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getCaseCached } from "@/features/cases/get-case-cached";
 import { listCaseFlags, listCaseStatusHistory } from "@/features/cases/api";
@@ -34,8 +35,8 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">tune</span>Status &amp; team</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><SlidersHorizontal size={16} className="text-tertiary" />Status &amp; team</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <form action={updateStatus} className="space-y-2">
             <Label className="text-xs font-bold uppercase">Change status</Label>
@@ -74,8 +75,8 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-error">person_alert</span>Subject &amp; conflict flags</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Flag size={16} className="text-error" />Subject &amp; conflict flags</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {flags.length === 0 && <p className="text-xs text-on-surface-variant">No flags declared on this case.</p>}
           <ul className="space-y-2">
@@ -114,8 +115,8 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card lg:col-span-2">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">history</span>Status history</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-2">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><History size={16} className="text-tertiary" />Status history</CardTitle></CardHeader>
         <CardContent>
           {history.length === 0 && <p className="text-xs text-on-surface-variant">No transitions recorded.</p>}
           <ul className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">

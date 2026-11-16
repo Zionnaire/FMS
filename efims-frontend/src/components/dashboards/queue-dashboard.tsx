@@ -1,18 +1,20 @@
 import Link from "next/link";
+import { Plus, ChevronRight, ShieldCheck, ArrowRight, type LucideIcon } from "lucide-react";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { ActivityTrendChart, type ActivityTrendPoint } from "@/components/charts/activity-trend-chart";
+import { SegmentedBar, type SegmentedBarPart } from "@/components/charts/segmented-bar";
 import { OperationalQueueTable } from "./operational-queue-table";
 import type { SeverityTier } from "@/features/cases/types";
 
 export interface DashboardKpi {
   label: string;
   value: string | number;
-  /** A `var(--color-...)` (or plain CSS color) painted as a small dot beside the label — matches
-   * the "Overview" mockup's flat dot-style KPI tiles. Omit for a neutral/no-dot tile (most
-   * loaders' KPIs have no natural severity-like color to show). */
-  dotColor?: string;
+  icon: LucideIcon;
+  /** A `var(--color-...)` (or plain CSS color) used to tint the icon badge — every KPI tile is a
+   * uniform white card (per the Institutional Intelligence reference, which uses no "hero"
+   * dark-filled card at all), differentiated only by this badge tint. */
+  color: string;
   sublabel?: string;
-  tone?: "hero" | "neutral" | "error";
 }
 
 export interface DashboardRow {
@@ -34,10 +36,18 @@ export interface DashboardRow {
   slaBreached?: boolean;
 }
 
+export interface RecentActivityItem {
+  title: string;
+  subtitle: string;
+  timestamp: string;
+}
+
 export interface DashboardAttentionItem {
   title: string;
   subtitle: string;
   count: number;
+  icon: LucideIcon;
+  color: string;
 }
 
 export interface DashboardData {
@@ -46,8 +56,15 @@ export interface DashboardData {
   kpis: DashboardKpi[];
   /** Tenant-wide activity pulse — same real data every role's loader can see (scoped by that
    * role's own backend access, same as everything else), framed as institution-wide context
-   * around this role's own queue below, matching the "Overview" mockup's layout. */
+   * around this role's own queue below, matching the Institutional Intelligence reference's
+   * layout. */
   trend?: { title: string; points: ActivityTrendPoint[] };
+  /** Case severity mix — sits in the layout slot the reference uses for its "Risk by Category"
+   * donut. That donut's center figure ("68% Overall Risk") has no real backing metric in this
+   * system (no risk-scoring model produces an aggregate percentage), so this uses the segmented
+   * bar already built for the Executive dashboard with real `CaseStats.bySeverity` data instead
+   * of fabricating a risk percentage to fill the reference's exact chart type. */
+  severityMix?: SegmentedBarPart[];
   needsAttention?: { items: DashboardAttentionItem[]; reviewHref: string; reviewLabel: string };
   queueTitle: string;
   rows: DashboardRow[];
@@ -61,28 +78,17 @@ export interface DashboardData {
 }
 
 function KpiTile({ kpi }: { kpi: DashboardKpi }) {
+  const Icon = kpi.icon;
   return (
-    <div
-      className={`flex flex-col justify-between rounded-2xl border p-5 shadow-card ${
-        kpi.tone === "hero"
-          ? "border-primary/20 bg-primary-container text-on-primary shadow-hero"
-          : kpi.tone === "error"
-            ? "border-error/30 bg-error-container/20"
-            : "border-outline-variant/40 bg-surface-container-lowest"
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: kpi.dotColor ?? "var(--color-outline)" }} />
-        <span className={`text-xs font-semibold tracking-wider uppercase ${kpi.tone === "hero" ? "text-secondary-fixed" : "text-outline"}`}>
-          {kpi.label}
+    <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${kpi.color} 16%, white)` }}>
+          <Icon size={20} strokeWidth={2} style={{ color: kpi.color }} />
         </span>
+        <span className="text-xs font-semibold text-on-surface-variant">{kpi.label}</span>
       </div>
-      <div className="mt-3">
-        <span className={`font-headline text-3xl font-bold ${kpi.tone === "hero" ? "text-surface-bright" : "text-primary"}`}>{kpi.value}</span>
-      </div>
-      {kpi.sublabel && (
-        <p className={`mt-1 text-xs ${kpi.tone === "hero" ? "text-on-primary-container" : "text-on-surface-variant"}`}>{kpi.sublabel}</p>
-      )}
+      <span className="font-sans text-[28px] leading-none font-bold text-on-surface">{kpi.value}</span>
+      {kpi.sublabel && <p className="text-xs text-on-surface-variant">{kpi.sublabel}</p>}
     </div>
   );
 }
@@ -97,24 +103,33 @@ function KpiTile({ kpi }: { kpi: DashboardKpi }) {
  * Administrator's governance register) render their own bespoke component instead, where this
  * generic shape genuinely doesn't fit what they need to show.
  *
- * Restyled 2026-11-13 against a full-resolution "Overview" mockup reference: flat dot-style KPI
- * tiles (no icon chips), an optional tenant-wide activity trend + "needs attention" panel above
- * the role's own queue, and a real filterable/paginated table for roles whose rows support it.
+ * Restyled 2026-11-14 against the Institutional Intelligence reference image: uniform white KPI
+ * tiles with a colored icon badge (replacing both the earlier icon-chip style and the brief
+ * dot-only style that preceded it), a real-data severity-mix card in the reference's donut slot,
+ * and Lucide icons throughout in place of the Material Symbols ligature font.
  */
-export function QueueDashboard({ data }: { data: DashboardData }) {
+function formatActivityTime(iso: string): string {
+  const date = new Date(iso);
+  const sameDay = date.toDateString() === new Date().toDateString();
+  return sameDay
+    ? date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+export function QueueDashboard({ data, recentActivity }: { data: DashboardData; recentActivity?: RecentActivityItem[] }) {
   return (
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">{data.title}</h1>
+          <h1 className="text-2xl font-bold text-on-surface">{data.title}</h1>
           <p className="mt-1 text-xs text-on-surface-variant">{data.subtitle}</p>
         </div>
         {data.primaryAction && (
           <Link
             href={data.primaryAction.href}
-            className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container"
+            className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90"
           >
-            <span className="material-symbols-outlined text-base">add_box</span>
+            <Plus size={16} strokeWidth={2.5} />
             {data.primaryAction.label}
           </Link>
         )}
@@ -124,10 +139,10 @@ export function QueueDashboard({ data }: { data: DashboardData }) {
         {data.kpis.map((kpi) => <KpiTile key={kpi.label} kpi={kpi} />)}
       </div>
 
-      {(data.trend || data.needsAttention) && (
+      {(data.trend || data.severityMix || data.needsAttention) && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {data.trend && (
-            <div className={`rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card ${data.needsAttention ? "lg:col-span-2" : "lg:col-span-3"}`}>
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card lg:col-span-2">
               <h2 className="text-sm font-bold text-on-surface">{data.trend.title}</h2>
               {data.trend.points.length < 2 ? (
                 <p className="py-10 text-center text-xs text-on-surface-variant">Not enough history in this window yet.</p>
@@ -136,23 +151,46 @@ export function QueueDashboard({ data }: { data: DashboardData }) {
               )}
             </div>
           )}
+
+          {data.severityMix && !data.trend && (
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card lg:col-span-2">
+              <h2 className="mb-3 text-sm font-bold text-on-surface">Case severity mix</h2>
+              <SegmentedBar parts={data.severityMix} />
+            </div>
+          )}
+
           {data.needsAttention && (
-            <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card">
-              <h2 className="text-sm font-bold text-on-surface">Needs attention</h2>
-              <ul className="mt-3 flex flex-col gap-3">
-                {data.needsAttention.items.map((item) => (
-                  <li key={item.title} className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-on-surface">{item.title}</p>
-                      <p className="truncate text-[11px] text-on-surface-variant">{item.subtitle}</p>
-                    </div>
-                    <span className="shrink-0 font-headline text-lg font-bold text-primary">{item.count}</span>
-                  </li>
-                ))}
+            <div className="flex flex-col rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-bold text-on-surface">Matters requiring attention</h2>
+                <Link href={data.needsAttention.reviewHref} className="text-[11px] font-semibold text-tertiary hover:underline">
+                  View all →
+                </Link>
+              </div>
+              <ul className="flex flex-col gap-3">
+                {data.needsAttention.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.title} className="flex items-start gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${item.color} 16%, white)` }}>
+                        <Icon size={16} strokeWidth={2} style={{ color: item.color }} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-on-surface">{item.title}</p>
+                        <p className="truncate text-[11px] text-on-surface-variant">{item.subtitle}</p>
+                      </div>
+                      <span className="shrink-0 text-lg font-bold text-on-surface">{item.count}</span>
+                    </li>
+                  );
+                })}
               </ul>
-              <Link href={data.needsAttention.reviewHref} className="mt-4 inline-block text-xs font-semibold text-primary underline-offset-4 hover:underline">
-                {data.needsAttention.reviewLabel} →
-              </Link>
+            </div>
+          )}
+
+          {data.severityMix && data.trend && (
+            <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card lg:col-span-3">
+              <h2 className="mb-3 text-sm font-bold text-on-surface">Case severity mix</h2>
+              <SegmentedBar parts={data.severityMix} />
             </div>
           )}
         </div>
@@ -161,7 +199,7 @@ export function QueueDashboard({ data }: { data: DashboardData }) {
       {data.richTable ? (
         <OperationalQueueTable rows={data.rows} emptyMessage={data.emptyMessage} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+        <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
           <div className="border-b border-outline-variant/30 bg-surface-container-low px-5 py-3">
             <h2 className="text-sm font-bold text-on-surface">{data.queueTitle}</h2>
           </div>
@@ -179,13 +217,55 @@ export function QueueDashboard({ data }: { data: DashboardData }) {
                     <div className="flex shrink-0 items-center gap-3">
                       {row.tertiary && <span className="text-xs text-on-surface-variant">{row.tertiary}</span>}
                       {row.badge && <StatusBadge status={row.badge.label} tone={row.badge.tone} />}
-                      <span className="material-symbols-outlined text-base text-outline">chevron_right</span>
+                      <ChevronRight size={16} className="text-outline" />
                     </div>
                   </Link>
                 </li>
               ))}
             </ul>
           )}
+        </div>
+      )}
+
+      {recentActivity && recentActivity.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card lg:col-span-2">
+            <h2 className="mb-3 text-sm font-bold text-on-surface">Recent activity</h2>
+            <ul className="flex flex-col gap-4">
+              {recentActivity.map((item, i) => (
+                <li key={`${item.title}-${item.timestamp}-${i}`} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center self-stretch">
+                    <span className="size-2.5 shrink-0 rounded-full border-2 border-tertiary" />
+                    {i < recentActivity.length - 1 && <span className="mt-1 w-px flex-1 bg-outline-variant" />}
+                  </div>
+                  <div className="min-w-0 flex-1 pb-1">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="truncate text-xs font-semibold text-on-surface">{item.title}</p>
+                      <span className="shrink-0 text-[11px] text-on-surface-variant">{formatActivityTime(item.timestamp)}</span>
+                    </div>
+                    <p className="truncate text-[11px] text-on-surface-variant">{item.subtitle}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col justify-between rounded-xl bg-primary p-5 text-on-primary shadow-card">
+            <div>
+              <span className="flex size-10 items-center justify-center rounded-full bg-tertiary text-on-tertiary">
+                <ShieldCheck size={20} strokeWidth={2} />
+              </span>
+              <h2 className="mt-3 text-base font-bold">EFIMS</h2>
+              <p className="text-xs font-medium text-on-primary-container">Intelligence. Action. Integrity.</p>
+              <p className="mt-2 text-xs text-on-primary-container">
+                A unified platform for detecting, investigating and resolving financial crime.
+              </p>
+            </div>
+            <Link href="/configuration" className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-lg bg-on-primary px-3.5 py-2 text-xs font-semibold text-primary transition-colors hover:bg-on-primary/90">
+              Learn more
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </Link>
+          </div>
         </div>
       )}
     </>

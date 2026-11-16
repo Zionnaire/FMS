@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus, FilterX, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listCases, getCaseStats } from "@/features/cases/api";
 import { CASE_STATUSES, SEVERITY_TIERS, type CaseStatus, type SeverityTier } from "@/features/cases/types";
@@ -83,7 +84,7 @@ async function TasksTabContent({ accessToken, currentUserId, filter }: { accessT
           </Link>
         ))}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-card">
         <div className="border-b border-outline-variant/20 bg-surface-container-low/40 px-5 py-3 text-xs text-on-surface-variant">
           {rows.length} item{rows.length === 1 ? "" : "s"} across every case you can access — a real freestanding to-do, an open
           remediation action, a pending approval, or a requested containment action.
@@ -110,7 +111,7 @@ function CaseTaskTabBar({ tab }: { tab: "cases" | "tasks" }) {
           key={t.key}
           href={`/cases${t.key === "cases" ? "" : "?tab=tasks"}`}
           className={`-mb-px rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
-            tab === t.key ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
+            tab === t.key ? "border-tertiary text-tertiary" : "border-transparent text-on-surface-variant hover:text-on-surface"
           }`}
         >
           {t.label}
@@ -130,7 +131,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
     return (
       <>
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">Cases</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Cases</h1>
           <p className="mt-1 text-xs text-on-surface-variant">
             Cases and Tasks are two views of the same work — this tab is everything due across your accessible cases.
           </p>
@@ -174,7 +175,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-headline text-2xl font-semibold text-primary">Cases</h1>
+            <h1 className="text-2xl font-bold text-on-surface">Cases</h1>
             {/* Honest, not decorative: every tenant in this build is seed/demo data today. A real
              * "is this tenant on real production data" signal should replace this hardcoded badge
              * before any real bank deployment — not left as a permanent, unexamined claim. */}
@@ -186,8 +187,8 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             {stats.total} accessible under the 7-condition case-access rule — tenant, role, team, subject/conflict, clearance, compartment.
           </p>
         </div>
-        <Link href="/cases/new" className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container">
-          <span className="material-symbols-outlined text-base">add_box</span>
+        <Link href="/cases/new" className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90">
+          <Plus size={16} strokeWidth={2.5} />
           New case
         </Link>
       </div>
@@ -200,7 +201,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
        * `CaseListItem.effectiveSeverity`'s own doc comment on the backend). */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {SEVERITY_TIERS.map((tier) => (
-          <div key={tier} className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+          <div key={tier} className="flex flex-col justify-between rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-outline uppercase">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SEVERITY_DOT[tier] }} />
@@ -208,7 +209,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="font-headline text-3xl font-bold text-on-surface">{stats.bySeverity[tier]}</span>
+              <span className="text-3xl font-bold text-on-surface">{stats.bySeverity[tier]}</span>
             </div>
             <p className="mt-1 text-xs text-on-surface-variant">
               {tier === "S1" && stats.overdueCount > 0 ? `${stats.overdueCount} overdue across all tiers` : tier === "S1" ? "No overdue cases" : " "}
@@ -218,13 +219,13 @@ export default async function CasesPage(props: PageProps<"/cases">) {
       </div>
 
       {/* Filter controls */}
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-1 rounded-full border border-outline-variant/30 bg-surface-container-low p-1 w-fit">
           {SEV_FILTERS.map((f) => (
             <Link
               key={f.key}
               href={sevFilterHref(f.key)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${(sevFilter ?? "") === f.key ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${(sevFilter ?? "") === f.key ? "bg-tertiary text-on-tertiary" : "text-on-surface-variant hover:text-on-surface"}`}
             >
               {f.label}
             </Link>
@@ -238,7 +239,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             <select
               name="status"
               defaultValue={status ?? ""}
-              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary focus:outline-none"
+              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-tertiary focus:outline-none"
             >
               <option value="">All statuses</option>
               {CASE_STATUSES.map((s) => (
@@ -253,7 +254,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
               name="q"
               defaultValue={q}
               placeholder="Reference or title..."
-              className="w-full rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface placeholder:text-outline/70 focus:ring-1 focus:ring-primary focus:outline-none"
+              className="w-full rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface placeholder:text-outline/70 focus:ring-1 focus:ring-tertiary focus:outline-none"
             />
           </div>
           <div>
@@ -261,7 +262,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             <select
               name="compartment"
               defaultValue={compartment ?? ""}
-              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary focus:outline-none"
+              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-tertiary focus:outline-none"
             >
               <option value="">All compartments</option>
               {COMPARTMENTS.map((c) => (
@@ -274,7 +275,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             <select
               name="sensitivityLevel"
               defaultValue={sensitivityLevel ?? ""}
-              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary focus:outline-none"
+              className="w-full cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3.5 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-tertiary focus:outline-none"
             >
               <option value="">All tiers</option>
               {SENSITIVITY_LEVELS.map((tier) => (
@@ -283,16 +284,16 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             </select>
           </div>
           <div className="flex items-end gap-2">
-            <button type="submit" className="w-full rounded-full bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <button type="submit" className="w-full rounded-full bg-tertiary px-3 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90">
               Apply filters
             </button>
           </div>
           <div className="flex items-end">
             <Link
               href="/cases"
-              className="flex w-full items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-primary"
+              className="flex w-full items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-tertiary"
             >
-              <span className="material-symbols-outlined text-base">filter_alt_off</span>
+              <FilterX size={16} />
               Reset
             </Link>
           </div>
@@ -300,7 +301,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-card">
         <CasesTable cases={cases} teams={teams} />
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-outline-variant/20 bg-surface-container-low/40 p-4 sm:flex-row">
@@ -314,27 +315,27 @@ export default async function CasesPage(props: PageProps<"/cases">) {
               href={`/cases?${new URLSearchParams({ ...Object.fromEntries(activeParams), ...(sevFilter ? { sevFilter } : {}), offset: String(Math.max(0, offset - PAGE_SIZE)) })}`}
               className={`rounded-full border border-outline-variant/30 p-1.5 text-outline transition-colors ${offset === 0 ? "pointer-events-none opacity-40" : "hover:bg-surface-container"}`}
             >
-              <span className="material-symbols-outlined text-base">chevron_left</span>
+              <ChevronLeft size={16} />
             </Link>
             <Link
               aria-disabled={offset + PAGE_SIZE >= total}
               href={`/cases?${new URLSearchParams({ ...Object.fromEntries(activeParams), ...(sevFilter ? { sevFilter } : {}), offset: String(offset + PAGE_SIZE) })}`}
               className={`rounded-full border border-outline-variant/30 p-1.5 text-outline transition-colors ${offset + PAGE_SIZE >= total ? "pointer-events-none opacity-40" : "hover:bg-surface-container"}`}
             >
-              <span className="material-symbols-outlined text-base">chevron_right</span>
+              <ChevronRight size={16} />
             </Link>
           </div>
         </div>
       </div>
 
       {stats.pendingApprovals > 0 && (
-        <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-outline-variant/40 bg-linear-to-r from-secondary-fixed/40 via-surface-container-low to-surface-container-lowest p-6 shadow-card md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-6 rounded-xl border border-outline-variant/60 bg-tertiary-container/40 p-6 shadow-card md:flex-row">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-container text-secondary-fixed shadow-card">
-              <span className="material-symbols-outlined text-2xl">policy</span>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tertiary-container text-tertiary shadow-card">
+              <ShieldCheck size={24} strokeWidth={2} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-primary">Approval requests awaiting a decision</h3>
+              <h3 className="text-base font-bold text-on-surface">Approval requests awaiting a decision</h3>
               <p className="mt-0.5 max-w-2xl text-sm text-on-surface-variant">
                 {stats.pendingApprovals} request{stats.pendingApprovals === 1 ? "" : "s"} across your accessible cases need a Team Lead,
                 Fraud/Risk Manager, or MLRO decision — segregation of duties means the requester cannot self-approve. Open each

@@ -1,3 +1,4 @@
+import { Clock } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getEvidenceRegister } from "@/features/evidence/api";
 import { getConfigurationKeyDetail } from "@/features/configuration/api";
@@ -20,13 +21,13 @@ export default async function RetentionPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Retention &amp; legal holds</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Retention &amp; legal holds</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           {heldItems.length} evidence item{heldItems.length === 1 ? "" : "s"} currently under legal hold across every case you can access.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-on-surface">CD-05 — retention schedule</h2>
           {!cd05.current && (
@@ -36,7 +37,7 @@ export default async function RetentionPage() {
         {cd05.current ? (
           <>
             <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary-container px-2.5 py-1 text-[11px] font-bold text-on-secondary-container">
-              <span className="material-symbols-outlined text-sm">pending</span>
+              <Clock size={14} strokeWidth={2} />
               {cd05.current.status === "RATIFIED" ? "Ratified" : "Unratified working default"} — v{cd05.current.version}
             </span>
             <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -55,7 +56,7 @@ export default async function RetentionPage() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <div className="border-b border-outline-variant/20 bg-surface-container-low/40 px-5 py-3 text-xs text-on-surface-variant">
           Items under legal hold
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertTriangle, BadgeCheck, Flag } from "lucide-react";
 import type { AnomalySuggestion } from "@/features/ml-gateway/types";
 import { ACCOUNT_RISK_RATINGS, TRANSACTION_CHANNELS, TRANSACTION_TYPES, VELOCITY_INDICATORS } from "@/features/ml-gateway/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -173,14 +174,14 @@ export function TransactionRiskScoringForm() {
                     state.result.isSuspicious ? "bg-error-container text-on-error-container" : "bg-tertiary-fixed text-on-tertiary-fixed-variant"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-sm">{state.result.isSuspicious ? "warning" : "verified"}</span>
+                  {state.result.isSuspicious ? <AlertTriangle size={14} strokeWidth={2} /> : <BadgeCheck size={14} strokeWidth={2} />}
                   {Math.round(state.result.anomalyScore * 100)}% anomaly score
                 </span>
                 {state.result.isSuspicious && <span className="font-semibold text-error">Suspicious</span>}
               </div>
               {state.result.requiresHumanReview && (
                 <p className="flex items-center gap-1 text-[11px] font-semibold text-error">
-                  <span className="material-symbols-outlined text-xs">flag</span>
+                  <Flag size={12} strokeWidth={2} />
                   Flagged for human review.
                 </p>
               )}

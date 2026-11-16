@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LayoutDashboard, Gavel, ShieldCheck, Lock, ShieldAlert, Landmark, ClipboardCheck, Scale, type LucideIcon } from "lucide-react";
 
-const TABS = [
-  { href: "", label: "Overview", icon: "dashboard" },
-  { href: "/approvals", label: "Approvals", icon: "gavel" },
-  { href: "/investigations", label: "Investigations", icon: "policy" },
-  { href: "/evidence", label: "Evidence", icon: "lock" },
-  { href: "/containment", label: "Containment", icon: "shield" },
-  { href: "/recovery", label: "Recovery", icon: "account_balance" },
-  { href: "/capa", label: "CAPA", icon: "fact_check" },
-  { href: "/regulatory", label: "Regulatory", icon: "balance" },
+const TABS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "", label: "Overview", icon: LayoutDashboard },
+  { href: "/approvals", label: "Approvals", icon: Gavel },
+  { href: "/investigations", label: "Investigations", icon: ShieldCheck },
+  { href: "/evidence", label: "Evidence", icon: Lock },
+  { href: "/containment", label: "Containment", icon: ShieldAlert },
+  { href: "/recovery", label: "Recovery", icon: Landmark },
+  { href: "/capa", label: "CAPA", icon: ClipboardCheck },
+  { href: "/regulatory", label: "Regulatory", icon: Scale },
 ];
 
 export function CaseTabs({ caseId }: { caseId: string }) {
@@ -23,15 +24,16 @@ export function CaseTabs({ caseId }: { caseId: string }) {
       {TABS.map((tab) => {
         const href = `${base}${tab.href}`;
         const active = tab.href === "" ? pathname === base : pathname.startsWith(href);
+        const Icon = tab.icon;
         return (
           <Link
             key={tab.href}
             href={href}
             className={`flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-xs font-semibold transition-colors ${
-              active ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-primary"
+              active ? "border-tertiary text-tertiary" : "border-transparent text-on-surface-variant hover:text-tertiary"
             }`}
           >
-            <span className="material-symbols-outlined text-base">{tab.icon}</span>
+            <Icon size={16} strokeWidth={2} />
             {tab.label}
           </Link>
         );

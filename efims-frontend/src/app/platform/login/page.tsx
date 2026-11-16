@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ShieldCheck } from "lucide-react";
 import { PlatformLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -16,11 +17,11 @@ export default function PlatformLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-inverse-surface px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-outline-variant bg-surface-container-lowest p-8 shadow-modal">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary">
-            <span className="font-headline text-lg font-bold">E</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tertiary text-on-tertiary">
+            <ShieldCheck size={20} strokeWidth={2.25} />
           </div>
           <div>
-            <p className="font-headline text-lg font-semibold text-primary">EFIMS Platform</p>
+            <p className="text-lg font-bold text-on-surface">EFIMS Platform</p>
             <p className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">Super-admin access</p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { Wrench, Clock, AlertTriangle, CheckCircle2, FilterX } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getCapaRegister } from "@/features/capa/api";
 import { CAPA_ACTION_STATUSES, type CapaActionStatus } from "@/features/capa/types";
@@ -29,63 +30,57 @@ export default async function RemediationPage(props: PageProps<"/remediation">) 
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Remediation</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Remediation</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           {allRows.length} CAPA action{allRows.length === 1 ? "" : "s"} across every case you can access.
         </p>
       </div>
 
-      {/* KPI hero row */}
+      {/* KPI row */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="flex flex-col justify-between rounded-2xl border border-primary/20 bg-primary-container p-5 text-on-primary shadow-hero">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-secondary-fixed uppercase">Total actions</span>
-            <span className="material-symbols-outlined text-secondary-fixed">build_circle</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-tertiary) 16%, white)" }}>
+              <Wrench size={20} strokeWidth={2} className="text-tertiary" />
+            </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Total actions</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-surface-bright">{allRows.length}</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{allRows.length}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">In progress</span>
-            <span className="rounded-xl bg-surface-container p-2 text-on-surface-variant">
-              <span className="material-symbols-outlined text-base">pending</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-secondary) 16%, white)" }}>
+              <Clock size={20} strokeWidth={2} className="text-secondary" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">In progress</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-primary">{byStatus.OPEN + byStatus.IN_PROGRESS}</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{byStatus.OPEN + byStatus.IN_PROGRESS}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Overdue</span>
-            <span className="rounded-xl bg-error-container p-2 text-on-error-container">
-              <span className="material-symbols-outlined text-base">warning</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-error) 16%, white)" }}>
+              <AlertTriangle size={20} strokeWidth={2} className="text-error" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Overdue</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-error">{overdueCount}</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{overdueCount}</span>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Validated</span>
-            <span className="rounded-xl bg-tertiary-fixed p-2 text-tertiary">
-              <span className="material-symbols-outlined text-base">task_alt</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 16%, white)" }}>
+              <CheckCircle2 size={20} strokeWidth={2} className="text-success" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Validated</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-primary">{byStatus.VALIDATED}</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{byStatus.VALIDATED}</span>
         </div>
       </div>
 
       {/* Filter controls */}
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant/20 pb-3">
           <a
             href={`/remediation${q ? `?${preserved.toString()}` : ""}`}
@@ -117,18 +112,18 @@ export default async function RemediationPage(props: PageProps<"/remediation">) 
             />
           </div>
           <div className="flex items-end gap-2">
-            <button type="submit" className="w-full rounded-full bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <button type="submit" className="w-full rounded-full bg-tertiary px-3 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90">
               Apply filters
             </button>
             <a href="/remediation" className="flex items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-primary">
-              <span className="material-symbols-outlined text-base">filter_alt_off</span>
+              <FilterX size={16} strokeWidth={2} />
             </a>
           </div>
         </form>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <RemediationTable rows={rows} />
       </div>
     </>

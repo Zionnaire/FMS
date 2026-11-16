@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Clock } from "lucide-react";
 import { getAllCurrentConfiguration } from "@/features/configuration/api";
 import { CD_KEYS } from "@/features/configuration/types";
 
@@ -15,7 +16,7 @@ export async function UnratifiedConfigurationBanner({ accessToken }: { accessTok
   return (
     <div className="flex items-center justify-between gap-3 border-b border-secondary/30 bg-secondary-container/60 px-8 py-2 text-xs font-semibold text-on-secondary-container">
       <span className="flex items-center gap-2">
-        <span className="material-symbols-outlined text-sm">pending</span>
+        <Clock size={14} strokeWidth={2} />
         {unratifiedCount} of {CD_KEYS.length} configuration decisions (CD-01–08) are working defaults, not yet formally ratified policy.
       </span>
       <Link href="/configuration" className="underline hover:no-underline">Review</Link>

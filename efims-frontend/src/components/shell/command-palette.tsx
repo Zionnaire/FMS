@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search, Loader2, Briefcase, AlertTriangle, Radio, User, type LucideIcon } from "lucide-react";
 import type { SearchResultItem } from "@/app/api/search/route";
 
-const KIND_ICON: Record<SearchResultItem["kind"], string> = {
-  case: "folder_managed",
-  incident: "crisis_alert",
-  signal: "flag",
-  user: "person",
+const KIND_ICON: Record<SearchResultItem["kind"], LucideIcon> = {
+  case: Briefcase,
+  incident: AlertTriangle,
+  signal: Radio,
+  user: User,
 };
 const KIND_LABEL: Record<SearchResultItem["kind"], string> = {
   case: "Case",
@@ -89,11 +90,11 @@ export function CommandPalette() {
       <button
         type="button"
         onClick={openPalette}
-        className="flex items-center gap-2 rounded-md border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-surface-container-low"
+        className="flex w-full max-w-md items-center gap-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-xs text-muted-foreground transition-colors hover:bg-surface-container-low"
       >
-        <span className="material-symbols-outlined text-[16px]">search</span>
-        <span className="hidden sm:inline">Search cases, incidents, signals, users…</span>
-        <span className="ml-2 rounded border border-outline-variant bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+        <Search size={16} strokeWidth={2} />
+        <span className="hidden sm:inline">Search EFIMS…</span>
+        <span className="ml-auto rounded border border-outline-variant bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
           Ctrl K
         </span>
       </button>
@@ -101,11 +102,11 @@ export function CommandPalette() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 pt-[12vh] backdrop-blur-[2px]" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-xl overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-modal"
+            className="w-full max-w-xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-modal"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 border-b border-outline-variant px-4 py-3">
-              <span className="material-symbols-outlined text-on-surface-variant">search</span>
+              <Search size={18} className="text-on-surface-variant" />
               <input
                 ref={inputRef}
                 value={query}
@@ -113,29 +114,32 @@ export function CommandPalette() {
                 placeholder="Search cases, incidents, signals, users…"
                 className="w-full bg-transparent text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none"
               />
-              {loading && <span className="material-symbols-outlined animate-spin text-[16px] text-muted-foreground">progress_activity</span>}
+              {loading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
             </div>
             <div className="max-h-80 overflow-y-auto">
               {query.trim().length >= 2 && !loading && displayResults.length === 0 && (
                 <p className="px-4 py-6 text-center text-xs text-muted-foreground">No results.</p>
               )}
-              {displayResults.map((r) => (
-                <button
-                  key={`${r.kind}-${r.id}`}
-                  type="button"
-                  onClick={() => select(r.href)}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-surface-container-low"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">{KIND_ICON[r.kind]}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-on-surface">{r.title}</span>
-                    <span className="block truncate font-mono text-[11px] text-muted-foreground">{r.subtitle}</span>
-                  </span>
-                  <span className="shrink-0 rounded bg-surface-container-low px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                    {KIND_LABEL[r.kind]}
-                  </span>
-                </button>
-              ))}
+              {displayResults.map((r) => {
+                const Icon = KIND_ICON[r.kind];
+                return (
+                  <button
+                    key={`${r.kind}-${r.id}`}
+                    type="button"
+                    onClick={() => select(r.href)}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-surface-container-low"
+                  >
+                    <Icon size={18} className="shrink-0 text-on-surface-variant" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-on-surface">{r.title}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted-foreground">{r.subtitle}</span>
+                    </span>
+                    <span className="shrink-0 rounded bg-surface-container-low px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                      {KIND_LABEL[r.kind]}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

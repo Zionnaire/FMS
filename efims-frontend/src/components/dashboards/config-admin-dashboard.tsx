@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SlidersHorizontal, BadgeCheck, Hourglass, ChevronRight } from "lucide-react";
 import { getAllCurrentConfiguration } from "@/features/configuration/api";
 import { CD_KEYS } from "@/features/configuration/types";
 import { StatusBadge } from "@/components/shell/status-badge";
@@ -16,36 +17,40 @@ export async function ConfigAdminDashboard({ accessToken }: { accessToken: strin
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">Configuration governance</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Configuration governance</h1>
           <p className="mt-1 text-xs text-on-surface-variant">{ratifiedCount} of {CD_KEYS.length} CD values ratified.</p>
         </div>
         <Link
           href="/configuration"
-          className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container"
+          className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90"
         >
-          <span className="material-symbols-outlined text-base">tune</span>
+          <SlidersHorizontal size={16} strokeWidth={2} />
           Open register
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="flex flex-col justify-between rounded-2xl border border-primary/20 bg-primary-container p-5 text-on-primary shadow-hero">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-secondary-fixed uppercase">Ratified</span>
-            <span className="material-symbols-outlined text-secondary-fixed">verified</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 16%, white)" }}>
+              <BadgeCheck size={20} strokeWidth={2} className="text-success" />
+            </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Ratified</span>
           </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-surface-bright">{ratifiedCount} / {CD_KEYS.length}</div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{ratifiedCount} / {CD_KEYS.length}</span>
         </div>
-        <div className="flex flex-col justify-between rounded-2xl border border-error/30 bg-error-container/20 p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Pending ratification</span>
-            <span className="material-symbols-outlined text-error">hourglass_top</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-error) 16%, white)" }}>
+              <Hourglass size={20} strokeWidth={2} className="text-error" />
+            </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Pending ratification</span>
           </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-error">{CD_KEYS.length - ratifiedCount}</div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{CD_KEYS.length - ratifiedCount}</span>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <div className="border-b border-outline-variant/30 bg-surface-container-low px-5 py-3">
           <h2 className="text-sm font-bold text-on-surface">CD-01..CD-08 register</h2>
         </div>
@@ -59,7 +64,7 @@ export async function ConfigAdminDashboard({ accessToken }: { accessToken: strin
                   <div className="flex items-center gap-3">
                     {entry && <span className="text-xs text-on-surface-variant">v{entry.version}</span>}
                     <StatusBadge status={entry ? "RATIFIED" : "DRAFT"} tone={entry ? "positive" : "warning"} />
-                    <span className="material-symbols-outlined text-base text-outline">chevron_right</span>
+                    <ChevronRight size={16} className="text-outline" />
                   </div>
                 </Link>
               </li>

@@ -1,3 +1,4 @@
+import { ClipboardCheck, Pencil, AlertCircle, CheckCircle2, FilterX } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getInvestigationsRegister } from "@/features/investigations/api";
 import { INVESTIGATION_PLAN_STATUSES, type InvestigationPlanStatus } from "@/features/investigations/types";
@@ -32,75 +33,72 @@ export default async function InvestigationsPage(props: PageProps<"/investigatio
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Investigations</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Investigations</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           {allRows.length} case{allRows.length === 1 ? "" : "s"} with an investigation plan across every case you can access.
         </p>
       </div>
 
-      {/* KPI hero row */}
+      {/* KPI row */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="flex flex-col justify-between rounded-2xl border border-primary/20 bg-primary-container p-5 text-on-primary shadow-hero">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-secondary-fixed uppercase">Active plans</span>
-            <span className="material-symbols-outlined text-secondary-fixed">fact_check</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-tertiary) 16%, white)" }}>
+              <ClipboardCheck size={20} strokeWidth={2} className="text-tertiary" />
+            </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Active plans</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-surface-bright">{byStatus.ACTIVE}</span>
-            <span className="rounded-full bg-secondary-container/30 px-2 py-0.5 text-xs font-medium text-secondary-fixed">in progress</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[28px] leading-none font-bold text-on-surface">{byStatus.ACTIVE}</span>
+            <span className="rounded-full bg-surface-container-high px-2 py-0.5 text-xs font-medium text-on-surface-variant">in progress</span>
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-xs text-on-primary-container">
-            <span>Across accessible cases</span>
-            <span className="font-semibold text-secondary-fixed">{allRows.length} total</span>
-          </div>
+          <p className="text-xs text-on-surface-variant">{allRows.length} total across accessible cases</p>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Draft plans</span>
-            <span className="rounded-xl bg-surface-container p-2 text-on-surface-variant">
-              <span className="material-symbols-outlined text-base">edit_note</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-secondary) 16%, white)" }}>
+              <Pencil size={20} strokeWidth={2} className="text-secondary" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Draft plans</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-primary">{byStatus.DRAFT}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[28px] leading-none font-bold text-on-surface">{byStatus.DRAFT}</span>
             <span className="text-sm font-semibold text-on-surface">Not yet active</span>
           </div>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Open issues</span>
-            <span className="rounded-xl bg-error-container p-2 text-on-error-container">
-              <span className="material-symbols-outlined text-base">report</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-error) 16%, white)" }}>
+              <AlertCircle size={20} strokeWidth={2} className="text-error" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Open issues</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-error">{totalOpenIssues}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[28px] leading-none font-bold text-on-surface">{totalOpenIssues}</span>
             <span className="text-sm font-semibold text-on-surface">Unresolved</span>
           </div>
-          <p className="mt-1 text-xs text-on-surface-variant">Summed across every case&apos;s investigation issues</p>
+          <p className="text-xs text-on-surface-variant">Summed across every case&apos;s investigation issues</p>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Completed</span>
-            <span className="rounded-xl bg-tertiary-fixed p-2 text-tertiary">
-              <span className="material-symbols-outlined text-base">task_alt</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 16%, white)" }}>
+              <CheckCircle2 size={20} strokeWidth={2} className="text-success" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Completed</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-primary">{byStatus.COMPLETED}</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{byStatus.COMPLETED}</span>
         </div>
       </div>
 
       {/* Filter controls */}
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant/20 pb-3">
           <a
             href={`/investigations${q ? `?${preserved.toString()}` : ""}`}
-            className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${!planStatus ? "bg-primary text-on-primary" : "bg-surface-container text-on-surface-variant hover:text-on-surface"}`}
+            className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${!planStatus ? "bg-tertiary text-on-tertiary" : "bg-surface-container text-on-surface-variant hover:text-on-surface"}`}
           >
             All plans <span className="ml-1 opacity-80">{allRows.length}</span>
           </a>
@@ -108,7 +106,7 @@ export default async function InvestigationsPage(props: PageProps<"/investigatio
             <a
               key={s}
               href={`/investigations?planStatus=${s}${q ? `&${preserved.toString()}` : ""}`}
-              className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${planStatus === s ? "bg-primary text-on-primary" : "bg-surface-container text-on-surface-variant hover:text-on-surface"}`}
+              className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${planStatus === s ? "bg-tertiary text-on-tertiary" : "bg-surface-container text-on-surface-variant hover:text-on-surface"}`}
             >
               {s} <span className="ml-1 opacity-80">{byStatus[s]}</span>
             </a>
@@ -128,18 +126,18 @@ export default async function InvestigationsPage(props: PageProps<"/investigatio
             />
           </div>
           <div className="flex items-end gap-2">
-            <button type="submit" className="w-full rounded-full bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <button type="submit" className="w-full rounded-full bg-tertiary px-3 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90">
               Apply filters
             </button>
             <a href="/investigations" className="flex items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-primary">
-              <span className="material-symbols-outlined text-base">filter_alt_off</span>
+              <FilterX size={16} strokeWidth={2} />
             </a>
           </div>
         </form>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <InvestigationsTable rows={rows} />
       </div>
     </>

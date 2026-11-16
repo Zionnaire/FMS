@@ -1,3 +1,4 @@
+import { Search, ClipboardCheck } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listRootCauses, listCapaActions } from "@/features/capa/api";
 import { startCapaActionAction } from "@/features/capa/actions";
@@ -16,8 +17,8 @@ export default async function CaseCapaPage(props: PageProps<"/cases/[id]/capa">)
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">search</span>Root cause {latestRootCause && `(v${latestRootCause.version})`}</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Search size={16} className="text-tertiary" />Root cause {latestRootCause && `(v${latestRootCause.version})`}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {latestRootCause ? (
             <div className="rounded-xl bg-surface-container-low p-3 text-xs">
@@ -31,8 +32,8 @@ export default async function CaseCapaPage(props: PageProps<"/cases/[id]/capa">)
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-tertiary">fact_check</span>New CAPA action</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><ClipboardCheck size={16} className="text-tertiary" />New CAPA action</CardTitle></CardHeader>
         <CardContent>
           <NewCapaActionForm caseId={id} rootCauseId={latestRootCause?.id} users={users} />
         </CardContent>
@@ -40,12 +41,12 @@ export default async function CaseCapaPage(props: PageProps<"/cases/[id]/capa">)
 
       <div className="space-y-3 lg:col-span-2">
         {actions.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
+          <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
             No CAPA actions yet.
           </div>
         )}
         {actions.map((action) => (
-          <Card key={action.id} className="rounded-2xl border-outline-variant shadow-card">
+          <Card key={action.id} className="rounded-xl border-outline-variant/60 shadow-card">
             <CardContent className="space-y-2 pt-4 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-on-surface">{action.title} <span className="font-normal text-on-surface-variant">({action.type})</span></span>

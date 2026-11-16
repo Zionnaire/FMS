@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listEvidence } from "@/features/evidence/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,19 +13,19 @@ export default async function CaseEvidencePage(props: PageProps<"/cases/[id]/evi
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-      <Card className="rounded-2xl border-outline-variant shadow-card lg:col-span-1">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">lock</span>Ingest evidence</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Lock size={16} className="text-tertiary" />Ingest evidence</CardTitle></CardHeader>
         <CardContent><IngestForm caseId={id} /></CardContent>
       </Card>
 
       <div className="space-y-3 lg:col-span-2">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
+          <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
             No evidence items yet.
           </div>
         )}
         {items.map((item) => (
-          <Card key={item.id} className="rounded-2xl border-outline-variant shadow-card">
+          <Card key={item.id} className="rounded-xl border-outline-variant/60 shadow-card">
             <CardContent className="space-y-2 pt-4 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-on-surface">{item.title}</span>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Landmark, Briefcase, Hourglass, AlertTriangle, Lock, CheckCircle2, type LucideIcon } from "lucide-react";
 import { getCaseStats } from "@/features/cases/api";
 import { getIncidentStats } from "@/features/incidents/api";
 import { getSeverityTrend } from "@/features/triage/api";
@@ -13,6 +14,28 @@ import { Sparkline } from "@/components/charts/sparkline";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+/** Uniform white KPI tile with a colored icon badge — matches `QueueDashboard`'s `KpiTile`
+ * pattern (Institutional Intelligence, 2026-11-14); no dark/"hero" card treatment anymore. */
+function KpiTile({ label, value, sublabel, icon: Icon, color, trailing }: { label: string; value: string | number; sublabel?: string; icon: LucideIcon; color: string; trailing?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${color} 16%, white)` }}>
+          <Icon size={20} strokeWidth={2} style={{ color }} />
+        </span>
+        <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{value}</span>
+          {sublabel && <p className="mt-1 text-xs text-on-surface-variant">{sublabel}</p>}
+        </div>
+        {trailing}
+      </div>
+    </div>
+  );
+}
+
 function formatNgn(amount: string): string {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(Number(amount));
 }
@@ -23,12 +46,12 @@ function formatNgn(amount: string): string {
  * from the severity tokens below: reusing e.g. `--color-severity-s3` here would make an
  * "UNDER_REVIEW" incident segment visually read as an S3-severity signal, which it isn't. */
 const INCIDENT_STATUS_COLOR: Record<string, { color: string; colorHex: string }> = {
-  OPEN: { color: "var(--color-tertiary)", colorHex: "#2563eb" },
-  UNDER_REVIEW: { color: "var(--color-secondary)", colorHex: "#475569" },
-  LINKED_TO_CASE: { color: "var(--color-primary)", colorHex: "#072320" },
-  MERGED: { color: "var(--color-outline)", colorHex: "#94a3b8" },
-  REJECTED: { color: "var(--color-error)", colorHex: "#ba1a1a" },
-  CLOSED_NO_CASE: { color: "var(--color-surface-container-highest)", colorHex: "#cbd5e1" },
+  OPEN: { color: "var(--color-tertiary)", colorHex: "#167d83" },
+  UNDER_REVIEW: { color: "var(--color-secondary)", colorHex: "#64748b" },
+  LINKED_TO_CASE: { color: "var(--color-primary)", colorHex: "#172b45" },
+  MERGED: { color: "var(--color-outline)", colorHex: "#c7d0d9" },
+  REJECTED: { color: "var(--color-error)", colorHex: "#b94343" },
+  CLOSED_NO_CASE: { color: "var(--color-surface-container-highest)", colorHex: "#dfe5eb" },
 };
 const INCIDENT_STATUS_LABEL: Record<string, string> = {
   OPEN: "Open",
@@ -83,7 +106,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Executive risk overview</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Executive risk overview</h1>
         <p className="mt-1 text-xs text-on-surface-variant">Aggregate posture across every case and incident accessible to you.</p>
       </div>
 
@@ -95,88 +118,60 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
 
         <TabsContent value="operations" className="flex flex-col gap-6 pt-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="flex flex-col justify-between rounded-2xl border border-primary/20 bg-primary-container p-6 text-on-primary shadow-hero">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-secondary-fixed uppercase">Outstanding exposure</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-white/10">
-              <span className="material-symbols-outlined text-secondary-fixed">account_balance</span>
-            </span>
-          </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-surface-bright">{formatNgn(caseStats.outstanding)}</div>
-          <p className="mt-1 text-xs text-on-primary-container">of {formatNgn(caseStats.totalLoss)} total recorded loss</p>
-          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-xs text-on-primary-container">
-            <span>Recovered</span>
-            <span className="font-semibold text-secondary-fixed">{formatNgn(caseStats.totalRecovered)}</span>
-          </div>
-        </div>
+        <KpiTile
+          label="Outstanding exposure"
+          value={formatNgn(caseStats.outstanding)}
+          sublabel={`Recovered ${formatNgn(caseStats.totalRecovered)} of ${formatNgn(caseStats.totalLoss)} total loss`}
+          icon={Landmark}
+          color="var(--color-tertiary)"
+        />
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Case portfolio</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-primary-container/50">
-              <span className="material-symbols-outlined text-primary">folder_managed</span>
-            </span>
-          </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-primary">{caseStats.total}</div>
-          <p className="mt-1 text-xs text-on-surface-variant">{caseStats.byStatus.OPEN} open · {caseStats.byStatus.UNDER_INVESTIGATION} under investigation</p>
-          <div className="mt-4 flex items-center justify-between border-t border-outline-variant/20 pt-3 text-xs text-on-surface-variant">
-            <span>High sensitivity (Tier 4)</span>
-            <span className="font-semibold text-primary">{caseStats.highSensitivityCount}</span>
-          </div>
-        </div>
+        <KpiTile
+          label="Case portfolio"
+          value={caseStats.total}
+          sublabel={`${caseStats.byStatus.OPEN} open · ${caseStats.byStatus.UNDER_INVESTIGATION} under investigation`}
+          icon={Briefcase}
+          color="var(--color-secondary)"
+        />
 
-        <div className="flex flex-col justify-between rounded-2xl border border-error/30 bg-error-container/20 p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Decisions needed</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-error/15">
-              <span className="material-symbols-outlined text-error">hourglass_top</span>
-            </span>
-          </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-error">{caseStats.pendingApprovals}</div>
-          <p className="mt-1 text-xs text-on-surface-variant">Pending approval requests across all cases</p>
-        </div>
+        <KpiTile
+          label="Decisions needed"
+          value={caseStats.pendingApprovals}
+          sublabel="Pending approval requests across all cases"
+          icon={Hourglass}
+          color="var(--color-error)"
+        />
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Incident pipeline</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-tertiary-container">
-              <span className="material-symbols-outlined text-tertiary">crisis_alert</span>
-            </span>
-          </div>
-          <div className="mt-3 flex items-end justify-between gap-2">
-            <div>
-              <div className="font-headline text-3xl font-bold text-primary">{incidentStats.total}</div>
-              <p className="mt-1 text-xs text-on-surface-variant">{incidentStats.byStatus.OPEN} open · {incidentStats.linkedToCaseCount} linked to a case</p>
-            </div>
-            {dailyAssessmentVolume.length >= 2 && (
-              <div className="mb-1 shrink-0" title="Daily triage-assessment volume, last 30 days">
+        <KpiTile
+          label="Incident pipeline"
+          value={incidentStats.total}
+          sublabel={`${incidentStats.byStatus.OPEN} open · ${incidentStats.linkedToCaseCount} linked to a case`}
+          icon={AlertTriangle}
+          color="var(--color-tertiary)"
+          trailing={
+            dailyAssessmentVolume.length >= 2 ? (
+              <div className="shrink-0" title="Daily triage-assessment volume, last 30 days">
                 <Sparkline data={dailyAssessmentVolume} accent="var(--color-tertiary)" />
               </div>
-            )}
-          </div>
-        </div>
+            ) : undefined
+          }
+        />
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Compartmented</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-secondary-container">
-              <span className="material-symbols-outlined text-secondary">encrypted</span>
-            </span>
-          </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-primary">{incidentStats.restrictedCompartmentCount}</div>
-          <p className="mt-1 text-xs text-on-surface-variant">Incidents outside STANDARD compartment</p>
-        </div>
+        <KpiTile
+          label="Compartmented"
+          value={incidentStats.restrictedCompartmentCount}
+          sublabel="Incidents outside STANDARD compartment"
+          icon={Lock}
+          color="var(--color-secondary)"
+        />
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Closed</span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-surface-container-high">
-              <span className="material-symbols-outlined text-on-surface-variant">task_alt</span>
-            </span>
-          </div>
-          <div className="mt-3 font-headline text-3xl font-bold text-primary">{caseStats.byStatus.CLOSED}</div>
-          <p className="mt-1 text-xs text-on-surface-variant">Cases resolved to date</p>
-        </div>
+        <KpiTile
+          label="Closed"
+          value={caseStats.byStatus.CLOSED}
+          sublabel="Cases resolved to date"
+          icon={CheckCircle2}
+          color="var(--color-success)"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -204,7 +199,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
                 <AvatarGroup>
                   {teams.slice(0, 6).map((t) => (
                     <Avatar key={t.id} title={t.name}>
-                      <AvatarFallback className="bg-primary-container text-[11px] font-bold text-primary">
+                      <AvatarFallback className="bg-tertiary-container text-[11px] font-bold text-tertiary">
                         {t.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -224,7 +219,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Link href="/cases" className="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-on-primary shadow-card transition-all hover:bg-primary-container">
+        <Link href="/cases" className="rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90">
           Review case portfolio
         </Link>
         <Link href="/incidents" className="rounded-full bg-surface-container px-5 py-2.5 text-xs font-semibold text-on-surface-variant transition-colors hover:text-on-surface">

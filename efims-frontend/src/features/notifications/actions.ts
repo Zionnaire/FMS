@@ -9,3 +9,13 @@ export async function markNotificationReadAction(id: string): Promise<void> {
   await api.markNotificationRead(accessToken, id);
   revalidatePath("/notifications");
 }
+
+export async function subscribeToPushAction(subscription: api.PushSubscriptionPayload): Promise<void> {
+  const { accessToken } = await requireSession();
+  await api.subscribeToPush(accessToken, subscription);
+}
+
+export async function unsubscribeFromPushAction(endpoint: string): Promise<void> {
+  const { accessToken } = await requireSession();
+  await api.unsubscribeFromPush(accessToken, endpoint);
+}

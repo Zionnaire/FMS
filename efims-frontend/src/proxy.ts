@@ -162,5 +162,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // `api/health` excluded alongside the existing static-asset exemptions — a deploy platform's
+  // liveness check (see render.yaml's healthCheckPath for this service) has no session cookie by
+  // design and must never be redirected to /login; it only needs to know this server is up.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health).*)"],
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ScanSearch } from "lucide-react";
 import { relateIncidentsAction, mergeIncidentAction } from "@/features/incidents/actions";
 import type { SimilarIncidentResult } from "@/features/incidents/api";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export function SimilarIncidentsPanel({ incidentId }: { incidentId: string }) {
   if (!state.results && !state.loading && !state.error) {
     return (
       <Button type="button" variant="outline" size="sm" onClick={fetchSimilar} className="gap-1.5">
-        <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+        <ScanSearch size={16} strokeWidth={2} />
         Find possibly-related incidents
       </Button>
     );
@@ -61,7 +62,7 @@ export function SimilarIncidentsPanel({ incidentId }: { incidentId: string }) {
   return (
     <div className="rounded-lg border border-tertiary/30 bg-tertiary-container/20 p-3 text-xs">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-tertiary uppercase">
-        <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+        <ScanSearch size={14} strokeWidth={2} />
         AI similarity — advisory only, you decide whether to relate or merge
       </div>
       {state.loading && <p className="text-on-surface-variant">Scanning open incidents…</p>}

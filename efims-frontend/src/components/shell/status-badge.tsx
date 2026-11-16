@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 
 const TONE_CLASSES: Record<string, string> = {
-  positive: "bg-tertiary-fixed text-on-tertiary-fixed-variant",
-  warning: "bg-secondary-container text-on-secondary-container",
+  positive: "bg-success-container text-success",
+  warning: "bg-warning-status-container text-warning-status",
   critical: "bg-error-container text-on-error-container",
   neutral: "bg-surface-container-high text-on-surface-variant",
 };

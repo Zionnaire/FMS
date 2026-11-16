@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ShieldCheck } from "lucide-react";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -20,11 +21,11 @@ export default function LoginPage() {
         <section className="flex flex-col justify-between gap-6 bg-primary-container p-8 text-on-primary md:col-span-2">
           <div>
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-on-primary/10">
-                <span className="font-headline text-lg font-bold">E</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tertiary text-on-tertiary">
+                <ShieldCheck size={22} strokeWidth={2.25} />
               </div>
               <div>
-                <p className="font-headline text-xl font-semibold">EFIMS Core</p>
+                <p className="text-xl font-bold">EFIMS Core</p>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-on-primary-container">
                   Financial Crime & Incident Orchestration
                 </p>
@@ -41,7 +42,7 @@ export default function LoginPage() {
         </section>
 
         <section className="col-span-1 bg-surface-container-lowest p-8 md:col-span-3">
-          <h1 className="font-headline text-2xl font-semibold text-primary">Sign in</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Sign in</h1>
           <p className="mt-1 mb-6 text-xs text-on-surface-variant">Enter your tenant, email, and password.</p>
           <LoginForm />
         </section>

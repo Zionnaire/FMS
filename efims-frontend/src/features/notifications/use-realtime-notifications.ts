@@ -11,14 +11,24 @@ import type { Notification } from "./types";
  * are). Authenticates with the same short-lived access token already used for REST, fetched from
  * `/api/realtime-token` since the session cookie itself is httpOnly.
  *
- * Each component that calls this hook opens its own socket connection (the topnav bell and the
- * notifications page both use it independently) — simpler than a shared context/provider for two
- * consumers, and a Socket.IO connection is cheap enough that this isn't worth the extra plumbing.
+ * Each component that calls this hook opens its own socket connection (the topnav bell, the
+ * notifications page, and the global toast listener all use it independently) — simpler than a
+ * shared context/provider for a handful of consumers, and a Socket.IO connection is cheap enough
+ * that this isn't worth the extra plumbing.
+ *
+ * `onRead`: fires on `notification.read`, emitted by the backend's `NotificationsService.markRead`
+ * after a successful update — the only way a consumer with its own local unread count (the badge)
+ * finds out a notification was read from *another* consumer (the list page, another tab, another
+ * device), not just its own. Optional because most callers only care about new notifications.
  */
-export function useRealtimeNotifications(onNotification: (notification: Notification) => void): void {
+export function useRealtimeNotifications(onNotification: (notification: Notification) => void, onRead?: (id: string) => void): void {
   const callbackRef = useRef(onNotification);
   useEffect(() => {
     callbackRef.current = onNotification;
+  });
+  const readCallbackRef = useRef(onRead);
+  useEffect(() => {
+    readCallbackRef.current = onRead;
   });
 
   useEffect(() => {
@@ -38,6 +48,7 @@ export function useRealtimeNotifications(onNotification: (notification: Notifica
 
       socket = io(`${process.env.NEXT_PUBLIC_REALTIME_URL}/realtime`, { auth: { token } });
       socket.on("notification.created", (notification: Notification) => callbackRef.current(notification));
+      socket.on("notification.read", ({ id }: { id: string }) => readCallbackRef.current?.(id));
     })();
 
     return () => {

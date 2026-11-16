@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Link2, Eye } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listIncidents } from "@/features/incidents/api";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,14 @@ export default async function WhistleblowingPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Protected disclosures</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Protected disclosures</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           {total} disclosure{total === 1 ? "" : "s"} compartmented to WHISTLEBLOWING — reporter identity is kept in a separate vault from the
           disclosure content, visible only to roles with this compartment grant.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <Table>
           <TableHeader>
             <TableRow className="bg-surface-container-low">
@@ -65,7 +66,7 @@ export default async function WhistleblowingPage() {
                     </Link>
                     {incident.caseId && (
                       <Link href={`/cases/${incident.caseId}`} className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-tertiary hover:underline">
-                        <span className="material-symbols-outlined text-xs">link</span> View linked case
+                        <Link2 size={12} strokeWidth={2} /> View linked case
                       </Link>
                     )}
                   </div>
@@ -81,8 +82,8 @@ export default async function WhistleblowingPage() {
                   {new Date(incident.occurredAt ?? incident.createdAt).toLocaleString()}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Link href={`/incidents/${incident.id}`} className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container" title="Open incident">
-                    <span className="material-symbols-outlined text-base">visibility</span>
+                  <Link href={`/incidents/${incident.id}`} className="inline-flex rounded-full p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface" title="Open incident">
+                    <Eye size={16} strokeWidth={2} />
                   </Link>
                 </TableCell>
               </TableRow>

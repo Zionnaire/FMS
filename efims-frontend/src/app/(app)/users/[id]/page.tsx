@@ -22,7 +22,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-on-surface">{target.fullName}</h1>
+        <h1 className="text-2xl font-bold text-on-surface">{target.fullName}</h1>
         <p className="mt-1 text-xs text-on-surface-variant">{target.email}</p>
       </div>
 

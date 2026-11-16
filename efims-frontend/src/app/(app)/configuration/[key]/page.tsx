@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Clock } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getConfigurationKeyDetail } from "@/features/configuration/api";
 import { CD_KEYS, type CdKey, type ConfigurationEntry } from "@/features/configuration/types";
@@ -70,11 +71,11 @@ export default async function ConfigurationKeyPage(props: PageProps<"/configurat
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-headline text-2xl font-semibold text-primary">{key}</h1>
+        <h1 className="text-2xl font-bold text-on-surface">{key}</h1>
         {detail.current && <StatusBadge status={detail.current.status} tone={detail.current.status === "RATIFIED" ? "positive" : "warning"} />}
         {isUnratified && (
           <span className="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2.5 py-1 text-[11px] font-bold text-on-secondary-container">
-            <span className="material-symbols-outlined text-sm">pending</span>
+            <Clock size={14} strokeWidth={2} />
             Unratified — working default only
           </span>
         )}

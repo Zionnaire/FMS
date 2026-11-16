@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Eye, ArrowRight } from "lucide-react";
 import type { CapaActionStatus, CapaRegisterRow } from "@/features/capa/types";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ export function RemediationTable({ rows }: { rows: CapaRegisterRow[] }) {
                   className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container"
                   title="Open remediation action"
                 >
-                  <span className="material-symbols-outlined text-base">visibility</span>
+                  <Eye size={16} strokeWidth={2} />
                 </Link>
               </TableCell>
             </TableRow>
@@ -80,10 +81,10 @@ export function RemediationTable({ rows }: { rows: CapaRegisterRow[] }) {
           selected && (
             <Link
               href={`/cases/${selected.caseId}/capa`}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-tertiary px-4 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90"
             >
               Open remediation action
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <ArrowRight size={16} strokeWidth={2} />
             </Link>
           )
         }

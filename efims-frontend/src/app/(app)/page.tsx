@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { requireSession } from "@/features/auth/session";
 import { listIncidents } from "@/features/incidents/api";
-import { QueueDashboard } from "@/components/dashboards/queue-dashboard";
+import { listNotifications } from "@/features/notifications/api";
+import { QueueDashboard, type RecentActivityItem } from "@/components/dashboards/queue-dashboard";
 import { ExecutiveDashboard } from "@/components/dashboards/executive-dashboard";
 import { ReporterDashboard } from "@/components/dashboards/reporter-dashboard";
 import { AdminDashboard } from "@/components/dashboards/admin-dashboard";
 import { ConfigAdminDashboard } from "@/components/dashboards/config-admin-dashboard";
 import { DASHBOARD_LOADERS } from "@/lib/dashboard-loaders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+/** Real, per-user, already-existing data (the same `listNotifications` call `TopNav` already
+ * makes) — fills the "Recent activity" slot in the Institutional Intelligence reference image
+ * without inventing a new activity-feed data source. Scoped to the `QueueDashboard`-driven roles
+ * only (not the 4 bespoke dashboards), matching the reference's own persona. */
+async function fetchRecentActivity(accessToken: string): Promise<RecentActivityItem[]> {
+  const { notifications } = await listNotifications(accessToken, { limit: 5 });
+  return notifications.map((n) => ({ title: n.title, subtitle: n.body, timestamp: n.createdAt }));
+}
 
 /**
  * Thin per-role dispatcher (added 2026-10-14 alongside the 20-role expansion — see
@@ -33,8 +43,8 @@ export default async function DashboardPage() {
 
   const loader = DASHBOARD_LOADERS[user.role];
   if (loader) {
-    const data = await loader(accessToken, user);
-    return <QueueDashboard data={data} />;
+    const [data, recentActivity] = await Promise.all([loader(accessToken, user), fetchRecentActivity(accessToken)]);
+    return <QueueDashboard data={data} recentActivity={recentActivity} />;
   }
 
   // Defensive fallback only — every one of the 20 roles is handled by one of the two branches
@@ -46,7 +56,7 @@ export default async function DashboardPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Good day.</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Good day.</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           Signed in as <span className="font-semibold text-on-surface">{user.role.replaceAll("_", " ")}</span>.
         </p>
@@ -60,10 +70,10 @@ export default async function DashboardPage() {
           <CardHeader><CardTitle className="text-[11px] font-bold tracking-wider text-on-surface-variant uppercase">Under review</CardTitle></CardHeader>
           <CardContent><p className="text-3xl font-extrabold tracking-tight text-on-surface">{underReview.total}</p></CardContent>
         </Card>
-        <Card className="border-outline-variant bg-primary-container text-on-primary shadow-card">
-          <CardHeader><CardTitle className="text-[11px] font-bold tracking-wider text-on-primary-container uppercase">Quick action</CardTitle></CardHeader>
+        <Card className="border-outline-variant bg-tertiary text-on-tertiary shadow-card">
+          <CardHeader><CardTitle className="text-[11px] font-bold tracking-wider text-on-tertiary/80 uppercase">Quick action</CardTitle></CardHeader>
           <CardContent>
-            <Link href="/incidents" className="text-sm font-semibold underline decoration-on-primary/40 underline-offset-4">
+            <Link href="/incidents" className="text-sm font-semibold underline decoration-on-tertiary/40 underline-offset-4">
               Review the incident queue →
             </Link>
           </CardContent>

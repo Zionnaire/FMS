@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { BadgeCheck, Clock, Gavel, Eye, ArrowRight } from "lucide-react";
 import type { EvidenceRegisterRow } from "@/features/evidence/types";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
@@ -46,15 +47,15 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
               <TableCell><Badge variant="outline" className="border-outline-variant text-on-surface-variant">{item.category.replaceAll("_", " ")}</Badge></TableCell>
               <TableCell className="text-xs text-on-surface-variant">{item.sourceSystem ?? "—"}</TableCell>
               <TableCell>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${isVerified(item) ? "bg-tertiary-fixed text-on-tertiary-fixed-variant" : "bg-surface-container text-on-surface-variant"}`}>
-                  <span className="material-symbols-outlined text-sm">{isVerified(item) ? "verified" : "schedule"}</span>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${isVerified(item) ? "bg-success-container text-success" : "bg-surface-container text-on-surface-variant"}`}>
+                  {isVerified(item) ? <BadgeCheck size={14} strokeWidth={2} /> : <Clock size={14} strokeWidth={2} />}
                   {isVerified(item) ? "Verified" : "Unverified"}
                 </span>
               </TableCell>
               <TableCell>
                 {item.legalHold ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2.5 py-1 text-xs font-bold text-on-error-container">
-                    <span className="material-symbols-outlined text-sm">gavel</span> Held
+                    <Gavel size={14} strokeWidth={2} /> Held
                   </span>
                 ) : (
                   <span className="text-xs text-on-surface-variant">—</span>
@@ -68,7 +69,7 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
                   className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container"
                   title="Open evidence"
                 >
-                  <span className="material-symbols-outlined text-base">visibility</span>
+                  <Eye size={16} strokeWidth={2} />
                 </Link>
               </TableCell>
             </TableRow>
@@ -85,10 +86,10 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
           selected && (
             <Link
               href={`/cases/${selected.caseId}/evidence`}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-tertiary px-4 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90"
             >
               Open evidence
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <ArrowRight size={16} strokeWidth={2} />
             </Link>
           )
         }
@@ -99,7 +100,7 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
               <Badge variant="outline" className="border-outline-variant text-on-surface-variant">{selected.category.replaceAll("_", " ")}</Badge>
               {selected.legalHold && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2.5 py-1 text-xs font-bold text-on-error-container">
-                  <span className="material-symbols-outlined text-sm">gavel</span> Legal hold
+                  <Gavel size={14} strokeWidth={2} /> Legal hold
                 </span>
               )}
             </div>

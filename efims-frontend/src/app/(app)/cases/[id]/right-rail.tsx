@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  Users, Timer, ListChecks, Link2, ShieldCheck, ClipboardCheck, Archive, ShieldAlert,
+  Landmark, Wrench, Gavel, type LucideIcon,
+} from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listTasks } from "@/features/tasks/api";
 import { listCapaActions } from "@/features/capa/api";
@@ -9,21 +13,21 @@ import { mergeTaskRows } from "@/features/tasks/merge";
 import { isPastDeadline } from "@/lib/time";
 import { Mono } from "@/components/ui/mono";
 
-const LINKED_WORK_TABS = [
-  { href: "approvals", label: "Approvals", icon: "policy" },
-  { href: "investigations", label: "Investigations", icon: "fact_check" },
-  { href: "evidence", label: "Evidence", icon: "inventory_2" },
-  { href: "containment", label: "Containment", icon: "shield_lock" },
-  { href: "recovery", label: "Recovery", icon: "account_balance" },
-  { href: "capa", label: "Remediation", icon: "build_circle" },
-  { href: "regulatory", label: "Regulatory", icon: "gavel" },
-] as const;
+const LINKED_WORK_TABS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "approvals", label: "Approvals", icon: Gavel },
+  { href: "investigations", label: "Investigations", icon: ShieldCheck },
+  { href: "evidence", label: "Evidence", icon: Archive },
+  { href: "containment", label: "Containment", icon: ShieldAlert },
+  { href: "recovery", label: "Recovery", icon: Landmark },
+  { href: "capa", label: "CAPA", icon: Wrench },
+  { href: "regulatory", label: "Regulatory", icon: ClipboardCheck },
+];
 
-function RailCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function RailCard({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-card">
+    <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-4 shadow-card">
       <div className="mb-3 flex items-center gap-2">
-        <span className="material-symbols-outlined text-base text-outline">{icon}</span>
+        <Icon size={16} className="text-outline" />
         <h3 className="text-xs font-bold tracking-wide text-on-surface uppercase">{title}</h3>
       </div>
       {children}
@@ -73,11 +77,11 @@ export async function CaseRightRail({
 
   return (
     <div className="flex flex-col gap-4">
-      <RailCard title="Owner" icon="group">
+      <RailCard title="Owner" icon={Users}>
         <p className="text-sm text-on-surface">{assignedTeamName ?? "Unassigned"}</p>
       </RailCard>
 
-      <RailCard title="Linked incident SLA" icon="timer">
+      <RailCard title="Linked incident SLA" icon={Timer}>
         {linkedIncidents.length === 0 ? (
           <p className="text-xs text-on-surface-variant">No linked incidents.</p>
         ) : (
@@ -86,7 +90,7 @@ export async function CaseRightRail({
               const clock = slaClocks[i];
               return (
                 <li key={incident.id} className="flex items-center justify-between gap-2">
-                  <Link href={`/incidents/${incident.id}`} className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+                  <Link href={`/incidents/${incident.id}`} className="flex items-center gap-1.5 text-xs font-semibold text-tertiary hover:underline">
                     <Mono className="rounded bg-surface-container px-1.5 py-0.5">{incident.referenceCode}</Mono>
                   </Link>
                   {!clock ? (
@@ -105,14 +109,14 @@ export async function CaseRightRail({
         )}
       </RailCard>
 
-      <RailCard title="Tasks" icon="checklist">
+      <RailCard title="Tasks" icon={ListChecks}>
         {rows.length === 0 ? (
           <p className="text-xs text-on-surface-variant">Nothing open on this case.</p>
         ) : (
           <ul className="space-y-2.5">
             {rows.slice(0, 6).map((row) => (
               <li key={row.key}>
-                <Link href={row.openHref} className="block text-xs font-medium text-on-surface hover:text-primary">
+                <Link href={row.openHref} className="block text-xs font-medium text-on-surface hover:text-tertiary">
                   {row.title}
                 </Link>
                 {row.dueAt && (
@@ -126,16 +130,19 @@ export async function CaseRightRail({
         )}
       </RailCard>
 
-      <RailCard title="Linked work" icon="link">
+      <RailCard title="Linked work" icon={Link2}>
         <ul className="space-y-1.5">
-          {LINKED_WORK_TABS.map((t) => (
-            <li key={t.href}>
-              <Link href={`/cases/${caseId}/${t.href}`} className="flex items-center gap-2 text-xs font-medium text-on-surface-variant hover:text-primary">
-                <span className="material-symbols-outlined text-sm">{t.icon}</span>
-                {t.label}
-              </Link>
-            </li>
-          ))}
+          {LINKED_WORK_TABS.map((t) => {
+            const Icon = t.icon;
+            return (
+              <li key={t.href}>
+                <Link href={`/cases/${caseId}/${t.href}`} className="flex items-center gap-2 text-xs font-medium text-on-surface-variant hover:text-tertiary">
+                  <Icon size={14} />
+                  {t.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </RailCard>
     </div>

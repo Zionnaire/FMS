@@ -63,7 +63,7 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
       <div className="flex items-center justify-between">
         <div>
           <p className="font-mono text-xs font-semibold text-primary">{incident.referenceCode}</p>
-          <h1 className="font-headline text-2xl font-semibold text-on-surface">{incident.title}</h1>
+          <h1 className="text-2xl font-bold text-on-surface">{incident.title}</h1>
         </div>
         <StatusBadge status={incident.status} tone={STATUS_TONE[incident.status] ?? "neutral"} />
       </div>

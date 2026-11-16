@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertCircle } from "lucide-react";
+
 /**
  * Catches errors thrown by any Server Action or Server Component under `(app)/` — required to
  * be a Client Component per Next.js's own `error.tsx` convention. Without this, an `ApiError`
@@ -14,15 +16,15 @@
  */
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-error/30 bg-error-container/20 p-10 text-center">
-      <span className="material-symbols-outlined text-4xl text-error">error</span>
+    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-error/30 bg-error-container/20 p-10 text-center">
+      <AlertCircle size={40} strokeWidth={1.75} className="text-error" />
       <div>
         <p className="text-sm font-semibold text-on-error-container">Something went wrong.</p>
         <p className="mt-1 max-w-md text-xs text-on-error-container/80">{error.message || "An unexpected error occurred."}</p>
       </div>
       <button
         onClick={reset}
-        className="rounded-xl border border-error/40 bg-surface-container-lowest px-4 py-2 text-xs font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
+        className="rounded-lg border border-error/40 bg-surface-container-lowest px-4 py-2 text-xs font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
       >
         Try again
       </button>

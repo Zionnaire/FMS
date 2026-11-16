@@ -1,3 +1,4 @@
+import { ShieldAlert } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listContainmentRequests } from "@/features/containment/api";
 import { listApprovals } from "@/features/workflow/api";
@@ -14,8 +15,8 @@ export default async function CaseContainmentPage(props: PageProps<"/cases/[id]/
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-      <Card className="rounded-2xl border-outline-variant shadow-card lg:col-span-1">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">shield</span>Request containment</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><ShieldAlert size={16} className="text-tertiary" />Request containment</CardTitle></CardHeader>
         <CardContent>
           {availableApprovals.length === 0 ? (
             <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-4 text-xs text-on-surface-variant">
@@ -29,12 +30,12 @@ export default async function CaseContainmentPage(props: PageProps<"/cases/[id]/
 
       <div className="space-y-3 lg:col-span-2">
         {requests.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
+          <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
             No containment requests yet.
           </div>
         )}
         {requests.map((req) => (
-          <Card key={req.id} className="rounded-2xl border-outline-variant shadow-card">
+          <Card key={req.id} className="rounded-xl border-outline-variant/60 shadow-card">
             <CardContent className="space-y-2 pt-4 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-on-surface">{req.actionType.replaceAll("_", " ")} — {req.targetDescription}</span>

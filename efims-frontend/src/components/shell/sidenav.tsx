@@ -1,13 +1,23 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Home, Radio, AlertTriangle, Radar, Briefcase, FileSearch, Archive, ShieldAlert,
+  Landmark, Wrench, Gavel, FileText, CheckSquare, Bell, FolderLock, EyeOff, Settings,
+  Plug, Clock, Users, ShieldCheck, ChevronRight, ChevronDown, X, type LucideIcon,
+} from "lucide-react";
+import { useState } from "react";
 import { ROLES, type Role } from "@/features/auth/types";
+import { useMobileNav } from "./mobile-nav-context";
 
 interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   /** Roles allowed to see this item — omit to show to everyone authenticated. */
   roles?: Role[];
-  /** One level of sub-items (Settings' sub-nav) — rendered indented under the parent, parent
+  /** One level of sub-items (Configuration's sub-nav) — rendered indented under the parent, parent
    * itself still links to its own href (its first/overview sub-page). */
   children?: NavItem[];
 }
@@ -51,125 +61,180 @@ interface NavSection {
   items: NavItem[];
 }
 
-/** Grouped Monitor/Manage/Govern, matching the user's own confirmed sidebar list. Investigations,
- * Evidence, Approvals, Containment, Recoveries, and Remediation were previously case-detail tabs
- * only ("a case-scoped tab is the more accurate IA than a global list page for something that's
- * never actually browsed independently of a case") — the user's concrete sidebar list asked for
- * these as real top-level pages too, so they now exist both ways: a cross-case register here, and
- * the same data still reachable per-case via the existing case-detail tabs. `notifications` still
- * has a page but no nav entry — reached via the topnav bell instead. Add an entry here in the same
- * change that ships any future section's first page; a nav link with nothing behind it is worse
- * than no link. */
+/** Monitor/Manage/Govern/Administration — regrouped 2026-11-14 against the Institutional
+ * Intelligence reference image, which splits "understand what's happening" (Signals, Incidents,
+ * Intelligence) from "investigate and resolve" (Cases, Investigations, Evidence, Containment,
+ * Recovery, CAPA) more precisely than the prior grouping did (Cases/Investigations/Evidence had
+ * been sitting under Monitor). `/signals` and `/incidents` are real, substantial pages that
+ * already existed — `/intake` (the tabbed switcher in front of both) stays working for existing
+ * deep links but is no longer the nav entry point, since linking each page directly is more
+ * precise. `/remediation`'s nav label changes to "CAPA" to match what the backend module and the
+ * reference both actually call it. No route was removed — every previously-linked page is still
+ * reachable, several (`/signals`, `/incidents`, `/notifications`) gained a *more* direct link than
+ * they had before. */
 const NAV_SECTIONS: NavSection[] = [
   {
     label: "Monitor",
     items: [
-      { href: "/", label: "Overview", icon: "space_dashboard" },
-      { href: "/intake", label: "Intake & triage", icon: "flag", roles: EXCEPT_REPORTER },
-      { href: "/cases", label: "Cases", icon: "folder_managed", roles: EXCEPT_REPORTER },
-      { href: "/investigations", label: "Investigations", icon: "fact_check", roles: EXCEPT_REPORTER },
-      { href: "/evidence", label: "Evidence", icon: "inventory_2", roles: EXCEPT_REPORTER },
+      { href: "/", label: "Overview", icon: Home },
+      { href: "/signals", label: "Signals", icon: Radio, roles: EXCEPT_REPORTER },
+      { href: "/incidents", label: "Incidents", icon: AlertTriangle, roles: EXCEPT_REPORTER },
+      { href: "/tools/transaction-risk-scoring", label: "Intelligence", icon: Radar, roles: EXCEPT_REPORTER },
     ],
   },
   {
     label: "Manage",
     items: [
-      { href: "/approvals", label: "Approvals", icon: "policy", roles: EXCEPT_REPORTER },
-      { href: "/containment", label: "Containment", icon: "shield_lock", roles: EXCEPT_REPORTER },
-      { href: "/recovery", label: "Recoveries", icon: "account_balance", roles: EXCEPT_REPORTER },
-      { href: "/remediation", label: "Remediation", icon: "build_circle", roles: EXCEPT_REPORTER },
-      { href: "/tools/transaction-risk-scoring", label: "Transaction risk scoring", icon: "radar", roles: EXCEPT_REPORTER },
+      { href: "/cases", label: "Cases", icon: Briefcase, roles: EXCEPT_REPORTER },
+      { href: "/investigations", label: "Investigations", icon: FileSearch, roles: EXCEPT_REPORTER },
+      { href: "/evidence", label: "Evidence", icon: Archive, roles: EXCEPT_REPORTER },
+      { href: "/containment", label: "Containment", icon: ShieldAlert, roles: EXCEPT_REPORTER },
+      { href: "/recovery", label: "Recovery", icon: Landmark, roles: EXCEPT_REPORTER },
+      { href: "/remediation", label: "CAPA", icon: Wrench, roles: EXCEPT_REPORTER },
     ],
   },
   {
     label: "Govern",
     items: [
-      { href: "/regulatory", label: "Regulatory reports", icon: "gavel", roles: AUDIT_READ_ROLES },
-      { href: "/audit", label: "Audit trail", icon: "history_edu", roles: AUDIT_READ_ROLES },
-      { href: "/referrals", label: "HR & legal referrals", icon: "folder_shared", roles: HR_LEGAL_REFERRAL_ROLES },
-      { href: "/whistleblowing", label: "Protected disclosures", icon: "shield_person", roles: PROTECTED_DISCLOSURE_ROLES },
+      { href: "/regulatory", label: "Regulatory", icon: Gavel, roles: AUDIT_READ_ROLES },
+      { href: "/audit", label: "Audit", icon: FileText, roles: AUDIT_READ_ROLES },
+      { href: "/approvals", label: "Approvals", icon: CheckSquare, roles: EXCEPT_REPORTER },
+      { href: "/notifications", label: "Notifications", icon: Bell },
+      { href: "/referrals", label: "HR & legal referrals", icon: FolderLock, roles: HR_LEGAL_REFERRAL_ROLES },
+      { href: "/whistleblowing", label: "Protected disclosures", icon: EyeOff, roles: PROTECTED_DISCLOSURE_ROLES },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [
+      { href: "/users", label: "Users & Teams", icon: Users, roles: USER_MANAGEMENT_ROLES },
       {
         href: "/configuration",
-        label: "Settings",
-        icon: "settings",
+        label: "Configuration",
+        icon: Settings,
+        roles: CONFIG_ROLES,
         children: [
-          { href: "/configuration", label: "Configuration", icon: "settings", roles: CONFIG_ROLES },
-          { href: "/users", label: "People & access", icon: "manage_accounts", roles: USER_MANAGEMENT_ROLES },
-          { href: "/settings/integrations", label: "Integrations", icon: "cable", roles: CONFIG_ROLES },
-          { href: "/settings/retention", label: "Retention & legal holds", icon: "lock_clock", roles: RETENTION_ROLES },
+          { href: "/settings/integrations", label: "Integrations", icon: Plug, roles: CONFIG_ROLES },
+          { href: "/settings/retention", label: "Retention & legal holds", icon: Clock, roles: RETENTION_ROLES },
         ],
       },
     ],
   },
 ];
 
-export function SideNav({ role }: { role: Role }) {
+function NavLink({ item, pathname, indent }: { item: NavItem; pathname: string; indent?: boolean }) {
+  const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+  const Icon = item.icon;
   return (
-    <aside className="fixed top-0 left-0 z-40 flex h-screen w-64 flex-col justify-between overflow-y-auto bg-primary-container p-4 text-on-primary shadow-hero">
+    <Link
+      href={item.href}
+      className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium transition-colors ${
+        indent ? "py-2 text-[11px]" : ""
+      } ${
+        active
+          ? "bg-tertiary text-on-tertiary shadow-sm"
+          : "text-on-primary-container hover:bg-primary-container hover:text-on-primary"
+      }`}
+    >
+      <Icon size={indent ? 16 : 18} strokeWidth={2} className="shrink-0" />
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
+export function SideNav({ role, institutionName = "Bank 1" }: { role: Role; institutionName?: string }) {
+  const pathname = usePathname();
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const { open: mobileOpen, close } = useMobileNav();
+
+  return (
+    <>
+      {/* Overlay — mobile/tablet only (below `lg`), dismisses the off-canvas sidebar on tap. */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-[1px] lg:hidden" onClick={close} aria-hidden="true" />
+      )}
+      <aside
+        className={`fixed top-0 left-0 z-40 flex h-screen w-64 flex-col justify-between overflow-y-auto bg-primary p-4 text-on-primary shadow-hero transition-transform duration-200 lg:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3 px-2 py-1.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary-container text-on-secondary-container">
-            <span className="font-headline text-base font-bold">E</span>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tertiary text-on-tertiary">
+            <ShieldCheck size={20} strokeWidth={2.25} />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight text-on-primary">EFIMS Core</span>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-on-primary-container">
-              Bank 1
-            </span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-bold tracking-tight text-on-primary">EFIMS</span>
+            <span className="text-[10px] leading-tight text-on-primary-container">Financial Intelligence Operations Platform</span>
           </div>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close navigation menu"
+            className="ml-auto shrink-0 rounded-md p-1.5 text-on-primary-container transition-colors hover:bg-primary-container hover:text-on-primary lg:hidden"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
         </div>
 
-        <nav className="mt-1 flex flex-col gap-3">
+        <nav className="mt-1 flex flex-col gap-3" aria-label="Primary">
           {NAV_SECTIONS.map((section) => {
             const items = section.items
               .map((item) => {
                 if (!item.children) return item;
                 const children = item.children.filter((child) => !child.roles || child.roles.includes(role));
-                return children.length > 0 ? { ...item, children } : null;
+                return children.length > 0 ? { ...item, children } : { ...item, children: undefined };
               })
               .filter((item): item is NavItem => item !== null && (!item.roles || item.roles.includes(role)));
             if (items.length === 0) return null;
             return (
               <div key={section.label} className="flex flex-col gap-1">
-                <span className="px-3.5 text-[10px] font-bold tracking-widest text-on-primary-container uppercase">{section.label}</span>
-                {items.map((item) => (
-                  <div key={item.href} className="flex flex-col gap-0.5">
-                    <Link
-                      href={item.href}
-                      className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-on-primary/80 transition-colors hover:bg-primary/40 hover:text-on-primary"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                    {item.children && (
-                      <div className="ml-4 flex flex-col gap-0.5 border-l border-on-primary/10 pl-3">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[11px] font-medium text-on-primary/70 transition-colors hover:bg-primary/40 hover:text-on-primary"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">{child.icon}</span>
-                            <span>{child.label}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <span className="px-3.5 text-[10px] font-bold tracking-widest text-on-primary-container/70 uppercase">{section.label}</span>
+                {items.map((item) =>
+                  item.children ? (
+                    <div key={item.href} className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setOpenGroup((g) => (g === item.href ? null : item.href))}
+                        aria-expanded={openGroup === item.href || pathname.startsWith(item.href)}
+                        className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium text-on-primary-container transition-colors hover:bg-primary-container hover:text-on-primary"
+                      >
+                        <item.icon size={18} strokeWidth={2} className="shrink-0" />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {openGroup === item.href || pathname.startsWith(item.href) ? (
+                          <ChevronDown size={14} />
+                        ) : (
+                          <ChevronRight size={14} />
+                        )}
+                      </button>
+                      {(openGroup === item.href || pathname.startsWith(item.href)) && (
+                        <div className="ml-4 flex flex-col gap-0.5 border-l border-on-primary/15 pl-3">
+                          <NavLink item={item} pathname={pathname} indent />
+                          {item.children.map((child) => (
+                            <NavLink key={child.href} item={child} pathname={pathname} indent />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <NavLink key={item.href} item={item} pathname={pathname} />
+                  ),
+                )}
               </div>
             );
           })}
         </nav>
       </div>
 
-      <div className="rounded-xl border border-on-primary/10 bg-primary/30 p-3">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-tertiary-fixed" />
-          <span className="font-mono text-[11px] font-medium text-on-primary/90">Backend connected</span>
+      <div className="flex items-center gap-2.5 rounded-lg border border-on-primary/10 bg-primary-container/40 p-3">
+        <Landmark size={16} strokeWidth={2} className="shrink-0 text-on-primary-container" />
+        <div className="flex min-w-0 flex-col leading-tight">
+          <span className="text-[10px] font-semibold tracking-wide text-on-primary-container/70 uppercase">Current institution</span>
+          <span className="truncate text-xs font-semibold text-on-primary">{institutionName}</span>
         </div>
-        <span className="font-mono text-[10px] text-on-primary/50">EFIMS backend, live</span>
+        <ChevronRight size={14} className="ml-auto shrink-0 text-on-primary-container/60" />
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

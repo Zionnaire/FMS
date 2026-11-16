@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShieldCheck, ShieldAlert, CheckCircle2, Ban, AlertCircle, FilterX } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getAuditStats, getAuditTrend, queryAuditEvents, verifyAuditChain } from "@/features/audit/api";
 import { AUDIT_OUTCOMES, type AuditOutcome } from "@/features/audit/types";
@@ -61,69 +62,62 @@ export default async function AuditPage(props: PageProps<"/audit">) {
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-headline text-2xl font-semibold text-primary">Audit trail</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Audit trail</h1>
           <p className="mt-1 text-xs text-on-surface-variant">{stats.total} events — append-only, tamper-evident hash chain.</p>
         </div>
       </div>
 
-      {/* KPI hero row */}
+      {/* KPI row */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className={`flex flex-col justify-between rounded-2xl border p-5 shadow-hero ${chain.intact ? "border-primary/20 bg-primary-container text-on-primary" : "border-error/40 bg-error-container text-on-error-container"}`}>
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-semibold tracking-wider uppercase ${chain.intact ? "text-secondary-fixed" : "text-on-error-container"}`}>Hash chain</span>
-            <span className="material-symbols-outlined">{chain.intact ? "verified" : "gpp_bad"}</span>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className={`font-headline text-2xl font-bold ${chain.intact ? "text-surface-bright" : "text-on-error-container"}`}>
-              {chain.intact ? "Intact" : "Broken"}
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span
+              className="flex size-10 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: `color-mix(in srgb, var(${chain.intact ? "--color-success" : "--color-error"}) 16%, white)` }}
+            >
+              {chain.intact ? <ShieldCheck size={20} strokeWidth={2} className="text-success" /> : <ShieldAlert size={20} strokeWidth={2} className="text-error" />}
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Hash chain</span>
           </div>
-          <div className={`mt-4 flex items-center justify-between border-t pt-3 text-xs ${chain.intact ? "border-white/10 text-on-primary-container" : "border-error/20 text-on-error-container"}`}>
-            <span>{chain.eventsChecked} events verified</span>
-            {chain.breaks.length > 0 && <span className="font-semibold">{chain.breaks.length} break{chain.breaks.length === 1 ? "" : "s"}</span>}
-          </div>
+          <span className={`text-[28px] leading-none font-bold ${chain.intact ? "text-on-surface" : "text-error"}`}>{chain.intact ? "Intact" : "Broken"}</span>
+          <p className="text-xs text-on-surface-variant">
+            {chain.eventsChecked} events verified{chain.breaks.length > 0 && ` — ${chain.breaks.length} break${chain.breaks.length === 1 ? "" : "s"}`}
+          </p>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Success</span>
-            <span className="rounded-xl bg-tertiary-fixed p-2 text-tertiary">
-              <span className="material-symbols-outlined text-base">check_circle</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 16%, white)" }}>
+              <CheckCircle2 size={20} strokeWidth={2} className="text-success" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Success</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-on-surface">{stats.byOutcome.SUCCESS}</span>
-          </div>
-          <div className="mt-4 flex items-center justify-between border-t border-outline-variant/20 pt-3 text-xs text-on-surface-variant">
-            <span>of {stats.total} total</span>
-            <span className="font-semibold text-on-surface">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
-          </div>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{stats.byOutcome.SUCCESS}</span>
+          <p className="text-xs text-on-surface-variant">
+            of {stats.total} total — <span className="font-semibold text-on-surface">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
+          </p>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-outline uppercase">Denied</span>
-            <span className="rounded-xl bg-secondary-container/30 p-2 text-secondary">
-              <span className="material-symbols-outlined text-base">block</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-secondary) 16%, white)" }}>
+              <Ban size={20} strokeWidth={2} className="text-secondary" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Denied</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-secondary">{stats.byOutcome.DENIED}</span>
-          </div>
-          <p className="mt-1 text-xs text-on-surface-variant">Access-control denials — CLAUDE.md #6</p>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{stats.byOutcome.DENIED}</span>
+          <p className="text-xs text-on-surface-variant">Access-control denials — CLAUDE.md #6</p>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider text-error uppercase">Failure</span>
-            <span className="rounded-xl bg-error-container p-2 text-on-error-container">
-              <span className="material-symbols-outlined text-base">error</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: "color-mix(in srgb, var(--color-error) 16%, white)" }}>
+              <AlertCircle size={20} strokeWidth={2} className="text-error" />
             </span>
+            <span className="text-xs font-semibold text-on-surface-variant">Failure</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-headline text-3xl font-bold text-error">{stats.byOutcome.FAILURE}</span>
-          </div>
-          <p className="mt-1 text-xs text-on-surface-variant">Operation-level failures, not access denials</p>
+          <span className="text-[28px] leading-none font-bold text-on-surface">{stats.byOutcome.FAILURE}</span>
+          <p className="text-xs text-on-surface-variant">Operation-level failures, not access denials</p>
         </div>
       </div>
 
@@ -146,9 +140,9 @@ export default async function AuditPage(props: PageProps<"/audit">) {
       </Card>
 
       {chain.breaks.length > 0 && (
-        <div className="space-y-3 rounded-2xl border border-error/30 bg-error-container/20 p-5 shadow-card">
+        <div className="space-y-3 rounded-xl border border-error/30 bg-error-container/20 p-5 shadow-card">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-error">gpp_bad</span>
+            <ShieldAlert size={18} strokeWidth={2} className="text-error" />
             <h2 className="text-sm font-bold text-on-error-container">Chain breaks — {chain.breaks.length} event{chain.breaks.length === 1 ? "" : "s"} don&apos;t verify</h2>
           </div>
           <p className="text-xs text-on-error-container/80">
@@ -171,7 +165,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
       )}
 
       {/* Filter controls */}
-      <div className="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-card">
+      <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant/20 pb-3">
           <Link
             href={`/audit${preserved ? `?${preserved}` : ""}`}
@@ -231,17 +225,17 @@ export default async function AuditPage(props: PageProps<"/audit">) {
             />
           </div>
           <div className="flex items-end gap-2">
-            <button type="submit" className="w-full rounded-full bg-primary px-3 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container">
+            <button type="submit" className="w-full rounded-full bg-tertiary px-3 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90">
               Apply filters
             </button>
             <Link href="/audit" className="flex items-center justify-center gap-1 rounded-full bg-surface-container px-3 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:text-primary">
-              <span className="material-symbols-outlined text-base">filter_alt_off</span>
+              <FilterX size={16} strokeWidth={2} />
             </Link>
           </div>
         </form>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+      <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         <Table>
           <TableHeader>
             <TableRow className="bg-surface-container-low">

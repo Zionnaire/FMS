@@ -1,3 +1,4 @@
+import { ShieldCheck, AlertTriangle, Mic, ClipboardCheck } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listInvestigationPlans, listIssues, listInterviews, listFindings } from "@/features/investigations/api";
 import { listUsers, userDisplayNameMap } from "@/features/users/api";
@@ -20,8 +21,8 @@ export default async function CaseInvestigationsPage(props: PageProps<"/cases/[i
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">policy</span>Investigation plan {latestPlan && `(v${latestPlan.version})`}</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><ShieldCheck size={16} className="text-tertiary" />Investigation plan {latestPlan && `(v${latestPlan.version})`}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {latestPlan ? (
             <div className="space-y-1 rounded-xl bg-surface-container-low p-3 text-xs">
@@ -36,8 +37,8 @@ export default async function CaseInvestigationsPage(props: PageProps<"/cases/[i
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-error">report</span>Issues ({issues.length})</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><AlertTriangle size={16} className="text-error" />Issues ({issues.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <ul className="space-y-2">
             {issues.map((issue) => (
@@ -56,8 +57,8 @@ export default async function CaseInvestigationsPage(props: PageProps<"/cases/[i
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-tertiary">record_voice_over</span>Interviews ({interviews.length})</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Mic size={16} className="text-tertiary" />Interviews ({interviews.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <ul className="space-y-2">
             {interviews.map((iv) => (
@@ -72,8 +73,8 @@ export default async function CaseInvestigationsPage(props: PageProps<"/cases/[i
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">fact_check</span>Findings ({findings.length})</CardTitle></CardHeader>
+      <Card className="rounded-xl border-outline-variant/60 shadow-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><ClipboardCheck size={16} className="text-tertiary" />Findings ({findings.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <ul className="space-y-2">
             {findings.map((f) => (

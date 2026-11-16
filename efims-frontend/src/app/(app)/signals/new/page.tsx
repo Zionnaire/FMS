@@ -4,7 +4,7 @@ export default function NewSignalPage() {
   return (
     <>
       <div>
-        <h1 className="font-headline text-2xl font-semibold text-primary">Log incident</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Log incident</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           Files a Signal — an unvalidated report. A triage-role reviewer decides whether it becomes an Incident.
         </p>

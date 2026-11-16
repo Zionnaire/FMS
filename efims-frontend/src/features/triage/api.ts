@@ -50,7 +50,8 @@ export interface SeveritySuggestion {
   citedFactors: string[];
   rationale: string;
   /** Which engine actually answered — the EFIMS AI Service's structured model (primary) or Groq
-   * (automatic fallback on unreachability). Always present as of the AI-service integration. */
+   * (opt-in only as of 2026-11-14 — see `allowLlmFallback` below; an LLM label isn't a validated
+   * classifier, so it no longer stands in silently on unreachability). */
   source: "structured-ml" | "groq-fallback";
   predictionId: string | null;
   requiresHumanReview: boolean;
@@ -59,7 +60,11 @@ export interface SeveritySuggestion {
 
 /** CD-08 Phase 2 advisory suggestion — fetched on demand (a button, not an automatic page-load
  * call), since every call is a real Groq request with real latency/cost; the human triaging the
- * incident opts into seeing it rather than it firing silently on every page view. */
-export async function getSeveritySuggestion(accessToken: string, incidentId: string): Promise<SeveritySuggestion> {
-  return backendFetch<SeveritySuggestion>(`/incidents/${incidentId}/triage/suggestion`, { accessToken });
+ * incident opts into seeing it rather than it firing silently on every page view.
+ * `allowLlmFallback` is a second, explicit opt-in on top of that: if the structured model is
+ * unavailable or this incident is missing risk-factor fields, the backend returns a 503 unless
+ * this is set, rather than silently substituting an LLM estimate. */
+export async function getSeveritySuggestion(accessToken: string, incidentId: string, allowLlmFallback = false): Promise<SeveritySuggestion> {
+  const query = allowLlmFallback ? "?allowLlmFallback=true" : "";
+  return backendFetch<SeveritySuggestion>(`/incidents/${incidentId}/triage/suggestion${query}`, { accessToken });
 }

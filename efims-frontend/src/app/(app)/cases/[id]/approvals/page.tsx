@@ -1,3 +1,4 @@
+import { Hourglass, Gavel } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { listApprovals } from "@/features/workflow/api";
 import { listUsers, userDisplayNameMap } from "@/features/users/api";
@@ -15,8 +16,8 @@ export default async function CaseApprovalsPage(props: PageProps<"/cases/[id]/ap
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-card">
-        <span className="rounded-xl bg-error-container p-2 text-on-error-container"><span className="material-symbols-outlined text-base">hourglass_top</span></span>
+      <div className="flex items-center gap-2 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-4 shadow-card">
+        <span className="rounded-xl bg-error-container p-2 text-on-error-container"><Hourglass size={16} /></span>
         <div>
           <p className="text-sm font-bold text-on-surface">{pendingCount} pending decision{pendingCount === 1 ? "" : "s"}</p>
           <p className="text-xs text-on-surface-variant">CD-04 approval matrix — no autonomous adverse action fires without a human decision.</p>
@@ -24,19 +25,19 @@ export default async function CaseApprovalsPage(props: PageProps<"/cases/[id]/ap
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <Card className="rounded-2xl border-outline-variant shadow-card lg:col-span-1">
-          <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><span className="material-symbols-outlined text-base text-primary">gavel</span>Request approval</CardTitle></CardHeader>
+        <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Gavel size={16} className="text-tertiary" />Request approval</CardTitle></CardHeader>
           <CardContent><RequestApprovalForm caseId={id} /></CardContent>
         </Card>
 
         <div className="space-y-3 lg:col-span-2">
           {approvals.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
+            <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
               No approval requests yet.
             </div>
           )}
           {approvals.map((approval) => (
-            <Card key={approval.id} className={`rounded-2xl border-l-4 shadow-card ${approval.status === "APPROVED" ? "border-l-tertiary border-outline-variant" : approval.status === "REJECTED" ? "border-l-error border-outline-variant" : "border-l-secondary border-outline-variant"}`}>
+            <Card key={approval.id} className={`rounded-xl border-l-4 shadow-card ${approval.status === "APPROVED" ? "border-l-tertiary border-outline-variant" : approval.status === "REJECTED" ? "border-l-error border-outline-variant" : "border-l-secondary border-outline-variant"}`}>
               <CardContent className="space-y-2 pt-4 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-on-surface">{approval.action.replaceAll("_", " ")} — {approval.severityBand.replace("_", "/")}</span>

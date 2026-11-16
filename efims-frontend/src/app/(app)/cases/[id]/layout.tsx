@@ -1,3 +1,4 @@
+import { Shield, Landmark, PiggyBank, Network, Flag } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getCaseCached } from "@/features/cases/get-case-cached";
 import { getCaseSummary } from "@/features/cases/api";
@@ -25,16 +26,15 @@ export default async function CaseLayout({ children, params }: LayoutProps<"/cas
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-6 shadow-card">
-        <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-secondary-container/20 blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-card">
         <div className="relative flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-primary-container px-3 py-1 font-mono text-xs font-bold tracking-wider text-surface-bright">
+              <span className="rounded-full bg-primary px-3 py-1 font-mono text-xs font-bold tracking-wider text-on-primary">
                 {caseRecord.referenceCode}
               </span>
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${caseRecord.sensitivityLevel === 4 ? "bg-error-container text-on-error-container" : "bg-surface-container text-on-surface-variant"}`}>
-                <span className="material-symbols-outlined text-sm">shield</span>
+                <Shield size={14} />
                 Tier {caseRecord.sensitivityLevel}
               </span>
               <span className="rounded-full border border-outline-variant/40 bg-surface-container px-2.5 py-1 text-xs font-medium text-on-surface-variant">
@@ -42,42 +42,42 @@ export default async function CaseLayout({ children, params }: LayoutProps<"/cas
               </span>
               <StatusBadge status={caseRecord.status} tone={STATUS_TONE[caseRecord.status] ?? "neutral"} />
             </div>
-            <h1 className="font-headline text-2xl font-semibold text-primary">{caseRecord.title}</h1>
+            <h1 className="text-2xl font-bold text-on-surface">{caseRecord.title}</h1>
             <p className="max-w-3xl text-sm text-on-surface-variant">{caseRecord.description}</p>
           </div>
         </div>
 
         <div className="relative mt-6 grid grid-cols-2 gap-4 border-t border-outline-variant/20 pt-6 sm:grid-cols-4">
-          <div className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-4">
+          <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
             <span className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant uppercase">
               Outstanding exposure
-              <span className="material-symbols-outlined text-base text-outline">account_balance</span>
+              <Landmark size={16} className="text-outline" />
             </span>
-            <div className="mt-2 font-headline text-lg font-bold text-primary">{formatNgn(recovery.outstanding)}</div>
+            <div className="mt-2 text-lg font-bold text-on-surface">{formatNgn(recovery.outstanding)}</div>
             <span className="text-xs text-on-surface-variant">of {formatNgn(recovery.totalLoss)} recorded loss</span>
           </div>
-          <div className="rounded-xl bg-primary-container p-4 text-on-primary shadow-card">
-            <span className="flex items-center justify-between text-[11px] font-semibold text-on-primary-container uppercase">
+          <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
+            <span className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant uppercase">
               Recovered
-              <span className="material-symbols-outlined text-base">savings</span>
+              <PiggyBank size={16} className="text-tertiary" />
             </span>
-            <div className="mt-2 font-headline text-lg font-bold text-surface-bright">{formatNgn(recovery.totalRecovered)}</div>
-            <span className="text-xs text-on-primary-container">{formatNgn(recovery.totalWrittenOff)} written off</span>
+            <div className="mt-2 text-lg font-bold text-on-surface">{formatNgn(recovery.totalRecovered)}</div>
+            <span className="text-xs text-on-surface-variant">{formatNgn(recovery.totalWrittenOff)} written off</span>
           </div>
-          <div className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-4">
+          <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
             <span className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant uppercase">
               Linked incidents
-              <span className="material-symbols-outlined text-base text-outline">hub</span>
+              <Network size={16} className="text-outline" />
             </span>
-            <div className="mt-2 font-headline text-lg font-bold text-primary">{summary.linkedIncidentsCount}</div>
+            <div className="mt-2 text-lg font-bold text-on-surface">{summary.linkedIncidentsCount}</div>
             <span className="text-xs text-on-surface-variant">{summary.assignedTeamName ?? "Unassigned"}</span>
           </div>
-          <div className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-4">
+          <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
             <span className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant uppercase">
               Opened &amp; flags
-              <span className="material-symbols-outlined text-base text-outline">person_alert</span>
+              <Flag size={16} className="text-outline" />
             </span>
-            <div className="mt-2 font-headline text-lg font-bold text-primary">{new Date(caseRecord.createdAt).toLocaleDateString()}</div>
+            <div className="mt-2 text-lg font-bold text-on-surface">{new Date(caseRecord.createdAt).toLocaleDateString()}</div>
             <span className="text-xs text-on-surface-variant">{summary.flagsCount} subject/conflict flag{summary.flagsCount === 1 ? "" : "s"}</span>
           </div>
         </div>

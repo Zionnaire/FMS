@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { Eye, ArrowRight } from "lucide-react";
 import type { MergedTaskRow } from "@/features/tasks/merge";
 import { completeTaskAction, cancelTaskAction } from "@/features/tasks/actions";
 import type { FormState } from "@/lib/form-state";
@@ -38,8 +39,8 @@ function TaskActions({ row }: { row: MergedTaskRow }) {
 
   if (row.kind !== "task" || row.status !== "OPEN") {
     return (
-      <Link href={row.openHref} onClick={(e) => e.stopPropagation()} className="inline-flex rounded-full p-1.5 text-primary transition-colors hover:bg-surface-container" title="Open">
-        <span className="material-symbols-outlined text-base">visibility</span>
+      <Link href={row.openHref} onClick={(e) => e.stopPropagation()} className="inline-flex rounded-full p-1.5 text-tertiary transition-colors hover:bg-surface-container" title="Open">
+        <Eye size={16} />
       </Link>
     );
   }
@@ -94,7 +95,7 @@ export function TasksTable({ rows }: { rows: MergedTaskRow[] }) {
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-on-surface">{row.title}</span>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <Mono className="rounded bg-surface-container px-2 py-0.5 text-primary">{row.caseRef}</Mono>
+                    <Mono className="rounded bg-surface-container px-2 py-0.5 text-on-surface">{row.caseRef}</Mono>
                     <span className="text-[11px] text-on-surface-variant">{row.caseTitle}</span>
                   </div>
                 </div>
@@ -125,10 +126,10 @@ export function TasksTable({ rows }: { rows: MergedTaskRow[] }) {
           selected && (
             <Link
               href={selected.openHref}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-container"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-tertiary px-4 py-2 text-xs font-semibold text-on-tertiary transition-colors hover:bg-tertiary/90"
             >
               Open {KIND_LABEL[selected.kind].toLowerCase()}
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <ArrowRight size={16} />
             </Link>
           )
         }

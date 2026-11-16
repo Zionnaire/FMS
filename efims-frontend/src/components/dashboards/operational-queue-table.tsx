@@ -51,7 +51,7 @@ export function OperationalQueueTable({ rows, emptyMessage }: { rows: DashboardR
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card">
+    <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/30 bg-surface-container-low px-5 py-3">
         <p className="text-xs text-on-surface-variant">
           {filtered.length === rows.length
