@@ -87,7 +87,18 @@ jobs:
         run: npm run test:e2e
 
   frontend:
-    name: Frontend — lint, typecheck, build, audit
+    # No standalone "Typecheck" step, unlike the backend job above — found live, 2026-11-16: Next
+    # 16's typed-route global types (`PageProps`/`LayoutProps`) are generated into `.next/types/`
+    # as a side effect of `next build`/`next dev` actually running at least once, not present on a
+    # fresh checkout. A standalone `tsc --noEmit` *before* `next build` fails with "Cannot find
+    # name 'PageProps'" on every single page/layout file, every time, on a clean CI runner — it
+    # only ever looked fine locally because this repo's own dev machine had already run `next
+    # build`/`next dev` many times, leaving `.next/types/` populated from a previous run.
+    # `next build` already runs a real project-wide TypeScript check as part of itself (confirmed:
+    # `typescript.ignoreBuildErrors` is not set in next.config.ts) and fails the Build step on a
+    # genuine type error — a separate `tsc --noEmit` step adds no real coverage here, only a
+    # guaranteed-to-fail ordering bug.
+    name: Frontend — lint, build (includes typecheck), audit
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -102,9 +113,7 @@ jobs:
       - run: npm ci
       - name: Lint
         run: npx eslint src --max-warnings=0
-      - name: Typecheck
-        run: npx tsc --noEmit
-      - name: Build
+      - name: Build (type-checks the whole project as part of the build)
         run: npm run build
       - name: Dependency audit (fails only on a NEW production-path finding — see audit-baseline.json)
         run: node scripts/audit-guard.js

@@ -43,6 +43,30 @@ rather than recolliding with 0010. `tsc --noEmit` and lint clean on both touched
 
 ---
 
+## 2026-11-16 (cont'd, 9th pass) — Real CI failure, root-caused: a workflow ordering bug, not an app bug
+
+First real CI run against `main` after today's merge failed its frontend job's `Typecheck` step —
+`Cannot find name 'PageProps'`/`'LayoutProps'` on effectively every page/layout file. Root-caused
+by fetching the actual check-run annotations via GitHub's public API (no `gh` CLI available in
+this environment) rather than guessing from the step name alone: Next.js 16's typed-route global
+types (`PageProps`/`LayoutProps`) are generated into `.next/types/` as a side effect of `next
+build`/`next dev` actually running at least once — not present on a genuinely fresh checkout.
+`ci.yml`'s frontend job ran a standalone `npx tsc --noEmit` step *before* `npm run build`, so on
+CI's clean runner it failed immediately, every time. It had only ever looked fine on this
+project's own dev machine because `.next/types/` was already populated from many earlier local
+`next build`/`next dev` runs this session — a classic "works on my machine" gap, caught the
+moment a truly clean environment (CI) ran the same command.
+
+Verified `next build` already performs a full, real project-wide TypeScript check as part of
+itself (`typescript.ignoreBuildErrors` is not set in `next.config.ts`, and the build's own output
+literally logs "Running TypeScript ... Finished TypeScript in Ns") — so the separate step added
+no real coverage, only a guaranteed-to-fail ordering dependency. Removed it; `Build` is the one
+step that both builds and type-checks now. Verified the fix properly: deleted `.next` entirely
+(the exact fresh-checkout condition CI starts from) and re-ran lint → build → audit-guard end to
+end — all three pass cleanly with zero prior local state to lean on.
+
+---
+
 ## 2026-11-16 (cont'd, 8th pass) — Render deployment: render.yaml, not Docker
 
 User is about to host on Render and asked for the deployment pipeline gap (flagged since the
