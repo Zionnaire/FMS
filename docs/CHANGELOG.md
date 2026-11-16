@@ -43,6 +43,42 @@ rather than recolliding with 0010. `tsc --noEmit` and lint clean on both touched
 
 ---
 
+## 2026-11-16 (cont'd, 10th pass) — Real Render deploy failure: web-push is ESM-only, crashed the compiled build
+
+First real Render deploy of the backend failed at boot: `Error [ERR_REQUIRE_ESM]: require() of ES
+Module .../web-push/src/index.js ... not supported`. Root cause: `web-push@4.0.0` ships ESM-only
+(`"type": "module"` in its own package.json, confirmed by reading it directly — no CommonJS build
+exists for this package at all). The plain `import * as webpush from 'web-push'` added earlier
+this session compiles to a `require()` call under this project's CommonJS build target, which
+Node refuses outright for an ESM-only package. This never surfaced in any local testing because
+`nest start --watch`'s dev-mode loader (ts-node/SWC-based) tolerates this differently than the
+actual compiled output — Render's `node dist/main.js` is the first thing that ever ran the real
+build. A real gap in this session's own verification discipline: the push-notification feature
+was tested live, repeatedly, but only ever through the dev server, never through
+`npm run build && npm run start`.
+
+**Fixed in two steps, the second one only found by reading the actual compiled output.** First
+attempt: switch to a dynamic `import('web-push')`, per Node's own error message's suggested fix.
+Built, then grepped `dist/` directly — TypeScript had rewritten it into `Promise.resolve().then(()
+=> require('web-push'))`, which still calls `require()` on an ESM-only package and would have
+still thrown the same error, just one microtask later. Second, real fix: hid the import inside
+`new Function('return import("web-push")')` so TypeScript's compiler never sees an `import()` AST
+node to rewrite (it's just a string literal to the compiler) — confirmed by rebuilding and
+re-grepping `dist/` a second time, this time finding a genuine, untouched `import("web-push")`
+call.
+
+**Verified properly, not just type-checked**: ran the actual production command
+(`npm run build && npm run start`, i.e. exactly what Render's `startCommand` does) locally,
+confirmed `Nest application successfully started` with zero `ERR_REQUIRE_ESM` anywhere in the
+log, then ran the real cross-user task-assignment flow from the 2026-11-10 push-notification
+verification again against this production build — got `PushDelivery` status `FAILED` with a
+genuine `web-push` library validation error ("p256dh value should be 65 bytes long," expected,
+since the test used a deliberately-fake key), not a crash. That's the same class of "correctly
+fails because the test key is fake" result confirmed earlier via the dev server — now reproduced
+identically against the actual compiled build Render runs.
+
+---
+
 ## 2026-11-16 (cont'd, 9th pass) — Real CI failure, root-caused: a workflow ordering bug, not an app bug
 
 First real CI run against `main` after today's merge failed its frontend job's `Typecheck` step —

@@ -2,7 +2,22 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
-import * as webpush from 'web-push';
+// `web-push` ships ESM-only (`"type": "module"`, confirmed live — see this file's own doc
+// comment on `webpushModule` below for the full story). A regular top-level `import` here would
+// compile to a `require()` call that crashes the compiled build with `ERR_REQUIRE_ESM` the moment
+// this module is ever imported, not just when push is actually used — so this is `import type`
+// only (erased by the compiler, no runtime `require()`) purely for the type annotation below.
+import type * as WebPushModule from 'web-push';
+
+/** A plain `import('web-push')` expression doesn't survive TypeScript's CommonJS emit unchanged
+ * — confirmed live by reading the actual compiled `dist/` output: TS rewrites it into
+ * `Promise.resolve().then(() => require('web-push'))`, which still calls `require()` on an
+ * ESM-only package and still throws `ERR_REQUIRE_ESM`, just one microtask later than a plain
+ * top-level import would have. Hiding the import behind `new Function` keeps the literal text
+ * `import(...)` inside a string the compiler never parses as an AST node, so it can't rewrite it
+ * — the function this constructs, once actually *called* at runtime, performs a genuine ES
+ * dynamic import instead of a disguised `require()`. */
+const dynamicImportWebPush = new Function('return import("web-push")') as () => Promise<typeof WebPushModule>;
 import { Notification, NotificationChannel, NotificationPriority, Prisma, PushSubscription, Role } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RealtimeService } from '../../infrastructure/realtime/realtime.service';
@@ -56,6 +71,20 @@ export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private readonly pushConfigured: boolean;
 
+  /** `web-push@4` is ESM-only (`"type": "module"` in its own package.json, no CommonJS build at
+   * all) — found live, not in local dev: `nest start --watch` tolerated a plain top-level
+   * `import * as webpush from 'web-push'` (its ts-node/SWC-based dev loader is more lenient
+   * about this than plain Node is), but the exact same code crashed the real compiled build the
+   * moment Render ran `node dist/main.js`: `Error [ERR_REQUIRE_ESM]: require() of ES Module
+   * .../web-push/src/index.js ... not supported`. A static import of an ESM package compiles to
+   * a `require()` call under this project's CommonJS build target, which Node flatly refuses for
+   * an ESM-only package — there is no `esModuleInterop`/`allowSyntheticDefaultImports` escape
+   * hatch for this specific case, since those only paper over a *default*-export shape mismatch,
+   * not a genuine CJS/ESM loader incompatibility. Node's own error message says exactly the fix:
+   * "change the require ... to a dynamic import()" — resolved once, lazily, and cached here so
+   * every other call site just `await`s this instead of re-importing per send. */
+  private webpushModule: Promise<typeof WebPushModule> | null = null;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtimeService: RealtimeService,
@@ -63,16 +92,19 @@ export class NotificationsService {
     private readonly teamsService: TeamsService,
     private readonly config: ConfigService,
   ) {
-    // Set once at construction, not per-send — `web-push` keeps these module-level, and every
-    // `sendNotification` call after this uses them automatically. Missing keys mean PUSH degrades
-    // to the same logged stub EMAIL/SMS already are (see `deliverExternal`), not a startup crash —
-    // this module has to keep working in any environment that hasn't generated a VAPID pair yet.
+    // Set once, not per-send — `web-push` keeps these module-level, and every `sendNotification`
+    // call after this uses them automatically. Missing keys mean PUSH degrades to the same logged
+    // stub EMAIL/SMS already are (see `deliverExternal`), not a startup crash — this module has to
+    // keep working in any environment that hasn't generated a VAPID pair yet.
     const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY');
     const privateKey = this.config.get<string>('VAPID_PRIVATE_KEY');
     const subject = this.config.get<string>('VAPID_SUBJECT');
     this.pushConfigured = Boolean(publicKey && privateKey && subject);
     if (this.pushConfigured) {
-      webpush.setVapidDetails(subject!, publicKey!, privateKey!);
+      this.webpushModule = dynamicImportWebPush().then((mod) => {
+        mod.setVapidDetails(subject!, publicKey!, privateKey!);
+        return mod;
+      });
     } else {
       this.logger.warn('VAPID keys not configured — push notifications will be logged, not sent. See .env.example.');
     }
@@ -305,6 +337,7 @@ export class NotificationsService {
       return;
     }
 
+    const webpush = await this.webpushModule;
     const payload = JSON.stringify({ title: notification.title, body: notification.body, notificationId: notification.id });
     const staleEndpoints: string[] = [];
     let anySent = false;
@@ -312,7 +345,7 @@ export class NotificationsService {
     await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+          await webpush!.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
           anySent = true;
         } catch (err) {
           const statusCode = (err as { statusCode?: number }).statusCode;
