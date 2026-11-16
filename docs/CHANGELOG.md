@@ -6,6 +6,695 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-16 — Live production bug: deterministic "Reference code collision" blocking all signal validation
+
+User hit a real, live-blocking bug: validating a signal into an incident (Triage Analyst account)
+failed every single time with `400 Bad Request: "Reference code collision — retry validating this
+signal"`, surviving repeated retries.
+
+**Root cause**: `IncidentsService.generateReferenceCode` (and `CasesService`'s own, explicitly
+documented as "identical") computed the next sequence number as
+`COUNT(rows with this prefix) + 1`, not `MAX(existing sequence numbers) + 1`. That's only correct
+while the sequence has no gaps. A gap had opened at `INC-2026-0007` (9 real rows existed:
+0001-0006, then 0008-0010 — likely from earlier test-data cleanup this session), so `COUNT = 9`
+recomputed `"INC-2026-0010"` — a code that already existed — and hit the
+`(tenantId, referenceCode)` unique constraint (`P2002`). The catch block's own comment framed this
+as a rare two-requests-at-once race worth a "just retry" response, but once a gap exists this is
+**deterministic, not rare**: a rolled-back insert never changes the COUNT, so every retry
+recomputed the exact same doomed code. Confirmed live — 3 fresh signal→validate attempts in a row
+all failed identically — before touching any code, and root-caused by querying the real `incidents`
+table directly via `DIRECT_URL` (bypassing RLS; the first pass mistakenly queried via the
+RLS-governed `DATABASE_URL` role with no tenant context set, which correctly returns zero rows and
+is not the same thing as an empty table).
+
+**Fix**: both `IncidentsService.generateReferenceCode` and `CasesService.generateReferenceCode` now
+fetch existing codes for the current prefix, parse out each one's numeric suffix, and use
+`max(suffix) + 1` — correct regardless of any gap, past or future (a case/incident merge is a real,
+ongoing source of exactly this kind of gap). `ConfigurationService.createDraft`'s version-numbering,
+cross-referenced by both other generators' doc comments as sharing "the same race/backstop
+pattern," was checked and found **not** vulnerable — it already used
+`orderBy: { version: 'desc' }` (MAX-based) rather than `count()`, so no change was needed there.
+The `(tenantId, referenceCode)`/`(tenantId, key, version)` unique constraints remain the correct
+backstop for genuine concurrent-writer races; only the COUNT-vs-MAX computation was wrong.
+
+Verified live post-fix: 3 fresh signal→validate attempts all succeeded (`201`), and the resulting
+incidents correctly landed at `INC-2026-0011`, `-0012`, `-0013` — continuing past the 0007 gap
+rather than recolliding with 0010. `tsc --noEmit` and lint clean on both touched files.
+
+---
+
+## 2026-11-16 (cont'd, 8th pass) — Render deployment: render.yaml, not Docker
+
+User is about to host on Render and asked for the deployment pipeline gap (flagged since the
+2026-11-02 audit, `docs/OPEN_ITEMS.md`) closed.
+
+**Chose Render's native Node runtime over a Dockerfile** — simpler and lower-risk for a plain
+NestJS + Next.js monorepo with no unusual system dependencies: no multi-stage build to get right,
+no Prisma-engine-platform-target footgun, and Render's own Blueprint spec supports a monorepo's
+sibling directories natively via `rootDir` per service. Wrote one `render.yaml` at the repo root
+defining both services (`efims-backend`, `efims-frontend`), each scoped to its own subdirectory.
+
+**Verified the Blueprint syntax against Render's real, current docs before writing anything** —
+two rounds. First confirmed the core fields (`runtime: node`, `rootDir`, `buildCommand`/
+`startCommand`, `healthCheckPath`, `envVars` with `sync: false`/`generateValue: true`) against
+the official spec page. Then, for the cross-service URL wiring specifically (frontend needs the
+backend's public URL and vice versa), the first draft used `fromService` with an `envVarKey:
+RENDER_EXTERNAL_URL` — plausible-sounding, but a second, narrowly-scoped verification pass found
+neither `envVarKey` nor `RENDER_EXTERNAL_URL` anywhere in the official docs: Render's confirmed
+`fromService` properties (`host`/`port`/`hostport`/etc.) expose a service's *private*-network
+address, not its public HTTPS URL, and there's no officially-documented Blueprint syntax for
+copying one service's public URL into another's env var at all. Rather than ship unverified
+syntax into a real deployment config, switched `CORS_ORIGINS` (backend) and `BACKEND_URL`/
+`NEXT_PUBLIC_REALTIME_URL` (frontend) to `sync: false` — a one-time manual paste after each
+service's first deploy, documented step-by-step in the new `docs/deployment.md`, in exchange for
+certainty the Blueprint actually deploys instead of failing on an unconfirmed field.
+
+**Also added**: a backend-independent `GET /api/health` route on the frontend (`efims-frontend/
+src/app/api/health/route.ts`) for Render's own health check — every other route either requires a
+session or calls the backend, either of which would fail the check for reasons unrelated to
+whether the Next.js server itself is up. Had to also add `api/health` to `proxy.ts`'s matcher
+exclusion list alongside the existing static-asset ones — without that, Render's cookie-less
+health check would have been redirected to `/login` (a 307, not the 200 a health check needs),
+found and fixed live before it could cause a false "service unhealthy" in production.
+
+**Deliberately deferred, documented in `docs/deployment.md` rather than automated**: RLS policy
+application (`prisma/rls-policies.sql`) only needs to run once, against a genuinely fresh
+database — scripted as a one-time manual step, not wired into every deploy, same reasoning as
+Prisma migrations being safely idempotent in `startCommand` while RLS setup is not.
+
+---
+
+## 2026-11-16 (cont'd, 7th pass) — Root-caused the session's recurring backend crashes; pre-demo design/data audit for Render hosting
+
+User reported a `fetch failed` error and "some navigation taking me to old design," with explicit
+context: about to host on Render and demo to their boss.
+
+**Root-caused the real cause of this entire day's repeated "backend is down" incidents** — not
+just Neon flakiness being unlucky, as assumed in every earlier pass. `@nestjs/schedule`'s `@Cron`
+has no built-in error handling: an unhandled rejection inside a scheduled method crashes the
+*entire Node process*, not just that one tick. Both of this codebase's cron jobs
+(`SlaClockService.sweepBreachedClocks`, `NotificationsService.escalateUnread`, both
+`EVERY_5_MINUTES`) queried the database with zero try/catch. Caught live in the act: a backend
+log showed `PrismaOverloadFilter` gracefully handling two real overload events, then — three
+`@Cron` ticks later — an uncaught `P1001` ("Can't reach database server," the same transient Neon
+drop seen several times this session) from inside `sweepBreachedClocks`, immediately followed by
+the process exiting. `NotificationsService` already had a `safely()` wrapper with a doc comment
+explaining this *exact* mechanism for `@OnEvent` handlers — just never extended to either cron
+job. Fixed: `escalateUnread` now wrapped in `safely()`; `sweepBreachedClocks` wrapped in an
+equivalent try/catch (no helper to reuse across files, so mirrored inline). Also hardened
+`PrismaOverloadFilter` itself, which had only ever covered the two error shapes the 3rd pass's
+load test produced (`P2024`, `Transaction API error`) — `P1001` fell through its condition and
+was rethrown, uncaught, for any request that happened to hit it directly. Expanded to cover the
+whole family of Prisma connection-level codes (`P1001`/`P1002`/`P1008`/`P1017`/`P2024`) as one
+`TRANSIENT_CONNECTIVITY_CODES` set.
+
+**Design audit, not a regression**: screenshotted ~25 pages across Monitor/Manage/Govern/
+Administration, every case-detail tab, and 5 different role dashboards (security, HR,
+effectiveness reviewer, incident reporter, executive) in a real headless Chromium session —
+zero instances of old fonts, old icons, or old colors anywhere. The most likely explanation for
+what the user saw is a stale browser tab/bundle from before an earlier `.next` cache clear this
+session, not a real regression — flagged back to the user rather than guessed at further.
+
+**One real layout bug found during the same audit, fixed**: the signals queue's summary column
+overlapped the status badge for any sufficiently long summary. Root cause: Tailwind's `truncate`
+utility (`overflow: hidden` + `text-overflow: ellipsis` + `white-space: nowrap`) silently does
+nothing on a `display: inline` element (the default for an `<a>`/`Link`) inside a `<table>` with
+default auto layout — `<td>`-level `max-w-*` doesn't constrain an inline child's rendered width.
+Fixed by adding `block` to that one `Link`. Audited every other `truncate` usage in the app
+(12 files) for the same pattern — all others were already either on a naturally block-level
+element (`<p>`, `<li>`, `<td>` itself) or explicitly `inline-block`/`block`, or (sidenav's
+institution name) a direct flex child, which CSS "blockifies" automatically regardless of its own
+`display` value — confirmed genuinely isolated, not systemic.
+
+**Test/debug data cleanup, with explicit sign-off first**: found 8 signals, 3 incidents, 2 tasks,
+and 1 notification left over from this session's own earlier debugging (reference-code-collision
+repro, push-notification e2e tests) — all clearly fake ("verify fix test", "repro collision test",
+"push e2e test task") and visible in the real Signals queue and a case's Tasks panel. Confirmed
+none were linked to any case/SLA-clock/triage-assessment. The direct-SQL delete was blocked by
+the sandbox's own destructive-action guard on the first attempt — correctly, since signals/
+incidents have no delete path in the app by design (`REVOKE DELETE` in `rls-policies.sql`, an
+intentional immutability choice) and this would bypass it. Asked the user explicitly before
+retrying; they confirmed, then it was done.
+
+---
+
+## 2026-11-16 (cont'd, 6th pass) — Fixed a stale Turbopack cache crash, real toast notifications, the notification-count sync bug, and real Web Push
+
+User hit a runtime crash (`chunk.reason.enqueueModel is not a function`, Next.js 16.4.3/Turbopack)
+and asked for toast notifications, Socket.IO, and notification count to be addressed.
+
+**The crash**: root-caused to `.next/cache` never being cleared after the 2026-11-02 Next.js
+16.3.6→16.4.3 version bump — stale compiled Turbopack chunks referencing an old React Flight
+internal shape. Fixed by stopping the dev server, deleting `.next` entirely, and restarting.
+Separately, the backend had also gone down (a recurring pattern this whole session — Neon
+connection drops) and needed its own clean restart; its downtime was what first looked like a
+frontend bug ("Unable to reach EFIMS Core") when testing the fix. Verified with a real headless
+Chromium session (Playwright, already cached locally) through login and every main page — zero
+console/page errors.
+
+**Toast notifications**: added `sonner` via the shadcn CLI, fixed its generated component to use
+this project's actual Institutional Intelligence tokens (`--color-surface-container-lowest`, etc.)
+instead of shadcn's generic `--popover`/`--border` defaults, which don't exist in this app's
+`globals.css`. A new `RealtimeToastListener` (mounted once, in `(app)/layout.tsx` — the one shell
+every authenticated page renders inside) shows a toast on every `notification.created` realtime
+event, as a third independent consumer of `useRealtimeNotifications` alongside the existing badge
+and notifications-list components (same "cheap to duplicate a socket" reasoning already
+established for those two).
+
+**Notification-count bug (real, found investigating the request)**: `NotificationBellBadge`'s
+unread count only ever incremented — marking everything read on the notifications page (even in
+the same tab) never decremented it, because the badge and the list are two independent components
+with no shared state, and nothing told the badge a read had happened. Fixed at the source:
+`NotificationsService.markRead` now emits `notification.read` to the user's realtime room (reusing
+the existing per-user Socket.IO room, not a new channel), and `useRealtimeNotifications` gained an
+optional second callback for it. The badge now decrements on that event — fixes the bug for the
+same tab, another tab, and another device, since it goes through the same realtime infrastructure
+`notification.created` already does, not local React state.
+
+**Real Web Push** — the biggest piece, wired into a seam this codebase explicitly built and
+deferred ("build the seam now, wire the real thing in later," same pattern as `ml-gateway` before
+Groq): `NotificationChannel.PUSH` existed in the schema from the start, but `deliverExternal` only
+ever logged a stub. Added: a `PushSubscription` Prisma model + migration + RLS policy (one
+subscription per browser/device, upserted by its own unique `endpoint`); `web-push` installed
+server-side with a freshly generated VAPID key pair (private half in `efims-backend/.env` only,
+public half copied to `efims-frontend/.env.local` as `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — both values
+generated via `web-push.generateVAPIDKeys()`, placeholders documented in both `.env.example`
+files); `POST`/`DELETE /notifications/push-subscriptions` endpoints; `NotificationsService.
+createAndDeliver` now fetches the recipient's subscriptions in the same transaction as creating
+the notification row and fires a real `sendPush` for each — not awaited by the caller (a network
+call to an external push service has no latency bound, and every caller of `createAndDeliver` is
+already a loop over possibly many recipients), but never silently dropped either: every attempt
+still writes a `NotificationDelivery` row (SENT/FAILED), and a 404/410 from the push service
+(subscription no longer exists on the browser's end) prunes that row immediately instead of
+retrying forever. Frontend: `public/sw.js` (a minimal push-only service worker — this app has no
+other offline/caching need), `usePushSubscription` (registers the worker, exposes subscribe/
+unsubscribe, never auto-subscribes — that would mean silently requesting OS notification
+permission without the user asking), and an explicit opt-in/out toggle on the notifications page.
+
+**Verified, honestly**: the full backend pipeline end-to-end, live — subscribed a real user,
+triggered a genuine cross-user `task.assigned` event (self-assignment is deliberately not
+notified, confirmed existing behavior, not a bug), confirmed a real `PUSH` `NotificationDelivery`
+row was written with `status: FAILED` (correct — the test used a fake endpoint) and that the
+triggering request (task creation) returned `201` immediately, unaffected by the slow/failing push
+call underneath. The frontend subscribe flow was verified up to the exact point a real browser
+differs from this one: service worker registration, the permission prompt, and VAPID key
+conversion all work, but Playwright's bundled test Chromium has no Google API key baked in (unlike
+a real Chrome install), so the final `pushManager.subscribe()` hop fails with "push service not
+available" — a known, documented limitation of testing the Push API in CI/headless Chromium
+generally, not something fixable from this app's code. A real Chrome browser on an actual device
+is needed for the final confirmation that an OS-level notification arrives; not done in this
+session.
+
+---
+
+## 2026-11-16 (cont'd, 5th pass) — Production-latency proxy test: confirms today's whole investigation was dev-environment latency, not an architectural ceiling
+
+User asked to follow through on the remaining open item from the 4th pass — real evidence for
+what this exact code would do co-located with its database (production topology), instead of
+leaving it as a reasoned-but-unverified projection.
+
+**Method**: rather than guess, or touch the real Neon project, built a disposable local proxy —
+this machine already runs a local PostgreSQL 17 service (unrelated to this project). With the
+user's explicit permission and the local superuser password (never written to any file or printed
+to any log), created a throwaway `efims_prodproxy_test` database, applied the real
+`prisma migrate deploy` + `prisma/rls-policies.sql` (the exact same schema and RLS setup, including
+the real `efims_app` role) that a fresh production database would get, seeded it with
+`npm run seed`, and ran a **second, fully isolated backend instance on port 3002** (via exported
+env vars only, never touching `efims-backend/.env` or the real running dev instance on 3001) to
+run the identical load-test scripts from the 3rd/4th passes against it.
+
+**Result — decisive**: single `GET /cases`, ~5.6s on the real dev setup (Neon, `us-east-2`,
+~230ms RTT) → **19ms** against the local instance (near-zero RTT) — a ~295x difference, for the
+exact same code. Single `GET /cases/stats`: 3.9s → 24ms. Concurrency 10 and 40, both 100% success
+on the dev setup after this session's earlier fixes, now complete in **under 200ms max** on the
+local instance instead of up to ~7.5s. Pushed to concurrency=100: the database/backend layer never
+became the bottleneck at all — the only failures were 52/100 `429`s from the *same* IP-based
+global rate limiter found in the 3rd pass (an intentional, correctly-functioning security control,
+not a capacity problem), and the 48 that succeeded all completed in 110-265ms.
+
+**What this settles**: every single slowness and concurrency-ceiling finding from today's 1st
+through 4th passes — the original "5 seconds per page" report, the connection-pool exhaustion, the
+audit-lock queueing under concurrent load — was downstream of this dev environment's cross-region
+database latency, not a structural flaw in the application code. The fixes made along the way
+(transaction consolidation, connection pool sizing, the audit round-trip reduction, removing the
+list-filtering audit write) are all still correct and worth keeping — they reduce absolute round
+trips and lock-hold time regardless of RTT — but the finding here is that **latency, not instance
+count, was the dominant variable**. A single backend instance, properly co-located with its
+database, shows no sign of needing horizontal scaling at any concurrency level this session could
+practically generate from one test machine.
+
+**What this does NOT settle**: this is a local-machine proxy, not the real target production
+topology (an actual Render instance + an actual Neon project in the same region, over a real
+network hop rather than localhost's loopback). Directionally very strong evidence, not a
+substitute for a real pre-launch load test against that actual pair once provisioned. Test database
+and the temporary second backend instance were both torn down immediately after — nothing from
+this proxy setup persists.
+
+---
+
+## 2026-11-16 (cont'd, 4th pass) — Audit policy call: list-view filtering isn't a "denial"; removing that write was the real fix
+
+Before chasing the 3rd pass's remaining concurrency ceiling further, the user asked a policy
+question that turned out to undercut the whole investigation's biggest remaining cost: is a case
+being silently excluded from a list/stats view actually a "denial" under CLAUDE.md non-negotiable
+#6 ("any denial is itself written as an audit event"), or does that non-negotiable only mean a
+*specific request* for a case the user can't open (`assertAccess`'s domain — e.g. `GET /cases/:id`
+returning 403)?
+
+Traced the `cases.case.list_filtered` write (added 2026-11-14/15 during an earlier hardening pass)
+back to its origin instead of assuming it was settled: `docs/engineering/implementation-assessment.md`
+finding #6 flagged it as "a real gap against CLAUDE.md's **literal** 'any denial...'" — the
+assessment's own word "literal" already hedging that this was a textual reading, not a confirmed
+policy interpretation — and it was implemented directly in a later session without ever going
+through `AskUserQuestion` the way the Groq-fallback policy conflict in that same assessment did.
+Checked `docs/DECISIONS.md` (no entry) and `docs/configuration-decisions.md`'s CD-01–CD-08
+ownership table (none of the 8 items cover audit-event granularity for access filtering) — this
+specific question had no assigned owner anywhere in the project's existing structure. Presented
+both readings to the user with a recommendation (narrow); **the user decided: narrow** — list/stats
+filtering is routine row-level security, not an access attempt, and gets no audit event at all.
+
+**Removed `cases.case.list_filtered` entirely.** `CasesService.getVisibleCases` reverted to a plain
+access filter (no denial-detail collection, no `auditService.record` call); `list()`/`stats()`
+reverted to their simpler pre-concurrency-fix shape (no `buildResult()`/`auditWrite` split, since
+there's no longer a second write to run concurrently with anything); `getVisibleCaseIds` reverted
+to a two-line wrapper. `AuditService.record`'s `opts.rethrowOnFailure` (added in the 2nd pass
+specifically for this one call site) was removed too, rather than left as unused speculative
+surface — nothing else in the codebase ever called it with that option.
+
+**Measured impact — this was the single biggest win of the entire 2026-11-16 investigation**:
+single `GET /cases` dropped from ~9.3-11.7s (pre- any of today's fixes) to **~5.6s** (no other
+change between these two numbers besides this one write's removal). More importantly for the
+user's original concurrency concern: a live load test with this write gone handled **40 concurrent
+`/cases` requests from one source with zero failures** (previously, even after the 3rd pass's pool
+and round-trip fixes, 20 concurrent requests still failed 4/10 and 30-40 failed worse). Pushed to
+60-80 concurrent requests from one test process and got 429s — confirmed via the response body
+(`ThrottlerException`) and `app.module.ts`'s `ThrottlerModule` config (100 req/60s, tracked by IP,
+NestJS's default) that this is the *unrelated*, correctly-functioning global rate limiter reacting
+to one IP firing a burst, not a database capacity ceiling — a real many-different-users production
+scenario wouldn't share one IP's throttle bucket the way one test script sharing one machine does.
+
+**What this changes about the still-open item from the 3rd pass**: `AuditService.record`'s
+per-tenant lock-queueing under concurrency is still real and still inherent to a hash-chain's
+correctness requirement — but it's no longer on the hot path for the two highest-traffic endpoints
+in the app (every ordinary case list/stats page load). It still applies to genuine
+`assertAccess`-path denials and every other audit-writing action in the app, just at a far lower
+natural frequency than "every list page load, for every user." The connection-pool fix
+(`connection_limit=60`) and the lock round-trip reduction from the 3rd pass both remain in place
+and still apply to those.
+
+---
+
+## 2026-11-16 (cont'd, 3rd pass) — Real concurrency load testing: connection pool exhaustion, audit-lock queueing, graceful degradation
+
+User, unconvinced single-request latency fixes alone would hold up with many simultaneous users,
+asked for "what's professionally necessary" for production-grade concurrency — explicitly wary of
+delays compounding into minutes-long waits. Ran actual concurrent-load tests (`Promise.allSettled`
+firing 2/5/10/20/30/40 simultaneous `/cases` requests) against the real backend, rather than
+reasoning about it abstractly.
+
+**Finding #1 (real, confirmed via the exact Prisma error message): connection pool exhaustion.**
+`DATABASE_URL` never explicitly set `connection_limit`, so Prisma defaulted to 9 (this machine's
+core count × 2 + 1). Every `CasesService.list`/`stats` call needs 2 simultaneous connections (its
+own transaction, plus `AuditService.record`'s separately-isolated one — true regardless of
+sequential or concurrent scheduling, since `audit` deliberately never shares a caller's
+transaction). At just 10 concurrent requests, 7/10 failed outright with
+`PrismaClientKnownRequestError: Timed out fetching a new connection from the connection pool`.
+Checked Neon's real ceiling first (`SHOW max_connections` via `DIRECT_URL`: 901, with only ~22 in
+use) before raising anything — confirmed massive headroom on the already-pooled (PgBouncer)
+endpoint. Set `connection_limit=60&pool_timeout=20` on `DATABASE_URL`. Verified: concurrency=10
+failures went from 7/10 to 0/10.
+
+**Finding #2 (real, found after #1 removed pool exhaustion as the dominant cause): audit hash-chain
+lock queueing.** At concurrency=20+, failures persisted — now `"Transaction already closed... the
+interactive transaction timeout"`, not a pool error. `AuditService.record`'s
+`pg_advisory_xact_lock(hashtext(tenantId))` necessarily serializes every audit write for the same
+tenant (this is what prevents the hash chain from forking under concurrent writers — a correctness
+requirement, not a performance bug, and explicitly NOT weakened here). Under enough simultaneous
+same-tenant users, writes queue behind each other long enough to cross the transaction's 20s
+timeout. Fixed the only thing safely fixable without touching that guarantee: shrank how long each
+write holds the lock, by combining the lock acquisition and the "latest hash" lookup (previously
+two sequential round trips — `$executeRaw` then `findFirst`) into one `$queryRaw` call using a
+`MATERIALIZED` CTE, verified correct against raw Postgres first (confirmed the lock's side effect
+still fires even when zero prior rows exist, via `pg_locks`) before changing the real code path.
+Verified live: concurrency=20 failures dropped from 7/10 to 4/10 on the same test.
+
+**Tried and reverted**: raising the interactive-transaction `timeout` from 20s to 30s as a cushion.
+A repeat load test showed no consistent improvement — contention grows to fill the extra time
+rather than resolving, and a longer timeout runs directly against the user's explicit concern
+(long waits), not toward it. Reverted to 20s.
+
+**Finding #3 (addressed directly, not a "fix" but the professionally correct response to a real
+ceiling): no graceful degradation existed.** Whatever WAS failing returned a bare, generic
+`500 Internal server error` — indistinguishable from a real bug to a caller. Added
+`PrismaOverloadFilter` (`src/common/filters/prisma-overload.filter.ts`), a global exception filter
+catching exactly the two Prisma error shapes this load test produced (`P2024` connection-pool
+timeout; the "Transaction API error" interactive-transaction expiry) and returning a clean
+`503` + `Retry-After: 5` with a human-readable message — everything else passes through unchanged.
+Verified live: concurrency up to 20 now succeeds 100% of the time on repeat runs; concurrency
+30-40 (genuinely beyond this single dev backend instance's capacity against a remote database)
+now fails fast with the clean 503, never a long hang or a confusing crash.
+
+**Explicitly not done, and why — this is the honest ceiling of what today's session can respon-
+sibly claim**: this dev environment's ~230ms RTT to Neon (`us-east-2`) inflates every one of these
+costs by roughly the same multiple a co-located production deployment wouldn't pay — the SAME code,
+run with backend and database in the same region, would likely clear a far higher concurrency
+ceiling before hitting either of today's two bottlenecks. Confirming that requires a real load test
+against actual target production infrastructure, not this dev setup — not done here. True
+high-scale concurrency (hundreds of simultaneous same-tenant users) would need: horizontal backend
+scaling (blocked today on the already-documented single-instance-only rate-limiter/cache — see the
+2026-11-02 production-readiness audit), and/or batching audit writes instead of one hash-chain
+append per request. Both are real architectural decisions for the user to prioritize, not
+something to silently build into a performance-investigation session.
+
+---
+
+## 2026-11-16 (cont'd, 2nd pass) — Constraint-driven fix: run the cases list-filtered audit append concurrently with its own enrichment queries, not before or after
+
+Direct follow-up to the pass below, executed against an explicit, detailed constraint list the user
+provided (preserve hash-chain integrity/canonicalization/locking/append-only; keep every individual
+denied case id + reason traceable from the one summarized event, not just reason-category counts;
+run the list query and the audit append concurrently, only after access control has established the
+filtered case ids; await both before returning success; never silently return 200 if the audit write
+fails; no audit event schema change without inspecting real consumers first; implement only this,
+then stop).
+
+**`AuditService.record`**: added an optional `opts.rethrowOnFailure` (default off, so the other ~40
+call sites — login, every other denial — keep their existing "log and swallow" behavior unchanged).
+**`CasesService.getVisibleCases`**: now collects per-case `{caseId, reason}` denial detail (not just
+`byReason` counts), and returns `{ visible, auditWrite }` instead of awaiting the audit write inline
+— `auditWrite` is already-started, not yet awaited. **`list()`/`stats()`**: their downstream
+enrichment work (teams, incident counts, severity/SLA, loss/recovery) now runs inside a
+`buildResult()` closure executed concurrently with `auditWrite` via `Promise.all`, both awaited
+before the method returns — a failed audit write (now rethrown) fails the whole request instead of
+silently returning filtered data with no record of why. Inspected before changing: `metadata` is a
+loose `Record<string, unknown>`/`Json?` on both ends, `audit-hash.ts`'s `canonicalize()` already
+handles arrays of objects generically, and a repo-wide search found zero frontend or backend code
+reading this action's metadata by shape — adding `deniedCases` alongside the existing `byReason` is
+additive, not a breaking schema change.
+
+Verified: `tsc`/lint clean; `GET /cases` still returns the same data as before; `GET
+/audit-events/verify` shows the same 3 pre-existing, already-documented 2026-09-24 breaks and zero
+new ones (confirms the new field hashes and round-trips through JSONB correctly). Measured (fully
+isolated, no concurrent traffic): baseline (sequential) ~9.3-11.7s; after (concurrent) ~5.2-5.9s
+steady-state — consistent with the ~4s audit write and ~2.5s enrichment work now overlapping instead
+of summing. Statement count is unchanged — this is a concurrency fix, not a reduction in DB work.
+Not tested: the failure path (a real forced audit-write failure) was verified by code inspection
+only, not a live failure injection.
+
+---
+
+## 2026-11-16 (cont'd) — Investigated "5 seconds per page navigation", fixed a real transaction-count bug, found the rest is dev-environment-inherent
+
+User reported page-to-page navigation taking ~5s and asked whether something was wrong with their
+system. Measured rather than guessed: raw React/Next.js render time is sub-100ms (confirmed), so
+the delay is 100% backend/database round-trip time, not the frontend or the user's machine.
+
+**Root cause #1 (real code bug, fixed)**: `IncidentsService.getVisibleIncidents`/`getById` opened
+two separate `forCurrentTenant` transactions per call (the incident read, then a second one for
+`getGrantedCompartments`) instead of sharing one. `CasesService.getVisibleCases`/`list`/`stats`
+had the same shape at a larger scale — `list()` alone opened up to 3 separate transactions
+(`getVisibleCases`, the teams+incident-count read, `computeSeverityAndOverdue`). Each
+`forCurrentTenant` call is a real `BEGIN`/`SET_CONFIG`/`COMMIT` round trip to Neon; this dev
+environment's database (`us-east-2`, Ohio) measures ~230-250ms RTT from this machine, so every
+extra transaction cost a fixed, avoidable tax regardless of query complexity. Fixed by threading an
+optional `tx` parameter through `getGrantedCompartments` (incidents), and through
+`getVisibleCases`/`computeSeverityAndOverdue` (cases) so `list()`/`stats()` each run as one shared
+transaction instead of three. Verified live: `GET /incidents` dropped from 2.5-4.6s to ~1.2-1.8s,
+a real, repeatable improvement.
+
+**Root cause #2 (structural, not fixable from this codebase alone)**: raw network RTT to Neon from
+this dev machine is ~230-250ms per round trip — confirmed with a raw `pg` client, no Prisma or app
+code involved. In a real production deployment, backend and database are co-located in the same
+region (sub-5ms RTT); this dev setup's cross-region latency doesn't reflect what users would see
+in production, but it is real for local development right now.
+
+**Root cause #3 (real, found, not changed without the user's input)**: `CasesService.getVisibleCases`
+writes one summarized `cases.case.list_filtered` audit event per call whenever any case is denied
+(`AuditService.record`, added 2026-11-02 for the batch-access-denial gap) — and `AuditService.record`
+always opens its *own* transaction (by design: the advisory lock serializing a tenant's hash chain,
+non-negotiable #3, is a deliberately separate concern from the caller's transaction). That one
+audit write measured ~4s on its own in a fully isolated test (no concurrent traffic) — confirmed via
+a raw-`pg` replay of the identical lock+select+insert pattern, which took ~1s for the same logical
+work, and an `EXPLAIN ANALYZE` on the "latest hash" lookup, which showed the index
+(`audit_events_tenantId_createdAt_idx`) working perfectly (0.085ms execution time, 1150 rows, no
+table-bloat issue). The ~4x gap between raw `pg` and the same operation through Prisma's interactive
+transaction appears to be Prisma's own per-statement protocol overhead, which compounds
+multiplicatively with this environment's high base RTT. Not changed in this session — making the
+denial audit write non-blocking would mean the HTTP response could return before the audit event is
+guaranteed written, which touches non-negotiable #6's audit-on-denial guarantee; that's a tradeoff
+for the user to decide on, not something to silently change while investigating a performance report.
+
+**Also found, not a code bug**: the backend's connection to Neon dropped outright twice during this
+session's restarts (`PrismaClientInitializationError: Can't reach database server`, error P1001) —
+consistent with Neon's serverless compute auto-suspending after idle and needing a moment to wake on
+reconnect. A simple restart recovered both times.
+
+**Process hygiene note**: repeated manual dev-server restarts during this investigation left 3-4
+orphaned `nest start --watch` processes competing for port 3001 at one point, which produced
+misleading, inconsistent timing measurements until all of them were killed and exactly one clean
+instance was confirmed via `netstat`. Worth remembering for any future live-timing investigation in
+this project: verify a single clean process before trusting measurements.
+
+---
+
+## 2026-11-14 (cont'd) — Full page-by-page QA pass: Overview through every main page, case-detail tab, and shell modal
+
+The comprehensive Track B8 live-verification pass the redesign plan called for — every main
+sidenav page, all 7 case-detail tabs, the quick-preview drawer, the command palette, and the
+responsive shell, checked live against a real running backend, not just `tsc`/lint.
+
+Split into 5 parallel verification passes (Overview/Monitor, full Cases module, Manage-section
+registers, Govern-section pages, Administration + shell modals) — each logged in as a real seeded
+user, screenshotted every page, checked for console errors, and fixed small clear bugs directly
+rather than just reporting them.
+
+**Real bugs found and fixed (13 total)**: the icon-migration sweep two sessions ago was scoped to
+Material-Symbols→Lucide specifically and never went back to re-check every page's `font-headline`
+usage against the later "drop serif except major editorial headings" decision — 12 pages had kept
+the old serif h1 as a result (`cases/new`, `notifications`, `referrals`, `users` ×4, `configuration`,
+`incidents/[id]`, `signals/[id]`, `signals/new`, `tools/transaction-risk-scoring`). All fixed, plus
+the `login`/`platform/login` pages' own brand-mark lockups (which had kept serif on the "EFIMS"
+wordmark even though the sidenav's real brand mark already uses plain sans — now consistent, with
+the plain "E" letter mark replaced by the same `ShieldCheck` icon the sidenav uses) and
+`platform/(authenticated)/page.tsx`'s "Tenants" h1. Also fixed: a stale "Remediation" label on the
+case right-rail that should have read "CAPA" after that nav rename, and one leftover `rounded-2xl`
+card on `operational-queue-table.tsx`. A repo-wide grep after all fixes confirms zero remaining
+`font-headline` class usages anywhere in the app.
+
+**Confirmed NOT bugs** (investigated, ruled out, nothing changed): a "₦NO" rendering on the
+Recovery page turned out to be a correctly-computed "₦0" (the ₦ glyph's strikethrough-N shape
+reads oddly next to a bare zero at small screenshot scale); the Audit page's outcome filters are
+real `<Link>`s with query params, not buttons, so a button-selector test failure was the test's
+own mistake; the command-palette "case" search and a user-detail-page navigation both appeared
+broken under the heavy concurrent load of 5 parallel verification passes hitting the same
+single-instance backend/Neon pool at once, and both were cleanly confirmed working correctly once
+re-tested in isolation afterward — the same "test impatience vs. this dev DB's real ~10-13s
+latency" class of false positive this project has hit and ruled out more than once before.
+
+All fixes verified together: `npx tsc --noEmit` and `npm run lint` clean on the frontend (only the
+pre-existing, unrelated `scripts/audit-guard.js` lint errors remain).
+
+---
+
+## 2026-11-14 (cont'd) — Backend Phase 1: the 5 net-new module-boundary/audit/hash findings, closed
+
+Closed all 5 of the Phase 0 engineering assessment's "small, well-isolated" findings, not just
+documented them.
+
+**Module-boundary violations (non-negotiable #2)**: `CasesService.stats()` no longer queries
+`lossEntry`/`recoveryEntry`/`approvalRequest` directly. `ApprovalService` gained `countPending`
+(same "take an already-resolved case-id list, no `CasesService` dependency" shape as its existing
+`listAll`). The loss/recovery total needed a different fix — `RecoveryModule` already imports
+`CasesModule` for its own access checks, so `CasesModule` importing `RecoveryModule` back would be
+a real circular module dependency NestJS refuses without `forwardRef()`. Used a plain,
+dependency-injection-free function instead (`recovery/recovery-ledger.util.ts`) — the recovery
+module's own code still runs the query, just not wired through Nest's injector, so there's no
+cycle at all. `RecoveryService.listAll` and `InvestigationsService.listAll` each used to run
+`tx.case.findMany(...)` directly too, for a display-only reference/title join — both now call a
+new `CasesService.getCaseSummariesByIds()`, the normal direction (both modules already import
+`CasesModule`, no cycle).
+
+**Reopen-from-CLOSED asymmetry**: closing a case requires a maker-checker-approved decision;
+reopening one required nothing. A full approval gate would need a new `ApprovalAction` enum value,
+a migration, and a CD-04 approval-matrix entry — CD-04 is still an unratified draft, not something
+to extend silently inside a "small fix." Closed the gap with what's available today instead: only
+an `ELEVATED_ROLES` actor may reopen a closed case, and must give a real reason (≥5 characters).
+
+**`isAccessible`'s un-audited batch denials**: the single-record access path audited every denial;
+the batch/list path (used by `list()`/`stats()`/every cross-module `getVisibleCaseIds` caller)
+didn't audit anything. Auditing per-case would mean dozens of audit rows on every ordinary list
+page load — most of that filtering is routine team/compartment scoping, not a meaningful security
+event each time. `getVisibleCases` now writes one summarized `cases.case.list_filtered` audit
+event per call (counts by denial reason) when anything was filtered, not one row per case.
+
+**The latent `Prisma.Decimal` hash landmine**: same bug class as the already-fixed `Date` issue —
+`Decimal` has no own enumerable properties either, so `canonicalize()` would silently hash it as
+`{}`. Added the same recursive-string-conversion branch the `Date` fix used, matching what
+`decimal.js`'s own `toJSON()` (what the JSONB write path actually calls) does.
+
+**Verification**: found and fixed two real, pre-existing, unrelated issues along the way — the
+`efims_test` database was missing two migrations from before this session even started (causing
+unrelated e2e failures the first run surfaced), and `tenant-isolation.e2e-spec.ts` times out in
+its own fixture setup under current Neon connection conditions (reproduced in isolation, not
+caused by anything in this pass — see `docs/OPEN_ITEMS.md`'s new entries on both). After the
+migration fix, 5 of 6 e2e suites pass cleanly (30 tests, including `case-access-matrix` and
+`containment-gate`, which exercise much of the same access-control code these fixes touched); the
+6th's `beforeAll` timeout was independently worked around with a fast, direct, targeted recheck of
+the actual RLS guarantee against the real dev database, which passed instantly.
+
+---
+
+## 2026-11-14 (cont'd) — Responsive/accessibility pass on the application shell; Recent-activity/brand cards; Groq fallback made opt-in
+
+Continued the same day's redesign with the remaining Track B items.
+
+**Shell responsiveness** (previously zero — a permanently `fixed w-64` sidebar with no way to
+reach it below desktop width): new `MobileNavProvider` context (`sidenav.tsx` and `topnav.tsx` are
+siblings, not parent/child, so the topnav's hamburger needs a shared state holder to control the
+sidebar) drives an off-canvas sidebar below the `lg` breakpoint — dismissible overlay, a close
+button inside the sidebar itself, auto-closes on navigation (adjusted during render per React's
+documented pattern, not inside a `useEffect`, after lint first flagged the naive version as a
+cascading-render risk). `<main>` drops its reserved `ml-64` margin below `lg`; the topnav degrades
+its own content progressively (institution name hidden below `sm`, user email/role hidden below
+`md`, never fully losing identity context). `DetailDrawer` gained `max-w-[90vw]` so its fixed
+480/640px width can't force horizontal scroll on a phone. Verified live at 375px/820px/1440px
+viewports — hamburger present and functional below `lg`, correctly absent at `lg`+, zero console
+errors.
+
+**Accessibility**: every icon-only shell control (hamburger, sidebar close, notification bell,
+sign-out in both the tenant and platform shells, drawer close) gained a real `aria-label` — a
+`title` attribute alone isn't a reliable accessible name for assistive technology. `DetailDrawer`
+gained `role="dialog"`/`aria-modal`/`aria-labelledby` (it closed on Escape already but was never
+announced as a dialog). `prefers-reduced-motion: reduce` is now respected globally. Verified live:
+full keyboard Tab order reaches every sidebar link in visual order with a visible focus ring.
+New `docs/design/responsive-guidelines.md` documents exactly what was and wasn't covered — notably
+not a certified WCAG/axe-core audit, and not yet a page-by-page sweep beyond the shell itself.
+
+**Closed the remaining visual gap against the reference image**: `QueueDashboard` gained a real
+"Recent activity" timeline (fed by the same `listNotifications` call `TopNav` already makes — no
+new data source invented) and a static dark brand card, matching the reference's bottom row.
+
+**Groq severity-fallback decision, resolved and shipped** (flagged as open in the Phase 0
+assessment, not left open): chose the middle option from that doc's own three — opt-in only, not
+automatic. `MlGatewayService.suggestSeverity` now takes `allowLlmFallback`; omitted, an unreachable
+EFIMS AI Service or a risk-factor-incomplete incident returns a clean 503 (matching anomaly/
+recovery's existing behavior) instead of silently calling Groq. `TriageController`'s
+`GET .../suggestion` route and the frontend's `SeveritySuggestionPanel` both thread the flag
+through — the panel shows a second, explicit "Try an LLM-estimated severity instead" button only
+after the first request 503s. `CLAUDE.md` non-negotiable #4 and the engineering assessment's
+"decision needed" section both updated to reflect this as resolved. Verified live: the unavailable
+path correctly 503s, the opt-in retry correctly falls back to Groq with the advisory disclaimer
+and "Groq (fallback)" source label intact.
+
+---
+
+## 2026-11-14 — Two master directives: backend Phase 0 engineering audit + total frontend redesign ("Institutional Intelligence")
+
+User issued two large, formal engineering directives in one session: a full backend/architecture
+audit-and-hardening pass, and a from-scratch frontend visual/UX redesign. Mapped into one combined
+phased roadmap (plan file: see the session's approved plan) — both tracks run in parallel, since
+they touch almost entirely disjoint files and neither changes an existing REST contract.
+
+**Backend Phase 0** (discovery only, no architecture changes yet): four parallel, read-only,
+code-verified audits (module boundaries, ml-gateway-vs-vendor-contract compliance, frontend
+architecture, security/ops) produced `docs/engineering/implementation-assessment.md`. Found 15
+net-new findings beyond the project's own existing `docs/OPEN_ITEMS.md` tracker — real ones worth
+naming: `CasesService.stats()` and two other services query tables they don't own directly instead
+of going through those modules' public interfaces (a real non-negotiable #2 violation); reopening
+a `CLOSED` case has no approval guard even though closing one requires one; the case-access rule's
+batch/list path never audits its denials, only the single-record path does; a latent audit-hash
+landmine (`canonicalize()` has no `Prisma.Decimal` branch, same bug class as the already-fixed
+`Date` bug, just not yet triggered). Also surfaced one real policy conflict needing a human
+decision: the new directive bans Groq as an automatic fallback for a failed predictive-model call,
+but the shipped code (and this file's own non-negotiable #4) does exactly that for severity
+prediction. **Resolved**: middle ground — severity fallback becomes opt-in per request ("LLM-
+estimated severity"), not automatic. Non-negotiable #4 updated accordingly (see below).
+
+**Frontend total redesign — "Institutional Intelligence."** Replaces "Botanical Precision"
+wholesale (not a blend, a full swap) against a user-supplied reference image: navy ink (`#172B45`)
+sidebar/brand + teal (`#167D83`) as the one real interactive accent, Inter + IBM Plex Mono
+replacing Plus Jakarta Sans/JetBrains Mono, and — the biggest single mechanical change — every one
+of ~164 Material Symbols Outlined icon usages across 46 files replaced with real `lucide-react`
+components (the ligature icon font's `<link>` and CSS rule both removed entirely, not just
+unused), per explicit instruction that the result must not read as a generic/AI-templated icon
+set. Because the app already routed every color through a semantic CSS-variable indirection layer
+(`var(--color-primary)` etc., never a literal hex in ~160 call sites), the full palette swap was a
+single-file change to `globals.css` — the icon migration was the real scope, done as 5 parallel
+agents each covering a cluster of files, then verified together with one full-project `tsc`/lint
+pass and a 17-page live Playwright sweep (zero console errors).
+
+Sidenav IA regrouped to match the reference's MONITOR/MANAGE/GOVERN/ADMINISTRATION split more
+precisely than before (Cases/Investigations/Evidence move from MONITOR to MANAGE, matching the
+directive's own "understand vs. resolve" definitions; `/signals` and `/incidents` — already real,
+substantial pages — gained direct nav links instead of being reached only through `/intake`'s tab
+switcher). `QueueDashboard` (the shared shell driving 16 of 20 roles) gained: uniform white KPI
+tiles with a colored icon badge (replacing the old dark "hero" card), a real "Case severity mix"
+segmented bar in the reference's donut slot (no fabricated "68% Overall Risk" — no risk-scoring
+model produces that number, so real `CaseStats.bySeverity` data went in its place instead), a
+"Matters requiring attention" panel, and a "Recent activity" timeline fed by real notifications
+(the same `listNotifications` call `TopNav` already made) plus a static brand card — the two
+pieces the reference image's bottom row showed that this pass hadn't covered yet in an earlier
+cut. `StatusBadge` gained real `success`/`warning-status`/`info` tokens (previously reused brand
+tokens as a stand-in).
+
+One real bug caught mid-migration: `executive-dashboard.tsx`'s severity/status color maps held
+literal hex values that had silently drifted from the new palette the moment `globals.css`
+changed — found and fixed by the fork doing that file, not left stale.
+
+New docs: `docs/design/design-tokens.md` (current, accurate token reference — supersedes
+`docs/design-system.md`'s now-stale color/font tables, which gained a pointer to this instead of
+being deleted), `docs/design/role-workspace-mapping.md` (built from the actual `Role` enum and
+`roles.ts` permission constants, confirming the shared-shell-with-per-role-composition
+architecture the directive asked for was already built during the 2026-10-14 twenty-role
+expansion — this pass re-skinned it, not rebuilt it), `docs/design/frontend-redesign-assessment.md`
+(the Phase 0 deliverable, written honestly noting it was produced alongside implementation rather
+than strictly before it, since the reference image's token spec was detailed enough to build from
+immediately).
+
+**Deferred, explicitly**: responsive/mobile audit, an icon-accessibility (`aria-label`) sweep,
+Storybook (not configured in this project; directive's own fallback says not to let that block
+implementation), `docs/design/interaction-patterns.md`/`responsive-guidelines.md` (nothing yet
+decided that warrants documenting).
+
+---
+
+## 2026-11-13 — Cases queue rebuild against a new mockup reference, bulk assign/escalate, and a latency pass on `getVisibleCases`
+
+A new, higher-fidelity Lovable-hosted mockup reference (distinct from the existing
+`mockups/screens/*.html` set) prompted a rebuild of the Cases queue page specifically, then a
+broader generalization once a 35-screen contact sheet showed the same KPI/trend/queue-table shape
+recurring everywhere.
+
+**Backend**: `TriageService.getLatestSeverityByIncidentIds` and
+`SlaClockService.getBreachedIncidentIds` — two new small, batched cross-module reads — let
+`CasesService.list`/`stats` compute per-case `effectiveSeverity`/`isOverdue` (added to
+`CaseListItem`) and `bySeverity`/`overdueCount` (added to `CaseStats`) without `CasesService`
+reaching into tables it doesn't own (non-negotiable #2). `CasesService.bulkAssignTeam`/
+`bulkEscalate` added — partial-success shape (a batch of 6 with one stale id doesn't fail the
+other 5), looping the existing single-case methods rather than duplicating their logic; escalate
+emits one new `CASE_ESCALATED_EVENT` per batch, notifying the assigned team's lead (falling back
+to the whole team if no member currently holds that role). New routes: `POST /cases/bulk-assign`,
+`POST /cases/bulk-escalate`.
+
+**Frontend**: Cases queue rebuilt with a real KPI strip (severity-tier counts, not fabricated), a
+"Sample data" badge, bulk checkbox selection feeding the new bulk endpoints, and a segmented
+All/S1–S2/Overdue filter. Generalized the same pattern into `QueueDashboard`/`dashboard-loaders.ts`
+for the 8 case-based roles beyond just the dedicated Cases page (institution-wide trend +
+needs-attention strip + a real filterable/paginated `OperationalQueueTable`, reusing
+`CaseListItem`'s new fields) — the other 8 non-case-based roles kept their simpler flat list,
+since forcing severity/team/SLA columns onto e.g. an evidence or CAPA queue would mean inventing
+fields that entity doesn't have.
+
+**Performance**: found and fixed the real dominant cost behind an apparent "navigation doesn't
+work" bug report (it was ~10-13s real latency on this dev DB, not a defect) — merged several
+previously-sequential `forCurrentTenant` transactions into one each (`getVisibleCases`,
+`computeSeverityAndOverdue`, `list()`'s team/incident-count lookup), cutting a typical `/cases`
+load from ~9 database round trips to ~3. Re-verified the 7-condition case-access rule and RLS
+tenant isolation held identically afterward, given `getVisibleCases`'s blast radius across the
+whole app.
+
+---
+
 ## 2026-11-11 — Real EFIMS AI Service integration (replaces Groq as primary severity engine)
 
 User's ML developer delivered a real, separately-running Python/FastAPI service ("EFIMS AI

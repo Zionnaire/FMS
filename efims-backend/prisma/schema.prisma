@@ -46,6 +46,7 @@ model Tenant {
   slaClocks             SlaClock[]
   approvalRequests      ApprovalRequest[]
   notifications         Notification[]
+  pushSubscriptions     PushSubscription[]
   investigationPlans    InvestigationPlan[]
   issues                InvestigationIssue[]
   interviews            Interview[]
@@ -1078,6 +1079,31 @@ model NotificationDelivery {
 
   @@index([tenantId, notificationId])
   @@map("notification_deliveries")
+}
+
+/// One row per browser/device a user has opted into Web Push on — `endpoint` is the push
+/// service's own unique URL for that subscription (so it doubles as the natural unique key: the
+/// same browser re-subscribing produces the same endpoint, and the standard flow is upsert-by-
+/// endpoint, not insert-and-hope). `p256dh`/`auth` are the two keys `PushSubscription.toJSON()`
+/// gives the client — opaque to this app, passed straight through to `web-push` at send time.
+/// Deleted outright (not soft-deleted) on unsubscribe or on a 404/410 from the push service
+/// itself (the subscription no longer exists on the browser's end) — an invalid endpoint has no
+/// audit/compliance value to retain, unlike a `Notification` row.
+model PushSubscription {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  userId String
+
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, userId])
+  @@map("push_subscriptions")
 }
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Notification, NotificationChannel, NotificationPriority, Prisma, Role } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import * as webpush from 'web-push';
+import { Notification, NotificationChannel, NotificationPriority, Prisma, PushSubscription, Role } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RealtimeService } from '../../infrastructure/realtime/realtime.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
@@ -22,6 +24,7 @@ import {
 import { TeamsService } from '../identity/teams.service';
 import { UsersService } from '../identity/users.service';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
+import { SubscribePushDto } from './dto/subscribe-push.dto';
 
 /** HIGH-priority notifications unread past this window get an escalation delivery on a second
  * channel (see `escalateUnread`) — architecture.md's "escalation" for this module, in its
@@ -51,13 +54,29 @@ const ESCALATION_WINDOW_MINUTES = 15;
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
+  private readonly pushConfigured: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtimeService: RealtimeService,
     private readonly usersService: UsersService,
     private readonly teamsService: TeamsService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    // Set once at construction, not per-send — `web-push` keeps these module-level, and every
+    // `sendNotification` call after this uses them automatically. Missing keys mean PUSH degrades
+    // to the same logged stub EMAIL/SMS already are (see `deliverExternal`), not a startup crash —
+    // this module has to keep working in any environment that hasn't generated a VAPID pair yet.
+    const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY');
+    const privateKey = this.config.get<string>('VAPID_PRIVATE_KEY');
+    const subject = this.config.get<string>('VAPID_SUBJECT');
+    this.pushConfigured = Boolean(publicKey && privateKey && subject);
+    if (this.pushConfigured) {
+      webpush.setVapidDetails(subject!, publicKey!, privateKey!);
+    } else {
+      this.logger.warn('VAPID keys not configured — push notifications will be logged, not sent. See .env.example.');
+    }
+  }
 
   async list(actor: AuthenticatedUser, query: ListNotificationsDto): Promise<{ notifications: Notification[]; total: number }> {
     const limit = query.limit ?? 20;
@@ -74,6 +93,12 @@ export class NotificationsService {
     return { notifications, total };
   }
 
+  /** Emits `notification.read` to the owning user's realtime room after a successful update — the
+   * only way `NotificationBellBadge`'s own unread count (a separate socket consumer from
+   * `NotificationsLiveList`, by this module's own established "each consumer opens its own
+   * connection" pattern) ever finds out a notification was read, including from the list page in
+   * the same tab, another tab, or another device. Without this, the badge's count only ever grows
+   * — a real bug found live, not a guess (see `docs/CHANGELOG.md`'s dated entry). */
   async markRead(actor: AuthenticatedUser, id: string): Promise<Notification> {
     const notification = await this.prisma.forCurrentTenant((tx) => tx.notification.findUnique({ where: { id } }));
     if (!notification || notification.userId !== actor.sub) {
@@ -85,7 +110,32 @@ export class NotificationsService {
     if (notification.readAt) {
       return notification;
     }
-    return this.prisma.forCurrentTenant((tx) => tx.notification.update({ where: { id }, data: { readAt: new Date() } }));
+    const updated = await this.prisma.forCurrentTenant((tx) => tx.notification.update({ where: { id }, data: { readAt: new Date() } }));
+    this.realtimeService.emitToUser(actor.sub, 'notification.read', { id: updated.id });
+    return updated;
+  }
+
+  /** Upsert by `endpoint` (its own unique key — see `PushSubscription`'s schema.prisma doc
+   * comment): a browser re-subscribing after e.g. clearing site data produces a fresh `endpoint`,
+   * so this never collides with a stale row left behind by that; a browser re-subscribing without
+   * clearing anything reuses the SAME `endpoint`, so this updates its keys in place instead of
+   * erroring on the unique constraint. */
+  async subscribeToPush(actor: AuthenticatedUser, dto: SubscribePushDto): Promise<void> {
+    await this.prisma.forCurrentTenant((tx) =>
+      tx.pushSubscription.upsert({
+        where: { endpoint: dto.endpoint },
+        create: { tenantId: actor.tenantId, userId: actor.sub, endpoint: dto.endpoint, p256dh: dto.keys.p256dh, auth: dto.keys.auth },
+        update: { p256dh: dto.keys.p256dh, auth: dto.keys.auth },
+      }),
+    );
+  }
+
+  /** No ownership check beyond RLS's tenant scoping — `endpoint` is a long, unguessable URL the
+   * push service itself generated, not a sequential id; knowing it already proves this is either
+   * the subscribing browser or something with equivalent access, same trust level this project
+   * already gives a bearer access token. */
+  async unsubscribeFromPush(actor: AuthenticatedUser, endpoint: string): Promise<void> {
+    await this.prisma.forCurrentTenant((tx) => tx.pushSubscription.deleteMany({ where: { endpoint, userId: actor.sub } }));
   }
 
   @OnEvent(APPROVAL_REQUESTED_EVENT)
@@ -207,27 +257,87 @@ export class NotificationsService {
     });
   }
 
-  /** Creates the IN_APP notification (the row itself) and pushes it live — the one delivery
-   * path that's genuinely real, not stubbed, since it needs no external provider. */
+  /** Creates the IN_APP notification (the row itself), pushes it live, and — 2026-11-16 — fires
+   * a real Web Push to every device this user has subscribed on (see `subscribeToPush`). Push
+   * delivery is NOT awaited by this method: it's a real network call to an external push service
+   * (Google FCM, Mozilla autopush, etc.) with no bound on latency, and every caller of this method
+   * is already a loop over possibly many recipients (`handleCaseEscalated` etc.) that shouldn't
+   * wait on it. `sendPush` catches its own errors internally, so this is never a silently-dropped
+   * failure (same "accurate record even when fire-and-forget" reasoning as the rest of this
+   * method's own delivery bookkeeping), just a not-blocking one. */
   private async createAndDeliver(
     tenantId: string,
     userId: string,
     input: { type: string; priority: NotificationPriority; title: string; body: string; metadata: Prisma.InputJsonValue },
   ): Promise<Notification> {
-    const notification = await this.prisma.withTenant(tenantId, (tx) =>
-      tx.notification.create({
+    const { notification, subscriptions } = await this.prisma.withTenant(tenantId, async (tx) => {
+      const notification = await tx.notification.create({
         data: { tenantId, userId, type: input.type, priority: input.priority, title: input.title, body: input.body, metadata: input.metadata },
-      }),
-    );
+      });
+      const subscriptions = await tx.pushSubscription.findMany({ where: { userId } });
+      return { notification, subscriptions };
+    });
 
     this.realtimeService.emitToUser(userId, 'notification.created', notification);
+
+    if (subscriptions.length > 0) {
+      void this.sendPush(tenantId, notification, subscriptions).catch((err) =>
+        this.logger.error(`Unexpected error sending push for notification ${notification.id}`, err as Error),
+      );
+    }
 
     return notification;
   }
 
-  /** Stub external delivery — logs instead of calling a real provider. See the class doc
-   * comment for why, and `docs/CHANGELOG.md`'s `notifications` entry for the explicit decision
-   * to build this seam now rather than block on provider credentials. */
+  /** Real delivery (not the stub below) — sends to every one of this user's subscribed devices
+   * in parallel, since a failure on one device must never block or fail delivery to another.
+   * `statusCode` 404/410 from the push service means that specific subscription no longer exists
+   * on the browser's end (uninstalled, site data cleared, etc.) — pruned immediately rather than
+   * retried forever. Falls back to the same log-only stub `deliverExternal` uses for EMAIL/SMS
+   * when VAPID keys aren't configured (see the constructor), so this module keeps working in any
+   * environment that hasn't generated a pair yet. */
+  private async sendPush(tenantId: string, notification: Notification, subscriptions: PushSubscription[]): Promise<void> {
+    if (!this.pushConfigured) {
+      this.logger.log(`[STUB] Would push notification ${notification.id} to ${subscriptions.length} device(s) — VAPID keys not configured.`);
+      await this.prisma.withTenant(tenantId, (tx) =>
+        tx.notificationDelivery.create({ data: { tenantId, notificationId: notification.id, channel: 'PUSH', status: 'SENT', isEscalation: false } }),
+      );
+      return;
+    }
+
+    const payload = JSON.stringify({ title: notification.title, body: notification.body, notificationId: notification.id });
+    const staleEndpoints: string[] = [];
+    let anySent = false;
+
+    await Promise.all(
+      subscriptions.map(async (sub) => {
+        try {
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+          anySent = true;
+        } catch (err) {
+          const statusCode = (err as { statusCode?: number }).statusCode;
+          if (statusCode === 404 || statusCode === 410) {
+            staleEndpoints.push(sub.endpoint);
+          } else {
+            this.logger.warn(`Push delivery failed for one subscription: ${(err as Error).message}`);
+          }
+        }
+      }),
+    );
+
+    await this.prisma.withTenant(tenantId, async (tx) => {
+      if (staleEndpoints.length > 0) {
+        await tx.pushSubscription.deleteMany({ where: { endpoint: { in: staleEndpoints } } });
+      }
+      await tx.notificationDelivery.create({
+        data: { tenantId, notificationId: notification.id, channel: 'PUSH', status: anySent ? 'SENT' : 'FAILED', isEscalation: false },
+      });
+    });
+  }
+
+  /** Stub external delivery — logs instead of calling a real provider. Still used for EMAIL/SMS
+   * (see the class doc comment for why those stay stubbed) — PUSH has its own real path now,
+   * `sendPush` above, called from `createAndDeliver` instead of here. */
   private async deliverExternal(tenantId: string, notificationId: string, channel: NotificationChannel, isEscalation: boolean): Promise<void> {
     this.logger.log(`[STUB] Would deliver notification ${notificationId} via ${channel}${isEscalation ? ' (escalation)' : ''}.`);
     await this.prisma.withTenant(tenantId, (tx) =>
@@ -242,33 +352,42 @@ export class NotificationsService {
    * escalation delivery yet gets one (EMAIL, stubbed). Same "no ambient tenant context in a
    * scheduled job" reasoning as `SlaClockService.sweepBreachedClocks` — lists tenants directly
    * and uses `withTenant` explicitly per tenant.
+   *
+   * Wrapped in `safely()` — found live, not a guess: `@nestjs/schedule`'s `@Cron` has no built-in
+   * error handling, so an unhandled rejection here (e.g. the Neon connection dropping mid-sweep,
+   * a real, recurring characteristic of this dev environment — see `docs/CHANGELOG.md`'s dated
+   * entries) crashes the entire Node process, not just this one tick. `safely()`'s own doc
+   * comment already explains exactly this mechanism for `@OnEvent` handlers; this cron job was
+   * the one place in this file that never got the same protection.
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async escalateUnread(): Promise<void> {
-    const tenants = await this.prisma.tenant.findMany({ select: { id: true } });
-    const cutoff = new Date(Date.now() - ESCALATION_WINDOW_MINUTES * 60000);
+    await this.safely('escalateUnread', async () => {
+      const tenants = await this.prisma.tenant.findMany({ select: { id: true } });
+      const cutoff = new Date(Date.now() - ESCALATION_WINDOW_MINUTES * 60000);
 
-    for (const tenant of tenants) {
-      const candidates = await this.prisma.withTenant(tenant.id, (tx) =>
-        tx.notification.findMany({
-          where: {
-            tenantId: tenant.id,
-            priority: NotificationPriority.HIGH,
-            readAt: null,
-            createdAt: { lt: cutoff },
-            deliveries: { none: { isEscalation: true } },
-          },
-        }),
-      );
+      for (const tenant of tenants) {
+        const candidates = await this.prisma.withTenant(tenant.id, (tx) =>
+          tx.notification.findMany({
+            where: {
+              tenantId: tenant.id,
+              priority: NotificationPriority.HIGH,
+              readAt: null,
+              createdAt: { lt: cutoff },
+              deliveries: { none: { isEscalation: true } },
+            },
+          }),
+        );
 
-      for (const notification of candidates) {
-        await this.deliverExternal(tenant.id, notification.id, 'EMAIL', true);
+        for (const notification of candidates) {
+          await this.deliverExternal(tenant.id, notification.id, 'EMAIL', true);
+        }
+
+        if (candidates.length > 0) {
+          this.logger.log(`Escalated ${candidates.length} unread HIGH-priority notification(s) for tenant ${tenant.id}.`);
+        }
       }
-
-      if (candidates.length > 0) {
-        this.logger.log(`Escalated ${candidates.length} unread HIGH-priority notification(s) for tenant ${tenant.id}.`);
-      }
-    }
+    });
   }
 
   /** Every `@OnEvent` handler runs this way — `EventEmitter2.emit()` (used by every emitter in

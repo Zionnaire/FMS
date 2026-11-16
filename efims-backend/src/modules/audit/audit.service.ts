@@ -78,13 +78,31 @@ export class AuditService {
   async record(input: RecordAuditEventInput): Promise<void> {
     try {
       await this.prisma.withTenant(input.tenantId, async (tx) => {
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))`;
-
-        const latest = await tx.auditEvent.findFirst({
-          where: { tenantId: input.tenantId },
-          orderBy: { createdAt: 'desc' },
-          select: { hash: true },
-        });
+        // The lock acquisition and the "latest hash" lookup used to be two separate round trips
+        // (`$executeRaw` then `findFirst`) — combined into one here, found live: under concurrent
+        // load, many tenants' users can each trigger a `record()` call around the same time, and
+        // since this lock is deliberately per-TENANT (serializing the hash chain, not a
+        // performance knob — see this method's own doc comment on why it can't be removed), every
+        // one of them queues up behind whichever call currently holds it. Each round trip this
+        // call needs is round trips the NEXT one in that queue waits on, so shrinking this call's
+        // own round-trip count shrinks the whole queue's length under load, not just this call's
+        // latency. `MATERIALIZED` forces the lock's side effect to happen as its own step before
+        // the main `SELECT` runs, regardless of whether the `WHERE` below ends up matching zero
+        // rows (the first-ever event for a tenant) — not left to the planner's own CTE-inlining
+        // judgment for a call this load-bearing. RLS already scopes `audit_events` to this tenant
+        // (`current_setting('app.current_tenant')`, set by `withTenant` just before this runs);
+        // the explicit `WHERE` is defense-in-depth, not the only thing doing the scoping.
+        const [{ hash: latestHash }] = await tx.$queryRaw<{ hash: string | null }[]>`
+          WITH lock_acquired AS MATERIALIZED (
+            SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))
+          )
+          SELECT ae.hash AS hash
+          FROM audit_events ae, lock_acquired
+          WHERE ae."tenantId" = ${input.tenantId}
+          ORDER BY ae."createdAt" DESC
+          LIMIT 1
+        `.then((rows) => (rows.length > 0 ? rows : [{ hash: null }]));
+        const latest = latestHash !== null ? { hash: latestHash } : null;
 
         const createdAt = new Date();
         const outcome = input.outcome ?? AuditOutcome.SUCCESS;

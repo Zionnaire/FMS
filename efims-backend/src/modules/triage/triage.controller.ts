@@ -55,8 +55,12 @@ export class TriageController {
   @Get('suggestion')
   @UseGuards(RolesGuard)
   @Roles(...TRIAGE_ROLES)
-  suggestSeverity(@CurrentUser() actor: AuthenticatedUser, @Param('incidentId', ParseUUIDPipe) incidentId: string) {
-    return this.triageService.suggestSeverity(actor, incidentId);
+  suggestSeverity(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('incidentId', ParseUUIDPipe) incidentId: string,
+    @Query('allowLlmFallback') allowLlmFallback?: string,
+  ) {
+    return this.triageService.suggestSeverity(actor, incidentId, allowLlmFallback === 'true');
   }
 }
 

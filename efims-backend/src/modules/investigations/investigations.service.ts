@@ -236,7 +236,7 @@ export class InvestigationsService {
     const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
     if (visibleCaseIds.length === 0) return [];
 
-    const [latestPlans, openIssueCounts, cases] = await this.prisma.forCurrentTenant((tx) =>
+    const [latestPlans, openIssueCounts, caseById] = await this.prisma.forCurrentTenant((tx) =>
       Promise.all([
         tx.investigationPlan.findMany({
           where: { caseId: { in: visibleCaseIds } },
@@ -248,11 +248,10 @@ export class InvestigationsService {
           where: { caseId: { in: visibleCaseIds }, status: { not: IssueStatus.RESOLVED } },
           _count: { _all: true },
         }),
-        tx.case.findMany({ where: { id: { in: visibleCaseIds } }, select: { id: true, referenceCode: true, title: true } }),
+        this.casesService.getCaseSummariesByIds(visibleCaseIds, tx),
       ]),
     );
 
-    const caseById = new Map(cases.map((c) => [c.id, c]));
     const openIssueCountByCaseId = new Map(openIssueCounts.map((o) => [o.caseId, o._count._all]));
 
     return latestPlans

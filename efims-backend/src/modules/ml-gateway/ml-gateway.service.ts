@@ -46,6 +46,11 @@ export interface SeveritySuggestionInput {
   regulatoryRelevance?: boolean | null;
   channel?: string | null;
   reportedByType?: string | null;
+  /** Opt-in only (2026-11-14 decision — see CLAUDE.md non-negotiable #4's dated note): an
+   * LLM-generated severity label is not a validated predictive classifier, so it no longer stands
+   * in automatically whenever the EFIMS AI Service is unreachable or risk factors are missing.
+   * The caller (ultimately a human clicking a second, explicit button in the UI) must ask for it. */
+  allowLlmFallback?: boolean;
 }
 
 export interface SimilarIncidentCandidateInput {
@@ -177,12 +182,15 @@ export class MlGatewayService {
   }
 
   /** Primary severity engine (EFIMS AI Service's structured model), automatic Groq fallback on
-   * unreachability. Requires the incident's risk-factor fields to all be set (see schema.prisma's
-   * doc comment on `Incident`'s new nullable columns) — if any are missing, this skips straight
-   * to Groq rather than sending the structured model fabricated/default values it was never
-   * designed to receive. A 422 from the structured model (our own request mapping is wrong) is
-   * NOT treated as "unreachable" — it surfaces as a 400, since falling back would hide a real bug
-   * in this mapping layer. */
+   * unreachability — Groq is now opt-in only (`input.allowLlmFallback`), per the 2026-11-14
+   * decision: an LLM label isn't a validated classifier, so it no longer stands in silently.
+   * Requires the incident's risk-factor fields to all be set (see schema.prisma's doc comment on
+   * `Incident`'s new nullable columns) to even attempt the structured model — if any are
+   * missing, this returns unavailable (same as the ML-service-unreachable case) rather than
+   * sending it fabricated/default values it was never designed to receive. A 422 from the
+   * structured model (our own request mapping is wrong) is NOT treated as "unreachable" — it
+   * surfaces as a 400, since falling back would hide a real bug in this mapping layer, and opting
+   * into Groq wouldn't fix it either. */
   async suggestSeverity(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
     const hasAllRiskFactors =
       input.financialExposureNgn != null &&
@@ -201,10 +209,19 @@ export class MlGatewayService {
         if (err instanceof MlServiceValidationError) {
           throw new BadRequestException(`EFIMS AI Service rejected the severity request: ${JSON.stringify(err.detail)}`);
         }
-        this.logger.warn(`Falling back to Groq for severity suggestion (incident ${input.incidentId}): ${(err as Error).message}`);
+        if (!input.allowLlmFallback) {
+          throw new ServiceUnavailableException(
+            'EFIMS AI Service is unavailable for severity prediction. Retry with an explicit LLM-estimate request if you want a Groq-based estimate instead.',
+          );
+        }
+        this.logger.warn(`Falling back to Groq for severity suggestion (incident ${input.incidentId}, explicitly requested): ${(err as Error).message}`);
       }
+    } else if (!input.allowLlmFallback) {
+      throw new ServiceUnavailableException(
+        'This incident is missing risk-factor fields the structured severity model needs. Retry with an explicit LLM-estimate request if you want a Groq-based estimate instead.',
+      );
     } else {
-      this.logger.debug(`Incident ${input.incidentId} is missing risk-factor fields — using Groq severity suggestion directly`);
+      this.logger.debug(`Incident ${input.incidentId} is missing risk-factor fields — using Groq severity suggestion (explicitly requested)`);
     }
 
     return this.suggestSeverityViaGroq(input);

@@ -224,48 +224,61 @@ export class SlaClockService {
    * for the same structural reason) and uses `withTenant(tenantId, ...)` explicitly per tenant.
    * Single-instance-only: see `ScheduleModule`'s registration in `app.module.ts` for why running
    * this on more than one instance isn't handled (yet).
+   *
+   * The whole body is wrapped in try/catch — found live, not a guess: `@nestjs/schedule`'s
+   * `@Cron` has no built-in error handling, so an unhandled rejection here (e.g. the Neon
+   * connection dropping mid-sweep, a real, recurring characteristic of this dev environment —
+   * see `docs/CHANGELOG.md`'s dated entries) crashes the entire Node process, not just this one
+   * 5-minute tick. `NotificationsService`'s own `escalateUnread` — the only other `@Cron` job in
+   * this codebase — had the identical gap, fixed the same session; that file's `safely()` doc
+   * comment already explained this exact mechanism for `@OnEvent` handlers, just never extended
+   * to either cron job.
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweepBreachedClocks(): Promise<void> {
-    const tenants = await this.prisma.tenant.findMany({ select: { id: true } });
+    try {
+      const tenants = await this.prisma.tenant.findMany({ select: { id: true } });
 
-    for (const tenant of tenants) {
-      const breached = await this.prisma.withTenant(tenant.id, (tx) =>
-        tx.slaClock.findMany({
-          where: {
-            tenantId: tenant.id,
-            status: { in: [SlaClockStatus.RUNNING, SlaClockStatus.PAUSED] },
-            targetDeadline: { lt: new Date() },
-            breachNotifiedAt: null,
-          },
-        }),
-      );
-
-      for (const clock of breached) {
-        await this.prisma.withTenant(tenant.id, (tx) =>
-          tx.slaClock.update({ where: { id: clock.id }, data: { breachNotifiedAt: new Date() } }),
+      for (const tenant of tenants) {
+        const breached = await this.prisma.withTenant(tenant.id, (tx) =>
+          tx.slaClock.findMany({
+            where: {
+              tenantId: tenant.id,
+              status: { in: [SlaClockStatus.RUNNING, SlaClockStatus.PAUSED] },
+              targetDeadline: { lt: new Date() },
+              breachNotifiedAt: null,
+            },
+          }),
         );
 
-        await this.auditService.record({
-          tenantId: tenant.id,
-          action: 'workflow.sla_clock.breach_detected',
-          entityType: 'SlaClock',
-          entityId: clock.id,
-          outcome: AuditOutcome.FAILURE,
-          metadata: { incidentId: clock.incidentId, targetDeadline: clock.targetDeadline.toISOString() },
-        });
+        for (const clock of breached) {
+          await this.prisma.withTenant(tenant.id, (tx) =>
+            tx.slaClock.update({ where: { id: clock.id }, data: { breachNotifiedAt: new Date() } }),
+          );
 
-        this.eventEmitter.emit(SLA_CLOCK_BREACHED_EVENT, {
-          tenantId: tenant.id,
-          clockId: clock.id,
-          incidentId: clock.incidentId,
-          targetDeadline: clock.targetDeadline.toISOString(),
-        } satisfies SlaClockBreachedEvent);
-      }
+          await this.auditService.record({
+            tenantId: tenant.id,
+            action: 'workflow.sla_clock.breach_detected',
+            entityType: 'SlaClock',
+            entityId: clock.id,
+            outcome: AuditOutcome.FAILURE,
+            metadata: { incidentId: clock.incidentId, targetDeadline: clock.targetDeadline.toISOString() },
+          });
 
-      if (breached.length > 0) {
-        this.logger.warn(`Detected ${breached.length} newly-breached SLA clock(s) for tenant ${tenant.id}.`);
+          this.eventEmitter.emit(SLA_CLOCK_BREACHED_EVENT, {
+            tenantId: tenant.id,
+            clockId: clock.id,
+            incidentId: clock.incidentId,
+            targetDeadline: clock.targetDeadline.toISOString(),
+          } satisfies SlaClockBreachedEvent);
+        }
+
+        if (breached.length > 0) {
+          this.logger.warn(`Detected ${breached.length} newly-breached SLA clock(s) for tenant ${tenant.id}.`);
+        }
       }
+    } catch (err) {
+      this.logger.error('sweepBreachedClocks failed', err as Error);
     }
   }
 }

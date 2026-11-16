@@ -1,3 +1,11 @@
+> **Superseded 2026-11-14.** The color and typography tables below describe "Botanical
+> Executive"/"Botanical Precision," which this codebase no longer uses — a full "Institutional
+> Intelligence" redesign (navy/teal palette, Inter/IBM Plex Mono, Lucide icons) replaced it
+> wholesale. See `docs/design/design-tokens.md` for the current, accurate token reference and
+> `docs/design/frontend-redesign-assessment.md` for what changed and why. This file's component-
+> structure and Storybook-architecture sections (§§2–5) are largely still relevant as historical/
+> structural reference; only the literal color/font values are stale.
+
 # EFIMS Frontend Design System & Component Documentation
 
 **Design System:** Botanical Executive

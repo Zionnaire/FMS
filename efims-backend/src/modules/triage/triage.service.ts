@@ -34,7 +34,7 @@ export class TriageService {
    * those with their own chosen severity exactly as before; this is a suggestion shown alongside
    * their own form, not a prefill. Same `IncidentsService.getById` visibility check every other
    * read in this module already goes through. */
-  async suggestSeverity(actor: AuthenticatedUser, incidentId: string): Promise<SeveritySuggestion> {
+  async suggestSeverity(actor: AuthenticatedUser, incidentId: string, allowLlmFallback = false): Promise<SeveritySuggestion> {
     const incident = await this.incidentsService.getById(actor, incidentId);
     const suggestion = await this.mlGatewayService.suggestSeverity({
       incidentId: incident.referenceCode,
@@ -50,6 +50,7 @@ export class TriageService {
       regulatoryRelevance: incident.regulatoryRelevance,
       channel: incident.channel,
       reportedByType: incident.reportedByType,
+      allowLlmFallback,
     });
 
     await this.auditService.record({

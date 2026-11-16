@@ -93,6 +93,11 @@ GRANT SELECT, INSERT, UPDATE ON notifications TO efims_app;
 REVOKE DELETE ON notifications FROM efims_app;
 GRANT SELECT, INSERT ON notification_deliveries TO efims_app;
 REVOKE UPDATE, DELETE ON notification_deliveries FROM efims_app;
+-- push_subscriptions: full CRUD except there's no meaningful "update" beyond re-subscribing
+-- (upsert-by-endpoint, i.e. delete+insert or insert-on-conflict), and DELETE is a real operation
+-- (unsubscribe, or NotificationsService cleaning up a stale endpoint after the push service
+-- itself reports it gone with a 404/410).
+GRANT SELECT, INSERT, UPDATE, DELETE ON push_subscriptions TO efims_app;
 
 -- investigations module: investigation_plans is versioned/append-only like
 -- configuration_entries/triage_assessments (a new plan revision is a new row, never mutated) —
@@ -197,7 +202,7 @@ DO $$
 DECLARE
   t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks']
+  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'push_subscriptions', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);

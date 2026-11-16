@@ -199,11 +199,19 @@ export class IncidentsService {
     return visible.map((i) => i.id);
   }
 
+  /** Both reads below used to run as two separate `forCurrentTenant` calls — each one its own
+   * `BEGIN`/`SET_CONFIG`/`COMMIT` round trip to Neon, on top of this dev environment's own
+   * ~230ms RTT to its region. Sharing one transaction and firing the two independent queries
+   * concurrently (neither depends on the other's result) halves that overhead — same "cut the
+   * Neon round trips" fix `CasesService.getVisibleCases` already applied to its own, larger
+   * version of this exact pattern. */
   private async getVisibleIncidents(actor: AuthenticatedUser, status?: IncidentStatus): Promise<Incident[]> {
-    const all = await this.prisma.forCurrentTenant((tx) =>
-      tx.incident.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: 'desc' } }),
+    const [all, grantedCompartments] = await this.prisma.forCurrentTenant((tx) =>
+      Promise.all([
+        tx.incident.findMany({ where: status ? { status } : undefined, orderBy: { createdAt: 'desc' } }),
+        this.getGrantedCompartments(actor, tx),
+      ]),
     );
-    const grantedCompartments = await this.getGrantedCompartments(actor);
     return all.filter((incident) => this.isVisible(incident.compartment, grantedCompartments));
   }
 
@@ -212,12 +220,13 @@ export class IncidentsService {
    * grants don't cover it — see the doc comment on `Incident.compartment` in schema.prisma for
    * why this check exists here and not only at the future `cases` level. */
   async getById(actor: AuthenticatedUser, id: string): Promise<Incident> {
-    const incident = await this.prisma.forCurrentTenant((tx) => tx.incident.findUnique({ where: { id } }));
+    const [incident, grantedCompartments] = await this.prisma.forCurrentTenant((tx) =>
+      Promise.all([tx.incident.findUnique({ where: { id } }), this.getGrantedCompartments(actor, tx)]),
+    );
     if (!incident) {
       throw new NotFoundException('Incident not found');
     }
 
-    const grantedCompartments = await this.getGrantedCompartments(actor);
     if (!this.isVisible(incident.compartment, grantedCompartments)) {
       await this.auditService.record({
         tenantId: actor.tenantId,
@@ -400,8 +409,8 @@ export class IncidentsService {
     });
   }
 
-  private async getGrantedCompartments(actor: AuthenticatedUser): Promise<Set<Compartment>> {
-    const granted = await this.usersService.getGrantedCompartments(actor.sub);
+  private async getGrantedCompartments(actor: AuthenticatedUser, tx?: TenantScopedClient): Promise<Set<Compartment>> {
+    const granted = await this.usersService.getGrantedCompartments(actor.sub, tx);
     return new Set(granted);
   }
 
@@ -432,14 +441,24 @@ export class IncidentsService {
     }
   }
 
-  /** "INC-{year}-{seq}" per tenant per year, seq computed from the current count + 1 — same
-   * race caveat as ConfigurationService.createDraft's version numbering: rare in practice for
-   * this kind of write volume, and the (tenantId, referenceCode) unique constraint is the hard
-   * backstop against two rows ever landing on the same code (see the P2002 catch above). */
+  /** "INC-{year}-{seq}" per tenant per year, seq computed from the highest existing suffix + 1 —
+   * deliberately MAX-based, not COUNT-based: a COUNT undercounts the moment any row with a
+   * reference code in this prefix is ever deleted (e.g. a merge), leaving a gap, and since a
+   * failed/rolled-back insert never changes the COUNT, every retry would recompute the exact same
+   * already-taken code forever rather than the rare one-off race the P2002 catch above is
+   * actually meant to guard against. Still races in theory under true concurrent writers — the
+   * (tenantId, referenceCode) unique constraint is the hard backstop for that, same as before. */
   private async generateReferenceCode(tx: TenantScopedClient, tenantId: string): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `INC-${year}-`;
-    const count = await tx.incident.count({ where: { tenantId, referenceCode: { startsWith: prefix } } });
-    return `${prefix}${String(count + 1).padStart(4, '0')}`;
+    const existing = await tx.incident.findMany({
+      where: { tenantId, referenceCode: { startsWith: prefix } },
+      select: { referenceCode: true },
+    });
+    const maxSeq = existing.reduce((max, { referenceCode }) => {
+      const seq = Number(referenceCode.slice(prefix.length));
+      return Number.isFinite(seq) && seq > max ? seq : max;
+    }, 0);
+    return `${prefix}${String(maxSeq + 1).padStart(4, '0')}`;
   }
 }

@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { Prisma } from '@prisma/client';
 
 export interface AuditHashInput {
   previousHash: string | null;
@@ -52,6 +53,17 @@ function canonicalize(value: unknown): string {
   // not even to correct a hashing bug in the code that wrote them).
   if (value instanceof Date) {
     return canonicalize(value.toISOString());
+  }
+  // Same bug class as the `Date` case above, flagged live before it was ever actually
+  // triggered (the Phase 0 engineering assessment, 2026-11-14 — every `amount` field audited
+  // today happens to already be a plain `number`, not a `Prisma.Decimal`, so this was a latent
+  // landmine, not yet a real broken hash chain). `Prisma.Decimal` has no own enumerable
+  // properties either (same as `Date`), so it would fall into the generic-object branch below
+  // and canonicalize to `{}`. `decimal.js`'s own `toJSON()` (what `JSON.stringify` — and
+  // therefore the JSONB write path — actually calls) delegates to `.toString()`, so recursing
+  // through the string branch matches that exactly, the same reasoning as the `Date` fix above.
+  if (value instanceof Prisma.Decimal) {
+    return canonicalize(value.toString());
   }
   if (typeof value !== 'object') {
     return JSON.stringify(value);

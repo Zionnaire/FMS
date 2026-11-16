@@ -53,6 +53,21 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    * have surfaced either — both are latency-driven, not a logic bug — which is exactly why this
    * lives at the one shared chokepoint every tenant-scoped call already goes through, rather
    * than patched into individual call sites as they're each discovered.
+   *
+   * 2026-11-16: a real concurrency load test (10/20/30 simultaneous `/cases` requests) found two
+   * distinct failure modes under load, fixed differently. (1) `DATABASE_URL`'s `connection_limit`
+   * was never explicitly set, defaulting to a tiny 9 — confirmed via the exact error message
+   * ("connection limit: 9") and fixed by raising it to 60 (Neon's own ceiling is 901; this is
+   * nowhere close). (2) Once pool exhaustion was no longer the bottleneck, some requests' outer
+   * transaction still crossed this 20s `timeout` under genuine contention from
+   * `AuditService.record`'s per-tenant lock queue growing long enough. Tried raising this to 30s
+   * as a cushion; a repeat load test showed no consistent improvement (contention just grows to
+   * fill the extra time, moving the failure point rather than fixing it) — reverted. The deliberate
+   * fix for that contention is "hold the lock for less time" (see `AuditService.record`'s own doc
+   * comment on combining its round trips) plus a global filter that turns this specific timeout
+   * into a clean `503 Retry-After` instead of a bare 500 (see `PrismaTimeoutFilter`) — fail fast
+   * and tell the client to retry, rather than make it wait indefinitely for a longer timeout to
+   * also eventually expire.
    */
   async withTenant<T>(tenantId: string, fn: (tx: TenantScopedClient) => Promise<T>): Promise<T> {
     return this.$transaction(

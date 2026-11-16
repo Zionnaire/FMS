@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApprovalAction, ApprovalRequest, ApprovalStatus, AuditOutcome, Role, SeverityBand } from '@prisma/client';
-import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import {
   APPROVAL_DECIDED_EVENT,
@@ -197,6 +197,17 @@ export class ApprovalService {
         orderBy: { requestedAt: 'desc' },
       }),
     );
+  }
+
+  /** `CasesService.stats()`'s KPI count — same "no `CasesService` dependency, take the already-
+   * resolved visible-case-id list as a parameter" shape as `listAll` above. Optional `tx`: shares
+   * the caller's already-open transaction instead of opening a second one, same pattern as every
+   * other batched cross-module read in this codebase. */
+  async countPending(caseIds: string[], tx?: TenantScopedClient): Promise<number> {
+    if (caseIds.length === 0) return 0;
+    const query = (client: TenantScopedClient) =>
+      client.approvalRequest.count({ where: { caseId: { in: caseIds }, status: ApprovalStatus.PENDING } });
+    return tx ? query(tx) : this.prisma.forCurrentTenant(query);
   }
 
   /** Used by `CasesService.updateStatus` to validate a specific approval before allowing a

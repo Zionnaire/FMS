@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { PrismaOverloadFilter } from './common/filters/prisma-overload.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,6 +32,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Turns the two specific Prisma errors a live 2026-11-16 concurrency load test produced
+  // (connection pool exhaustion, an interactive transaction expiring under contention) into a
+  // clean 503 + Retry-After — see that filter's own doc comment. Every other exception is
+  // untouched.
+  app.useGlobalFilters(new PrismaOverloadFilter());
 
   const port = config.get<number>('PORT', 3001);
   await app.listen(port);

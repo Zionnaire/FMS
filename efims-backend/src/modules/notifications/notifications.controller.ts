@@ -1,7 +1,8 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
+import { SubscribePushDto, UnsubscribePushDto } from './dto/subscribe-push.dto';
 import { NotificationsService } from './notifications.service';
 
 /** No `@Roles()` gate anywhere here — a notification only ever belongs to the requesting user
@@ -19,5 +20,15 @@ export class NotificationsController {
   @Post(':id/read')
   markRead(@CurrentUser() actor: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.notificationsService.markRead(actor, id);
+  }
+
+  @Post('push-subscriptions')
+  subscribeToPush(@CurrentUser() actor: AuthenticatedUser, @Body() dto: SubscribePushDto) {
+    return this.notificationsService.subscribeToPush(actor, dto);
+  }
+
+  @Delete('push-subscriptions')
+  unsubscribeFromPush(@CurrentUser() actor: AuthenticatedUser, @Body() dto: UnsubscribePushDto) {
+    return this.notificationsService.unsubscribeFromPush(actor, dto.endpoint);
   }
 }

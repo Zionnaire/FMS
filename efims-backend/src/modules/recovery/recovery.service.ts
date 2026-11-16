@@ -257,16 +257,15 @@ export class RecoveryService {
     const visibleCaseIds = await this.casesService.getVisibleCaseIds(actor);
     if (visibleCaseIds.length === 0) return [];
 
-    const [lossByCase, recoveredByCase, writtenOffByCase, cases] = await this.prisma.forCurrentTenant((tx) =>
+    const [lossByCase, recoveredByCase, writtenOffByCase, caseById] = await this.prisma.forCurrentTenant((tx) =>
       Promise.all([
         tx.lossEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
         tx.recoveryEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
         tx.writeOffEntry.groupBy({ by: ['caseId'], where: { caseId: { in: visibleCaseIds } }, _sum: { amount: true } }),
-        tx.case.findMany({ where: { id: { in: visibleCaseIds } }, select: { id: true, referenceCode: true, title: true } }),
+        this.casesService.getCaseSummariesByIds(visibleCaseIds, tx),
       ]),
     );
 
-    const caseById = new Map(cases.map((c) => [c.id, c]));
     const recoveredByCaseId = new Map(recoveredByCase.map((r) => [r.caseId, r._sum.amount ?? new Prisma.Decimal(0)]));
     const writtenOffByCaseId = new Map(writtenOffByCase.map((w) => [w.caseId, w._sum.amount ?? new Prisma.Decimal(0)]));
 
