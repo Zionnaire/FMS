@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ObligationStatus } from '@prisma/client';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -8,6 +8,7 @@ import { CASE_ROLES } from '../../common/constants/roles';
 import { AcknowledgeObligationDto } from './dto/acknowledge-obligation.dto';
 import { CreateObligationDto } from './dto/create-obligation.dto';
 import { SubmitObligationDto } from './dto/submit-obligation.dto';
+import { UpdateFilingDetailsDto } from './dto/update-filing-details.dto';
 import { WaiveObligationDto } from './dto/waive-obligation.dto';
 import { RegulatoryService } from './regulatory.service';
 
@@ -47,6 +48,18 @@ export class RegulatoryController {
     @Param('obligationId', ParseUUIDPipe) obligationId: string,
   ) {
     return this.regulatoryService.getById(actor, caseId, obligationId);
+  }
+
+  @Patch(':obligationId/filing-details')
+  @UseGuards(RolesGuard)
+  @Roles(...CASE_ROLES)
+  updateFilingDetails(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Param('obligationId', ParseUUIDPipe) obligationId: string,
+    @Body() dto: UpdateFilingDetailsDto,
+  ) {
+    return this.regulatoryService.updateFilingDetails(actor, caseId, obligationId, dto);
   }
 
   @Post(':obligationId/submit')

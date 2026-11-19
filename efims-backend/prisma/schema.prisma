@@ -168,6 +168,20 @@ model User {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
+  /// TOTP-based MFA (RFC 6238), added 2026-11-19 — opt-in per user, never forced: `mfaEnabled`
+  /// stays `false` for every existing and new user until they go through `AuthService`'s own
+  /// enroll/confirm flow. `mfaSecret` has to be stored reversibly (unlike `passwordHash` — a
+  /// TOTP code is verified by recomputing it from the secret, not by comparing hashes), so it's
+  /// plain text at this layer, same trust boundary as every other credential this app holds in
+  /// Postgres (RLS + least-privilege `efims_app` role, no separate field-level encryption yet —
+  /// a real, named limitation, not hidden). `mfaBackupCodeHashes` holds **hashed** one-time
+  /// recovery codes (sha256, each consumed exactly once) — the only values the user actually
+  /// sees are returned once at enrollment and never stored in recoverable form.
+  mfaEnabled           Boolean   @default(false)
+  mfaSecret            String?
+  mfaBackupCodeHashes  String[]  @default([])
+  mfaEnrolledAt        DateTime?
+
   compartmentGrants    UserCompartmentGrant[]
   teamMemberships      TeamMembership[]
   refreshTokens        RefreshToken[]
@@ -1722,6 +1736,22 @@ model RegulatoryObligation {
   obligationType ObligationType
   description    String
   regulatorName  String?
+
+  /// Structured filing data — real, honestly-scoped fields for the two obligation types that
+  /// have a genuine standard shape (STR_SAR_FILING: reporting institution, subjects of report,
+  /// grounds of suspicion narrative, transaction schedule; REGULATOR_NOTIFICATION: reporting
+  /// institution, incident classification, narrative, financial exposure). `OTHER` has no
+  /// structured schema — `description` alone covers it. Deliberately NOT a typed relation or a
+  /// second table: the shape genuinely varies by `obligationType`, same "Json, shape depends on
+  /// a sibling enum field" pattern `AccessChangeRequest.payload` already uses. Editable only
+  /// while `status` is `PENDING` (see `RegulatoryService.updateFilingDetails`) — once submitted,
+  /// what was actually filed is a fact of record, not something this app lets anyone revise.
+  /// There is NO real integration with NFIU's goAML system, CBN's BSD-CR-01 portal, or any other
+  /// regulator system anywhere in this codebase — this field only ever backs a print/preview
+  /// view a human fills out and then physically/separately files; `submit()`'s existing
+  /// approval-gated status transition is still the only record that a human did that, same as
+  /// before this field existed.
+  filingDetails Json?
 
   /// Statutory deadline — see this block's own doc comment for why there is deliberately no
   /// pause mechanism anywhere near this field.

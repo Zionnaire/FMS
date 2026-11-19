@@ -8,6 +8,7 @@ import { ApprovalService } from '../workflow/approval.service';
 import { AcknowledgeObligationDto } from './dto/acknowledge-obligation.dto';
 import { CreateObligationDto } from './dto/create-obligation.dto';
 import { SubmitObligationDto } from './dto/submit-obligation.dto';
+import { UpdateFilingDetailsDto } from './dto/update-filing-details.dto';
 import { WaiveObligationDto } from './dto/waive-obligation.dto';
 
 /**
@@ -77,6 +78,35 @@ export class RegulatoryService {
       throw new NotFoundException('Regulatory obligation not found on this case');
     }
     return obligation;
+  }
+
+  /** Real, honestly-scoped structured filing capture (STR/SAR subjects + transaction schedule,
+   * or a regulator-notification narrative — see `schema.prisma`'s own doc comment on
+   * `filingDetails` for exactly what this does and does NOT do: no real transmission to any
+   * regulator system exists). Only editable before submission — once `submit()` moves this to
+   * `SUBMITTED`, what was actually filed is a fact of record, not something anyone revises
+   * after the fact. */
+  async updateFilingDetails(actor: AuthenticatedUser, caseId: string, obligationId: string, dto: UpdateFilingDetailsDto): Promise<RegulatoryObligation> {
+    const obligation = await this.assertObligationOnCase(actor, caseId, obligationId);
+    if (obligation.status !== ObligationStatus.PENDING) {
+      throw new BadRequestException(`This obligation is ${obligation.status.toLowerCase()}, not PENDING — filing details can no longer be edited`);
+    }
+
+    const updated = await this.prisma.forCurrentTenant((tx) =>
+      tx.regulatoryObligation.update({ where: { id: obligationId }, data: { filingDetails: dto.filingDetails as object } }),
+    );
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'regulatory.obligation.update_filing_details',
+      entityType: 'RegulatoryObligation',
+      entityId: obligationId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { caseId },
+    });
+
+    return updated;
   }
 
   async submit(actor: AuthenticatedUser, caseId: string, obligationId: string, dto: SubmitObligationDto): Promise<RegulatorySubmission> {

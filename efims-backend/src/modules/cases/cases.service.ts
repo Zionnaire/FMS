@@ -68,6 +68,9 @@ export interface CaseStats {
   totalRecovered: string;
   outstanding: string;
   currency: 'NGN';
+  /** Mean `closedAt - createdAt` in days, over this visible set's `CLOSED` cases only — `null`
+   * if none are closed yet, rather than `0` (a real "no data" case, not "zero days to close"). */
+  meanDaysToClose: number | null;
 }
 
 /**
@@ -316,6 +319,13 @@ export class CasesService {
       for (const c of visible) byStatus[c.status]++;
       const highSensitivityCount = visible.filter((c) => c.sensitivityLevel === 4).length;
 
+      const closedDurationsDays = visible
+        .filter((c) => c.status === CaseStatus.CLOSED && c.closedAt)
+        .map((c) => (c.closedAt!.getTime() - c.createdAt.getTime()) / 86_400_000);
+      const meanDaysToClose = closedDurationsDays.length
+        ? Math.round((closedDurationsDays.reduce((a, b) => a + b, 0) / closedDurationsDays.length) * 10) / 10
+        : null;
+
       const [severityAndOverdueByCaseId, [{ totalLoss, totalRecovered }, pendingApprovals]] = await Promise.all([
         this.computeSeverityAndOverdue(visibleIds, tx),
         visibleIds.length
@@ -340,6 +350,7 @@ export class CasesService {
         totalRecovered: totalRecovered.toFixed(2),
         outstanding: totalLoss.sub(totalRecovered).toFixed(2),
         currency: 'NGN',
+        meanDaysToClose,
       };
     });
   }
