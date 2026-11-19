@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lightbulb, Flag } from "lucide-react";
 import type { SeveritySuggestion } from "@/features/triage/api";
+import { PredictionDecisionControls } from "@/components/shell/prediction-decision-controls";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Button } from "@/components/ui/button";
 
@@ -84,6 +85,9 @@ export function SeveritySuggestionPanel({ incidentId }: { incidentId: string }) 
               ))}
             </ul>
           )}
+          {/* A Groq-fallback suggestion's predictionId is null — nothing to decide (never logged
+              backend-side). `key` forces a fresh decision state whenever a new suggestion replaces this one. */}
+          {state.result.predictionId && <PredictionDecisionControls key={state.result.predictionId} predictionId={state.result.predictionId} />}
         </div>
       )}
     </div>

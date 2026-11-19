@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, BadgeCheck, Flag } from "lucide-react";
 import type { AnomalySuggestion } from "@/features/ml-gateway/types";
 import { ACCOUNT_RISK_RATINGS, TRANSACTION_CHANNELS, TRANSACTION_TYPES, VELOCITY_INDICATORS } from "@/features/ml-gateway/types";
+import { PredictionDecisionControls } from "@/components/shell/prediction-decision-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,6 +192,7 @@ export function TransactionRiskScoringForm() {
                 </ul>
               )}
               <p className="border-t border-outline-variant/30 pt-2 text-[11px] text-on-surface-variant">{state.result.disclaimer}</p>
+              <PredictionDecisionControls key={state.result.predictionId} predictionId={state.result.predictionId} />
             </div>
           )}
         </CardContent>

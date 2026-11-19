@@ -5,6 +5,7 @@ import { Flag } from "lucide-react";
 import type { RecoverySuggestion } from "@/features/recovery/types";
 import { RECOVERY_CHANNELS, RECOVERY_FRAUD_TYPES } from "@/features/recovery/types";
 import { SEVERITY_TIERS } from "@/features/triage/types";
+import { PredictionDecisionControls } from "@/components/shell/prediction-decision-controls";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,6 +100,7 @@ export function RecoveryPredictionPanel({ caseId }: { caseId: string }) {
             </ul>
           )}
           <p className="border-t border-outline-variant/30 pt-2 text-[11px] text-on-surface-variant">{state.result.disclaimer}</p>
+          <PredictionDecisionControls key={state.result.predictionId} predictionId={state.result.predictionId} />
         </div>
       )}
     </div>
