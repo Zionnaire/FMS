@@ -73,6 +73,17 @@ export interface CaseStats {
   meanDaysToClose: number | null;
 }
 
+export interface TeamConflictCheckResult {
+  teamId: string;
+  memberCount: number;
+  conflictedMembers: {
+    userId: string;
+    fullName: string;
+    flagType: CaseUserRelationType;
+    reason: string | null;
+  }[];
+}
+
 /**
  * Owns `Case`, `CaseUserFlag`, `CaseStatusHistory` — architecture.md's "case record, team,
  * status history". This is the module CLAUDE.md non-negotiable #6 is actually about: every read
@@ -556,6 +567,43 @@ export class CasesService {
     });
 
     return updated;
+  }
+
+  /** Real version of what the "team assignment conflict check" mockup was actually reaching
+   * for underneath its fabricated PEP/beneficial-ownership screening and fake hardware-token
+   * table (neither of which this codebase has or needs) — the one real, already-enforced rule
+   * this CAN surface proactively: a team member who is flagged `SUBJECT` or `CONFLICT` on this
+   * case (non-negotiable #6) will be denied access the moment they try to open it regardless of
+   * team assignment, so telling the assigner *before* they assign the team is a real usability
+   * improvement, not a new security boundary — the access check itself is unchanged and already
+   * correct. Purely advisory: never blocks the assignment itself, same "surface it, let the
+   * human decide" posture as every other advisory check in this codebase. */
+  async checkTeamConflicts(actor: AuthenticatedUser, id: string, teamId: string): Promise<TeamConflictCheckResult> {
+    await this.getById(actor, id);
+    await this.teamsService.assertExists(teamId);
+
+    const [memberIds, flags, users] = await Promise.all([
+      this.teamsService.listMemberIds(teamId),
+      this.prisma.forCurrentTenant((tx) => tx.caseUserFlag.findMany({ where: { caseId: id } })),
+      this.usersService.list(),
+    ]);
+
+    const flagByUserId = new Map(flags.map((f) => [f.userId, f]));
+    const userById = new Map(users.map((u) => [u.id, u]));
+
+    const conflictedMembers = memberIds
+      .filter((userId) => flagByUserId.has(userId))
+      .map((userId) => {
+        const flag = flagByUserId.get(userId)!;
+        return {
+          userId,
+          fullName: userById.get(userId)?.fullName ?? 'Unknown user',
+          flagType: flag.type,
+          reason: flag.reason,
+        };
+      });
+
+    return { teamId, memberCount: memberIds.length, conflictedMembers };
   }
 
   /** Loops the existing, unchanged `assignTeam` per case — reused, not duplicated — continuing

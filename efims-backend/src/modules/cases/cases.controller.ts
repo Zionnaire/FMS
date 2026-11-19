@@ -101,6 +101,19 @@ export class CasesController {
     return this.casesService.assignTeam(actor, id, dto);
   }
 
+  /** Read-only, advisory — see `CasesService.checkTeamConflicts`'s own doc comment. No
+   * `@Roles()` gate: anyone who can already see this case (enforced inside the service, same as
+   * every other read route in this controller) can check a candidate team before proposing it,
+   * not just whoever has `CASE_ROLES`' write access to actually assign it. */
+  @Get(':id/team-conflict-check')
+  checkTeamConflicts(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('teamId', ParseUUIDPipe) teamId: string,
+  ) {
+    return this.casesService.checkTeamConflicts(actor, id, teamId);
+  }
+
   @Post(':id/incidents')
   @UseGuards(RolesGuard)
   @Roles(...CASE_ROLES)

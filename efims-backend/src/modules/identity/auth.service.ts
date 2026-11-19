@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuditOutcome, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { randomBytes, createHash } from 'node:crypto';
-import { OTP } from 'otplib';
+import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
@@ -16,11 +16,16 @@ import { LoginDto } from './dto/login.dto';
 const MFA_ISSUER = 'EFIMS';
 const MFA_CHALLENGE_TTL = '5m';
 const MFA_BACKUP_CODE_COUNT = 10;
-/** One shared instance — stateless per RFC 6238, `secret`/`token` are passed per call, nothing
- * here is request-specific. `epochTolerance: 30` accepts a code from one period (30s) either
- * side of "now", the standard allowance for ordinary client/server clock drift. */
-const totp = new OTP({ strategy: 'totp' });
-const TOTP_EPOCH_TOLERANCE = 30;
+/** `mfaSecret` is always stored/consumed as base32 (`encoding: 'base32'` below) — speakeasy's own
+ * default encoding is ascii, so every call site must say so explicitly. `window: 1` accepts a
+ * code from one time-step (30s) either side of "now" — same clock-drift allowance the otplib
+ * code this replaced used (`epochTolerance: 30`). Swapped from otplib because otplib's only
+ * shipped base32 plugin (`@otplib/plugin-base32-scure`) transitively requires the ESM-only
+ * `@scure/base`, which crashes Node's CommonJS `require()` at runtime in production
+ * (`ERR_REQUIRE_ESM`) — invisible to `tsc`/`nest build` since the failure is inside otplib's own
+ * precompiled `.cjs`. speakeasy is pure CommonJS end to end (confirmed via its and its one
+ * dependency's own `package.json`), so the whole class of problem doesn't apply. */
+const TOTP_WINDOW = 1;
 
 export type LoginResult = (AuthTokens & { user: PublicUser; mfaRequired?: false }) | { mfaRequired: true; mfaChallengeToken: string };
 
@@ -247,13 +252,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired MFA challenge — log in again');
     }
 
-    // `totp.verify` throws (rather than returning `{valid: false}`) for a token that isn't
-    // exactly 6 digits — a real, live-found bug: a backup code (9 chars, "A1B2-C3D4") crashed
-    // this with a 500 instead of falling through to backup-code matching below. Only a 6-digit
-    // input is a plausible TOTP code at all, so anything else skips straight to backup-code
-    // matching without ever calling `totp.verify`.
+    // Only a 6-digit input is a plausible TOTP code at all (a backup code is 9 chars,
+    // "A1B2-C3D4") — anything else skips straight to backup-code matching without calling
+    // `speakeasy.totp.verify` at all.
     const totpValid = /^\d{6}$/.test(code)
-      ? (await totp.verify({ secret: user.mfaSecret, token: code, epochTolerance: TOTP_EPOCH_TOLERANCE })).valid
+      ? speakeasy.totp.verify({ secret: user.mfaSecret, encoding: 'base32', token: code, window: TOTP_WINDOW })
       : false;
     let usedBackupCode = false;
     if (!totpValid) {
@@ -327,8 +330,8 @@ export class AuthService {
       throw new BadRequestException('MFA is already enabled for this account — disable it before re-enrolling');
     }
 
-    const secret = totp.generateSecret();
-    const otpauthUrl = totp.generateURI({ issuer: MFA_ISSUER, label: user.email, secret });
+    const secret = speakeasy.generateSecret({ length: 20 }).base32;
+    const otpauthUrl = speakeasy.otpauthURL({ secret, encoding: 'base32', issuer: MFA_ISSUER, label: user.email });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
     await this.prisma.withTenant(actor.tenantId, (tx) => tx.user.update({ where: { id: user.id }, data: { mfaSecret: secret } }));
@@ -362,8 +365,8 @@ export class AuthService {
       throw new BadRequestException('Start enrollment first — no pending MFA secret for this account');
     }
 
-    const confirmResult = await totp.verify({ secret: user.mfaSecret, token: code, epochTolerance: TOTP_EPOCH_TOLERANCE });
-    if (!confirmResult.valid) {
+    const confirmed = speakeasy.totp.verify({ secret: user.mfaSecret, encoding: 'base32', token: code, window: TOTP_WINDOW });
+    if (!confirmed) {
       await this.auditService.record({
         tenantId: actor.tenantId,
         actorUserId: user.id,
