@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { TRIAGE_ROLES } from '../../common/constants/roles';
+import { EXCEPT_REPORTER_ROLES, TRIAGE_ROLES } from '../../common/constants/roles';
+import { DecidePredictionDto } from '../ml-gateway/dto/decide-prediction.dto';
 import { CreateTriageAssessmentDto } from './dto/create-triage-assessment.dto';
 import { TriageService } from './triage.service';
 
@@ -61,6 +62,25 @@ export class TriageController {
     @Query('allowLlmFallback') allowLlmFallback?: string,
   ) {
     return this.triageService.suggestSeverity(actor, incidentId, allowLlmFallback === 'true');
+  }
+
+  /** The EFIMS AI Service's v1.0 integration spec, rule #3 — "record whether the analyst
+   * accepted or overrode it." Entity-scoped (nested under this incident) specifically so the
+   * incident's own compartment/clearance access check runs before anyone can decide a prediction
+   * about it — see `TriageService.decideSeveritySuggestion`'s own doc comment. Gated
+   * `EXCEPT_REPORTER_ROLES`, same breadth as `MlGatewayController`'s anomaly-only decide route,
+   * rather than `TRIAGE_ROLES` — deciding is a lighter action than triaging itself. */
+  @Patch('suggestion/:predictionId/decision')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
+  async decideSeveritySuggestion(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('incidentId', ParseUUIDPipe) incidentId: string,
+    @Param('predictionId') predictionId: string,
+    @Body() dto: DecidePredictionDto,
+  ) {
+    await this.triageService.decideSeveritySuggestion(actor, incidentId, predictionId, dto.decision);
+    return { predictionId, decision: dto.decision };
   }
 }
 

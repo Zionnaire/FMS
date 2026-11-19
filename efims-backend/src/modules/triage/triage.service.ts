@@ -36,22 +36,25 @@ export class TriageService {
    * read in this module already goes through. */
   async suggestSeverity(actor: AuthenticatedUser, incidentId: string, allowLlmFallback = false): Promise<SeveritySuggestion> {
     const incident = await this.incidentsService.getById(actor, incidentId);
-    const suggestion = await this.mlGatewayService.suggestSeverity({
-      incidentId: incident.referenceCode,
-      category: incident.category,
-      type: incident.type,
-      title: incident.title,
-      description: incident.description,
-      financialExposureNgn: incident.financialExposureNgn?.toNumber() ?? null,
-      customerImpactCount: incident.customerImpactCount,
-      ongoingThreat: incident.ongoingThreat,
-      insiderInvolvement: incident.insiderInvolvement,
-      dataCompromise: incident.dataCompromise,
-      regulatoryRelevance: incident.regulatoryRelevance,
-      channel: incident.channel,
-      reportedByType: incident.reportedByType,
-      allowLlmFallback,
-    });
+    const suggestion = await this.mlGatewayService.suggestSeverity(
+      {
+        incidentId: incident.referenceCode,
+        category: incident.category,
+        type: incident.type,
+        title: incident.title,
+        description: incident.description,
+        financialExposureNgn: incident.financialExposureNgn?.toNumber() ?? null,
+        customerImpactCount: incident.customerImpactCount,
+        ongoingThreat: incident.ongoingThreat,
+        insiderInvolvement: incident.insiderInvolvement,
+        dataCompromise: incident.dataCompromise,
+        regulatoryRelevance: incident.regulatoryRelevance,
+        channel: incident.channel,
+        reportedByType: incident.reportedByType,
+        allowLlmFallback,
+      },
+      { tenantId: actor.tenantId, entityType: 'Incident', entityId: incidentId, requestedBy: actor.sub },
+    );
 
     await this.auditService.record({
       tenantId: actor.tenantId,
@@ -69,6 +72,32 @@ export class TriageService {
     });
 
     return suggestion;
+  }
+
+  /** The entity-scoped half of `MlGatewayService.decidePrediction` for SEVERITY predictions —
+   * see that method's own doc comment for why it can't check this itself (a circular module
+   * dependency). Runs the same `IncidentsService.getById` compartment/clearance check every other
+   * read in this module goes through, then confirms the prediction is actually about THIS
+   * incident (not just any prediction in the tenant) before handing off the one-way mutation. */
+  async decideSeveritySuggestion(actor: AuthenticatedUser, incidentId: string, predictionId: string, decision: 'ACCEPTED' | 'OVERRIDDEN'): Promise<void> {
+    await this.incidentsService.getById(actor, incidentId);
+
+    const record = await this.mlGatewayService.getPredictionRecord(actor, predictionId);
+    if (record.entityType !== 'Incident' || record.entityId !== incidentId) {
+      throw new BadRequestException(`Prediction ${predictionId} is not a severity suggestion for incident ${incidentId}`);
+    }
+
+    await this.mlGatewayService.decidePrediction(actor, predictionId, decision);
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'triage.severity_suggestion.decide',
+      entityType: 'Incident',
+      entityId: incidentId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { predictionId, decision },
+    });
   }
 
   /** The first assessment for an incident. Also moves the incident OPEN -> UNDER_REVIEW (see

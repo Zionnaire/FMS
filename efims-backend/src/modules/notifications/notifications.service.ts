@@ -81,8 +81,16 @@ export class NotificationsService {
    * an ESM-only package — there is no `esModuleInterop`/`allowSyntheticDefaultImports` escape
    * hatch for this specific case, since those only paper over a *default*-export shape mismatch,
    * not a genuine CJS/ESM loader incompatibility. Node's own error message says exactly the fix:
-   * "change the require ... to a dynamic import()" — resolved once, lazily, and cached here so
-   * every other call site just `await`s this instead of re-importing per send. */
+   * "change the require ... to a dynamic import()" — resolved lazily, on first actual push send
+   * (`getWebpushModule` below), not here in the constructor.
+   *
+   * **Found 2026-11-19**: this used to run eagerly in the constructor, which broke the e2e Jest
+   * suite outright — `ts-jest`'s CommonJS test environment throws `A dynamic import callback was
+   * invoked without --experimental-vm-modules` the instant `NotificationsService` is
+   * instantiated, which every one of the 6 e2e spec files does just by booting the app, whether
+   * or not that test ever sends a push notification. Deferring the import to first actual use
+   * means a test run that never calls `sendPush` (true for all 6 specs today — none of them
+   * subscribe a push endpoint) never touches `dynamicImportWebPush` at all. */
   private webpushModule: Promise<typeof WebPushModule> | null = null;
 
   constructor(
@@ -92,22 +100,32 @@ export class NotificationsService {
     private readonly teamsService: TeamsService,
     private readonly config: ConfigService,
   ) {
-    // Set once, not per-send — `web-push` keeps these module-level, and every `sendNotification`
-    // call after this uses them automatically. Missing keys mean PUSH degrades to the same logged
-    // stub EMAIL/SMS already are (see `deliverExternal`), not a startup crash — this module has to
-    // keep working in any environment that hasn't generated a VAPID pair yet.
+    // Missing keys mean PUSH degrades to the same logged stub EMAIL/SMS already are (see
+    // `deliverExternal`), not a startup crash — this module has to keep working in any
+    // environment that hasn't generated a VAPID pair yet.
     const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY');
     const privateKey = this.config.get<string>('VAPID_PRIVATE_KEY');
     const subject = this.config.get<string>('VAPID_SUBJECT');
     this.pushConfigured = Boolean(publicKey && privateKey && subject);
-    if (this.pushConfigured) {
-      this.webpushModule = dynamicImportWebPush().then((mod) => {
-        mod.setVapidDetails(subject!, publicKey!, privateKey!);
-        return mod;
-      });
-    } else {
+    if (!this.pushConfigured) {
       this.logger.warn('VAPID keys not configured — push notifications will be logged, not sent. See .env.example.');
     }
+  }
+
+  /** Resolved once, lazily, on first actual push send — not at construction time (see
+   * `webpushModule`'s own doc comment on why). Cached in `this.webpushModule` so every
+   * subsequent send just awaits the same promise instead of re-importing. */
+  private getWebpushModule(): Promise<typeof WebPushModule> {
+    if (!this.webpushModule) {
+      const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY')!;
+      const privateKey = this.config.get<string>('VAPID_PRIVATE_KEY')!;
+      const subject = this.config.get<string>('VAPID_SUBJECT')!;
+      this.webpushModule = dynamicImportWebPush().then((mod) => {
+        mod.setVapidDetails(subject, publicKey, privateKey);
+        return mod;
+      });
+    }
+    return this.webpushModule;
   }
 
   async list(actor: AuthenticatedUser, query: ListNotificationsDto): Promise<{ notifications: Notification[]; total: number }> {
@@ -337,7 +355,7 @@ export class NotificationsService {
       return;
     }
 
-    const webpush = await this.webpushModule;
+    const webpush = await this.getWebpushModule();
     const payload = JSON.stringify({ title: notification.title, body: notification.body, notificationId: notification.id });
     const staleEndpoints: string[] = [];
     let anySent = false;
@@ -345,7 +363,7 @@ export class NotificationsService {
     await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          await webpush!.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
           anySent = true;
         } catch (err) {
           const statusCode = (err as { statusCode?: number }).statusCode;

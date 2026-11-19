@@ -126,12 +126,27 @@ export interface RecoveryPredictResponse extends PredictionEnvelope {
   recommended_recovery_actions: string[];
 }
 
-const REQUEST_TIMEOUT_MS = 5000;
+/** The vendor's own doc, v1.0: "Free hosting sleeps after 15 minutes idle. The first request can
+ * take about a minute, so use a 90 second timeout. The first prediction after a start is also
+ * slower." Applied to every request, not just a detected-cold-start first call — there's no
+ * reliable client-side signal for "the instance just woke up" worth building, and a healthy,
+ * already-warm instance still returns well inside 90s, so the longer timeout costs nothing on
+ * the common path. */
+const REQUEST_TIMEOUT_MS = 90_000;
 
 export class MlServiceClient {
   private readonly logger = new Logger(MlServiceClient.name);
 
-  constructor(private readonly baseUrl: string) {}
+  /** `apiKey` is optional only so local dev against a self-run copy of the service (vendor's own
+   * "Running your own copy" section — `EFIMS_API_KEY=<a key you choose>`) can still omit it if
+   * that copy was started without one configured; the real hosted service at
+   * `https://efims-ai.onrender.com` requires it and returns 401 without it. Never sourced from
+   * anywhere but an environment variable by the caller — this class never reads `process.env`
+   * itself, same "config stays at the edge" discipline as `baseUrl`. */
+  constructor(
+    private readonly baseUrl: string,
+    private readonly apiKey?: string,
+  ) {}
 
   async getHealth(): Promise<MlServiceHealth> {
     return this.request<MlServiceHealth>('GET', '/api/v1/health');
@@ -154,7 +169,7 @@ export class MlServiceClient {
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.apiKey ? { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey } : { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
@@ -163,6 +178,10 @@ export class MlServiceClient {
       throw new MlServiceUnavailableError(`EFIMS AI Service unreachable: ${(err as Error).message}`);
     }
 
+    if (response.status === 401) {
+      this.logger.error(`EFIMS AI Service rejected the X-API-Key for ${path} (401) — check ML_SERVICE_API_KEY`);
+      throw new MlServiceUnavailableError('EFIMS AI Service rejected the configured API key (401)');
+    }
     if (response.status === 422) {
       const detail = await response.json().catch(() => null);
       throw new MlServiceValidationError('EFIMS AI Service rejected the request as invalid', detail);

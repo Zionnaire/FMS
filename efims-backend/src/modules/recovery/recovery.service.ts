@@ -166,15 +166,18 @@ export class RecoveryService {
     );
     const grossActualLossNgn = (lossAgg._sum.amount ?? new Prisma.Decimal(0)).toNumber();
 
-    const suggestion = await this.mlGatewayService.predictRecovery({
-      caseId,
-      grossActualLossNgn,
-      severity: dto.severity,
-      fraudType: dto.fraudType,
-      channel: dto.channel,
-      daysToDetection: dto.daysToDetection,
-      containmentConfirmed: !!confirmedContainment,
-    });
+    const suggestion = await this.mlGatewayService.predictRecovery(
+      {
+        caseId,
+        grossActualLossNgn,
+        severity: dto.severity,
+        fraudType: dto.fraudType,
+        channel: dto.channel,
+        daysToDetection: dto.daysToDetection,
+        containmentConfirmed: !!confirmedContainment,
+      },
+      { tenantId: actor.tenantId, entityType: 'Case', entityId: caseId, requestedBy: actor.sub },
+    );
 
     await this.auditService.record({
       tenantId: actor.tenantId,
@@ -187,6 +190,33 @@ export class RecoveryService {
     });
 
     return suggestion;
+  }
+
+  /** The entity-scoped half of `MlGatewayService.decidePrediction` for RECOVERY predictions —
+   * see that method's own doc comment for why it can't check this itself (a circular module
+   * dependency: `CasesModule` imports `TriageModule`, which imports `MlGatewayModule`). Runs the
+   * same `casesService.getById` access check every other method in this module goes through,
+   * then confirms the prediction is actually about THIS case before handing off the one-way
+   * mutation. */
+  async decideRecoveryPrediction(actor: AuthenticatedUser, caseId: string, predictionId: string, decision: 'ACCEPTED' | 'OVERRIDDEN'): Promise<void> {
+    await this.casesService.getById(actor, caseId);
+
+    const record = await this.mlGatewayService.getPredictionRecord(actor, predictionId);
+    if (record.entityType !== 'Case' || record.entityId !== caseId) {
+      throw new BadRequestException(`Prediction ${predictionId} is not a recovery prediction for case ${caseId}`);
+    }
+
+    await this.mlGatewayService.decidePrediction(actor, predictionId, decision);
+
+    await this.auditService.record({
+      tenantId: actor.tenantId,
+      actorUserId: actor.sub,
+      action: 'recovery.recovery_prediction.decide',
+      entityType: 'Case',
+      entityId: caseId,
+      outcome: AuditOutcome.SUCCESS,
+      metadata: { predictionId, decision },
+    });
   }
 
   /** Computed on every call, never stored — see schema.prisma's own doc comment on why

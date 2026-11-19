@@ -850,15 +850,19 @@ providers, two different roles — see `ml-gateway.service.ts`'s own doc comment
 reasoning:
 
 - **EFIMS AI Service** (`ml-service-client.ts`) — a separate Python/FastAPI application (not part
-  of this repo), reached over plain HTTP at `ML_SERVICE_BASE_URL` (default
-  `http://127.0.0.1:8000`), 5s timeout. The source of truth for severity prediction (primary
-  engine), transaction anomaly scoring, and recovery-probability prediction. Its own
-  documentation is explicit that its models are trained on synthetic data and are "not for real
-  case decisions" yet (severity S1 has only 3 training examples; recovery's cross-validated
-  ROC-AUC is 0.627) — carried over here verbatim, not smoothed over.
-- **Groq** (`openai` SDK pointed at Groq's base URL) — kept only as (a) an automatic fallback for
-  severity if the EFIMS AI Service is unreachable, and (b) the sole engine for duplicate/
-  correlation detection, which the EFIMS AI Service doesn't cover at all.
+  of this repo), **live since 2026-11-18** at `https://efims-ai.onrender.com` (`ML_SERVICE_BASE_URL`),
+  authenticated via an `X-API-Key` header (`ML_SERVICE_API_KEY`), 90s timeout (the vendor's free
+  tier sleeps after 15 minutes idle; the first request after a gap can take close to a minute).
+  The source of truth for severity prediction (primary engine), transaction anomaly scoring, and
+  recovery-probability prediction. Its own documentation is explicit that its models are trained
+  on synthetic data and are "not for real case decisions" yet (severity S1 has only 3 training
+  examples; recovery's cross-validated ROC-AUC is 0.627) — carried over here verbatim, not
+  smoothed over.
+- **Groq** (`openai` SDK pointed at Groq's base URL) — kept only as (a) an **opt-in-only**
+  fallback for severity if the EFIMS AI Service is unreachable or the incident is missing a
+  risk-factor field (2026-11-14 — an LLM label isn't a validated classifier, so it no longer
+  stands in silently), and (b) the sole engine for duplicate/correlation detection, which the
+  EFIMS AI Service doesn't cover at all.
 
 Every method is read-only and advisory — returns a suggestion object, never writes anywhere,
 never fires an action itself:
@@ -881,12 +885,25 @@ never fires an action itself:
 - `MlGatewayService.findSimilarIncidents` — unchanged, Groq-only (CD-08 Phase 2's original
   duplicate/correlation detection).
 
-Verified against a throwaway local mock implementing the EFIMS AI Service's exact documented
-contract (this session had only the reference document, not the ML developer's actual running
-service) — every response shape, plus the documented 422/503/500 error cases, and the Groq
-fallback path specifically (confirmed firing when the mock was stopped mid-test). The real service
-needs no code change on this side once available, since the client is built against the
-documented contract, not the mock.
+**Prediction persistence** (added 2026-11-18, closing the vendor's own rule #3 — "Store every
+`prediction_id` with the case, and record whether the analyst accepted or overrode it. That data
+is used for retraining"): `MlPredictionRecord` logs one row per structured-model prediction
+(never a Groq-fallback one — those carry no vendor `prediction_id`), `decision` starting
+`PENDING` and moving to `ACCEPTED`/`OVERRIDDEN` exactly once via
+`PATCH /ml-gateway/predictions/:predictionId/decision` (audited). Wired into the frontend's
+severity-suggestion panel only so far — the anomaly/recovery panels don't have a decide UI yet
+(see `docs/OPEN_ITEMS.md`), though the backend logs and accepts decisions for all three
+capabilities already.
+
+Originally built and verified against a throwaway local mock of the EFIMS AI Service's documented
+contract, before the real service existed. **Live-verified against the real hosted instance on
+2026-11-18** once it went live — no code change was needed on this side beyond adding the
+`X-API-Key` header and raising the timeout from the mock-era 5s to the vendor's required 90s;
+field names/response shapes/422/503 handling all matched the real service on the first try,
+confirming the mock-based contract was accurate. Confirmed live: health check, a real
+`severity/predict` call (S2, 95.6% confidence), a real `anomaly/score` call through the full
+stack with a `MlPredictionRecord` row written and then decided, the one-way-decide guard
+rejecting a second decision, and the no-key case failing as a distinct 401.
 
 ## What's deliberately not here yet
 

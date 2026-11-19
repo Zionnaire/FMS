@@ -1,6 +1,9 @@
-import { BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MlPredictionCapability, MlPredictionDecision } from '@prisma/client';
 import OpenAI from 'openai';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 import {
   AnomalyScoreRequest,
   AnomalyScoreResponse,
@@ -131,11 +134,23 @@ function shortFactorLabel(feature: string, direction: 'increases_risk' | 'decrea
   return `${label} (${direction === 'increases_risk' ? '+' : '−'})`;
 }
 
+/** What to log a structured-model prediction against — the caller (the module that actually
+ * knows what entity this request was about) supplies this; `MlGatewayService` never guesses it. */
+export interface MlPredictionLogContext {
+  tenantId: string;
+  entityType: 'Incident' | 'Case' | 'Transaction';
+  entityId: string;
+  requestedBy: string;
+}
+
 /**
  * The ONLY module allowed to call an external AI/ML provider anywhere in this codebase (CLAUDE.md
- * non-negotiable #4). Every method here is read-only and advisory: it returns a suggestion object
- * and never writes to any table, never calls another module's write path, never fires an
- * autonomous action — the mechanical enforcement of that non-negotiable, not just a comment.
+ * non-negotiable #4). Every method here is read-only and advisory with respect to EFIMS's own
+ * case/incident data — it returns a suggestion object and never writes to another module's
+ * tables or fires an autonomous action. The one exception is this module's OWN durable prediction
+ * log (`MlPredictionRecord`, added alongside the real EFIMS AI Service integration): the vendor's
+ * v1.0 integration spec requires storing every `prediction_id` plus whether a human later accepted
+ * or overrode it, for retraining — that's bookkeeping about a suggestion, not an action on it.
  *
  * Two providers, two different roles:
  * - **EFIMS AI Service** (a separate Python/FastAPI application the user's ML developer supplied,
@@ -145,9 +160,12 @@ function shortFactorLabel(feature: string, direction: 'increases_risk' | 'decrea
  *   case decisions" yet (severity S1 has only 3 training examples; recovery's cross-validated
  *   ROC-AUC is 0.627) — carried over here verbatim rather than smoothed over, per this project's
  *   standing rule to never represent a capability as more reliable than its own docs say.
- * - **Groq** (LLM, `openai` SDK pointed at Groq's base URL) — kept only as (a) an automatic
- *   fallback for severity if the EFIMS AI Service is unreachable, and (b) the sole engine for
- *   duplicate/correlation detection, which the EFIMS AI Service doesn't cover at all.
+ * - **Groq** (LLM, `openai` SDK pointed at Groq's base URL) — kept only as (a) an **opt-in-only**
+ *   fallback for severity if the EFIMS AI Service is unreachable (`allowLlmFallback` — see the
+ *   2026-11-14 decision note on `SeveritySuggestionInput` below; this is NOT automatic), and (b)
+ *   the sole engine for duplicate/correlation detection, which the EFIMS AI Service doesn't cover
+ *   at all. A Groq-fallback suggestion carries no vendor `prediction_id` and is never written to
+ *   `MlPredictionRecord` — there's nothing to send back to the vendor for retraining.
  */
 @Injectable()
 export class MlGatewayService {
@@ -156,14 +174,53 @@ export class MlGatewayService {
   private readonly groqModel: string;
   private readonly mlServiceClient: MlServiceClient;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     const apiKey = this.config.get<string>('GROQ_API_KEY');
     this.groqModel = this.config.get<string>('GROQ_MODEL', 'llama-3.3-70b-versatile');
     // Deliberately doesn't throw at startup if unconfigured — a missing AI credential shouldn't
     // take down the whole backend; every method below fails loudly and specifically (503) only
     // when actually called.
     this.groqClient = apiKey && apiKey !== 'dev-only-change-me-groq' ? new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' }) : null;
-    this.mlServiceClient = new MlServiceClient(this.config.get<string>('ML_SERVICE_BASE_URL', 'http://127.0.0.1:8000'));
+    const mlServiceApiKey = this.config.get<string>('ML_SERVICE_API_KEY');
+    this.mlServiceClient = new MlServiceClient(
+      this.config.get<string>('ML_SERVICE_BASE_URL', 'http://127.0.0.1:8000'),
+      mlServiceApiKey && mlServiceApiKey !== 'dev-only-change-me-ml-service' ? mlServiceApiKey : undefined,
+    );
+  }
+
+  /** Writes one `MlPredictionRecord` row for a structured-model (never Groq-fallback) response.
+   * Fire-and-forget from the caller's point of view in spirit, but actually awaited so a logging
+   * failure surfaces rather than silently losing a retraining row — it just never blocks the
+   * suggestion itself from having already been computed. */
+  private async logPrediction(
+    capability: MlPredictionCapability,
+    predictionId: string,
+    requiresHumanReview: boolean,
+    rawResponse: unknown,
+    ctx?: MlPredictionLogContext,
+  ): Promise<void> {
+    if (!ctx) return;
+    try {
+      await this.prisma.forCurrentTenant((tx) =>
+        tx.mlPredictionRecord.create({
+          data: {
+            tenantId: ctx.tenantId,
+            capability,
+            predictionId,
+            entityType: ctx.entityType,
+            entityId: ctx.entityId,
+            requestedBy: ctx.requestedBy,
+            requiresHumanReview,
+            rawResponse: rawResponse as object,
+          },
+        }),
+      );
+    } catch (err) {
+      this.logger.error(`Failed to log ${capability} prediction ${predictionId} for retraining: ${(err as Error).message}`);
+    }
   }
 
   private assertGroqConfigured(): OpenAI {
@@ -191,7 +248,7 @@ export class MlGatewayService {
    * structured model (our own request mapping is wrong) is NOT treated as "unreachable" — it
    * surfaces as a 400, since falling back would hide a real bug in this mapping layer, and opting
    * into Groq wouldn't fix it either. */
-  async suggestSeverity(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
+  async suggestSeverity(input: SeveritySuggestionInput, ctx?: MlPredictionLogContext): Promise<SeveritySuggestion> {
     const hasAllRiskFactors =
       input.financialExposureNgn != null &&
       input.customerImpactCount != null &&
@@ -204,7 +261,7 @@ export class MlGatewayService {
 
     if (hasAllRiskFactors) {
       try {
-        return await this.suggestSeverityViaMlService(input);
+        return await this.suggestSeverityViaMlService(input, ctx);
       } catch (err) {
         if (err instanceof MlServiceValidationError) {
           throw new BadRequestException(`EFIMS AI Service rejected the severity request: ${JSON.stringify(err.detail)}`);
@@ -227,7 +284,7 @@ export class MlGatewayService {
     return this.suggestSeverityViaGroq(input);
   }
 
-  private async suggestSeverityViaMlService(input: SeveritySuggestionInput): Promise<SeveritySuggestion> {
+  private async suggestSeverityViaMlService(input: SeveritySuggestionInput, ctx?: MlPredictionLogContext): Promise<SeveritySuggestion> {
     const request: SeverityPredictRequest = {
       incident_id: input.incidentId,
       financial_exposure_ngn: input.financialExposureNgn!,
@@ -244,6 +301,7 @@ export class MlGatewayService {
     };
 
     const response: SeverityPredictResponse = await this.mlServiceClient.predictSeverity(request);
+    await this.logPrediction(MlPredictionCapability.SEVERITY, response.prediction_id, response.requires_human_review, response, ctx);
 
     return {
       suggestedSeverity: response.severity_prediction,
@@ -313,7 +371,7 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
   /** New capability — the EFIMS AI Service's transaction anomaly scorer. No Groq equivalent
    * exists; on unreachability this surfaces as 503, same convention `ml-gateway` already uses for
    * an unconfigured Groq client. */
-  async scoreAnomaly(input: AnomalyScoreInput): Promise<AnomalySuggestion> {
+  async scoreAnomaly(input: AnomalyScoreInput, ctx?: MlPredictionLogContext): Promise<AnomalySuggestion> {
     const request: AnomalyScoreRequest = {
       transaction_id: input.transactionId,
       amount_ngn: input.amountNgn,
@@ -337,6 +395,8 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
       throw new ServiceUnavailableException((err as Error).message);
     }
 
+    await this.logPrediction(MlPredictionCapability.ANOMALY, response.prediction_id, response.requires_human_review, response, ctx);
+
     return {
       predictionId: response.prediction_id,
       confidence: response.confidence_score,
@@ -351,7 +411,7 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
 
   /** New capability — the EFIMS AI Service's recovery-probability predictor. No Groq equivalent
    * exists; on unreachability this surfaces as 503. */
-  async predictRecovery(input: RecoveryPredictionInput): Promise<RecoverySuggestion> {
+  async predictRecovery(input: RecoveryPredictionInput, ctx?: MlPredictionLogContext): Promise<RecoverySuggestion> {
     const request: RecoveryPredictRequest = {
       case_id: input.caseId,
       gross_actual_loss_ngn: input.grossActualLossNgn,
@@ -371,6 +431,8 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
       }
       throw new ServiceUnavailableException((err as Error).message);
     }
+
+    await this.logPrediction(MlPredictionCapability.RECOVERY, response.prediction_id, response.requires_human_review, response, ctx);
 
     return {
       predictionId: response.prediction_id,
@@ -437,5 +499,52 @@ Respond with ONLY a JSON object, no other text, in this exact shape (omit any ca
       this.logger.error('Failed to parse Groq similarity response', err as Error);
       throw new ServiceUnavailableException('ml-gateway received an unparseable response from Groq');
     }
+  }
+
+  /** Read-only lookup, tenant-scoped like every other method here. Exists so a caller that
+   * already knows how to check access on a specific entity (`TriageService`/`RecoveryService`,
+   * both of which already depend on this module) can verify a prediction's `entityType`/
+   * `entityId` actually matches the entity it's about to run its own access check against,
+   * before deciding it — see `decidePrediction`'s own doc comment on why this module can't run
+   * that check itself. */
+  async getPredictionRecord(actor: AuthenticatedUser, predictionId: string) {
+    const record = await this.prisma.forCurrentTenant((tx) =>
+      tx.mlPredictionRecord.findUnique({ where: { tenantId_predictionId: { tenantId: actor.tenantId, predictionId } } }),
+    );
+    if (!record) {
+      throw new NotFoundException(`No logged prediction found with id ${predictionId}`);
+    }
+    return record;
+  }
+
+  /** The other half of the vendor's rule #3 ("record whether the analyst accepted or overrode
+   * it"). Called once a human actually acts on a logged structured-model suggestion — never by
+   * this module itself. Mutates PENDING -> ACCEPTED|OVERRIDDEN exactly once, same one-way-decide
+   * shape as `ApprovalService.decide`; a prediction that's already been decided can't be
+   * re-decided (no legitimate "change your mind" flow is modeled — a human who acts twice should
+   * record a fresh event under whichever other module owns that follow-up action, not mutate the
+   * retraining record of what they originally decided).
+   *
+   * Deliberately does NOT check compartment/clearance access on the prediction's underlying
+   * entity (a SEVERITY prediction's `Incident`, a RECOVERY prediction's `Case`) — this module
+   * can't: `IncidentsModule` already imports `MlGatewayModule`, and `CasesModule` imports
+   * `TriageModule` which also imports it, so the reverse dependency this check would need creates
+   * a circular module graph. Callers that own an entity-access check
+   * (`TriageService.decideSeveritySuggestion`, `RecoveryService.decideRecoveryPrediction`) must
+   * run it themselves, via `getPredictionRecord`, before calling this. A caller with no entity to
+   * check (`MlGatewayController`'s own route, ANOMALY only — nothing in EFIMS models a
+   * `Transaction`) calls this directly. */
+  async decidePrediction(actor: AuthenticatedUser, predictionId: string, decision: 'ACCEPTED' | 'OVERRIDDEN'): Promise<void> {
+    const record = await this.getPredictionRecord(actor, predictionId);
+    if (record.decision !== MlPredictionDecision.PENDING) {
+      throw new BadRequestException(`Prediction ${predictionId} was already recorded as ${record.decision}`);
+    }
+
+    await this.prisma.forCurrentTenant((tx) =>
+      tx.mlPredictionRecord.update({
+        where: { id: record.id },
+        data: { decision: decision as MlPredictionDecision, decidedBy: actor.sub, decidedAt: new Date() },
+      }),
+    );
   }
 }

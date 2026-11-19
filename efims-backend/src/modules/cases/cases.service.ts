@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApprovalAction, AuditOutcome, Case, CaseStatus, CaseStatusHistory, CaseUserFlag, CaseUserRelationType, Compartment, Prisma, SeverityTier } from '@prisma/client';
+import { ApprovalAction, AuditOutcome, Case, CaseStatus, CaseStatusHistory, CaseUserFlag, CaseUserRelationType, Compartment, Prisma, SeverityTier, Team } from '@prisma/client';
 import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
@@ -279,14 +279,14 @@ export class CasesService {
 
       const page = visible.slice(offset, offset + limit);
       const needsTeams = page.some((c) => c.assignedTeamId);
-      const [teams, counts] = await Promise.all([
+      const [teams, counts]: [Team[], { id: string; _count: { incidents: number } }[]] = await Promise.all([
         needsTeams ? this.teamsService.list(tx) : [],
         page.length
           ? tx.case.findMany({ where: { id: { in: page.map((c) => c.id) } }, select: { id: true, _count: { select: { incidents: true } } } })
           : [],
       ]);
-      const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
-      const incidentCountById = new Map(counts.map((c) => [c.id, c._count.incidents]));
+      const teamNameById = new Map<string, string>(teams.map((t) => [t.id, t.name]));
+      const incidentCountById = new Map<string, number>(counts.map((c) => [c.id, c._count.incidents]));
       // Only recompute for the page if we didn't already compute it over the whole visible set
       // above (no `sevFilter` means the map is still empty).
       const pageSeverityAndOverdue = sevFilter ? severityAndOverdueByCaseId : await this.computeSeverityAndOverdue(page.map((c) => c.id), tx);

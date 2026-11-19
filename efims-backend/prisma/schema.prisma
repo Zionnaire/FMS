@@ -64,6 +64,7 @@ model Tenant {
   regulatorySubmissions RegulatorySubmission[]
   accessChangeRequests  AccessChangeRequest[]
   tasks                 Task[]
+  mlPredictionRecords   MlPredictionRecord[]
 
   @@map("tenants")
 }
@@ -1764,4 +1765,62 @@ model RegulatorySubmission {
 
   @@index([tenantId, obligationId])
   @@map("regulatory_submissions")
+}
+
+// ---------------------------------------------------------------------------------------------
+// ml-gateway module — durable prediction log, added alongside the real EFIMS AI Service
+// integration (v1.0). The vendor's own integration spec requires this explicitly: "Store every
+// prediction_id with the case, and record whether the analyst accepted or overrode it. That data
+// is used for retraining." `MlGatewayService` writes one row per structured-model prediction it
+// returns (Groq-fallback suggestions carry no vendor `prediction_id` and are never logged here —
+// nothing to send back for retraining); `MlGatewayService.decidePrediction` is the one place that
+// ever moves a row off `PENDING`, called once a human actually accepts or overrides a suggestion.
+// ---------------------------------------------------------------------------------------------
+
+enum MlPredictionCapability {
+  SEVERITY
+  ANOMALY
+  RECOVERY
+}
+
+enum MlPredictionDecision {
+  PENDING
+  ACCEPTED
+  OVERRIDDEN
+}
+
+/// Append-only except for one single, one-way mutation: `decision` moves PENDING -> ACCEPTED or
+/// OVERRIDDEN exactly once (same "mutate once" shape as `ApprovalRequest`/`AccessChangeRequest`'s
+/// own `decide()`), never re-decided or removed. `entityType`/`entityId` loosely identifies what
+/// the prediction was about (Incident for SEVERITY, Case for RECOVERY, a bare transaction id with
+/// no EFIMS entity behind it for ANOMALY) — a plain string pair rather than a typed relation,
+/// mirroring `AuditEvent`'s own convention, since this table's job is a durable retraining log,
+/// not something this app queries relationally.
+model MlPredictionRecord {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  capability   MlPredictionCapability
+  /// The vendor's own `prediction_id` from the response envelope — opaque, not EFIMS-generated.
+  predictionId String
+  entityType   String
+  entityId     String
+
+  requestedBy         String
+  requiresHumanReview Boolean
+  /// The full vendor response, verbatim — the retraining use case this exists for needs whatever
+  /// the model actually said, not just the fields EFIMS's own UI happens to surface today.
+  rawResponse Json
+
+  decision  MlPredictionDecision @default(PENDING)
+  decidedBy String?
+  decidedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, predictionId])
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, decision])
+  @@map("ml_prediction_records")
 }

@@ -168,6 +168,13 @@ REVOKE DELETE ON tasks FROM efims_app;
 GRANT SELECT, INSERT ON regulatory_submissions TO efims_app;
 REVOKE UPDATE, DELETE ON regulatory_submissions FROM efims_app;
 
+-- ml-gateway module: ml_prediction_records needs UPDATE (decidePrediction() mutates decision/
+-- decidedBy/decidedAt on the same row, same pattern as approval_requests/access_change_requests'
+-- own decide()), no DELETE — a logged prediction and its eventual accept/override decision is a
+-- retraining-data record, never erased, same "never hard-delete" posture as everything else here.
+GRANT SELECT, INSERT, UPDATE ON ml_prediction_records TO efims_app;
+REVOKE DELETE ON ml_prediction_records FROM efims_app;
+
 -- ...but audit_events is append-only at the *database grant* level, not just in application
 -- code — belt-and-suspenders for CLAUDE.md non-negotiable #6 ("no update/delete path exists,
 -- including via raw SQL"). efims_app can INSERT and SELECT, nothing else.
@@ -202,7 +209,7 @@ DO $$
 DECLARE
   t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'push_subscriptions', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks']
+  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'push_subscriptions', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks', 'ml_prediction_records']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
