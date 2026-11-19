@@ -1,6 +1,6 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
-import type { ObligationStatus, ObligationType, RegulatoryObligation, RegulatoryRegisterRow } from "./types";
+import type { FilingDetails, ObligationStatus, ObligationType, RegulatoryObligation, RegulatoryRegisterRow } from "./types";
 
 const base = (caseId: string) => `/cases/${caseId}/regulatory-obligations`;
 
@@ -19,6 +19,15 @@ export async function listObligations(accessToken: string, caseId: string, statu
 
 export async function getObligation(accessToken: string, caseId: string, obligationId: string): Promise<RegulatoryObligation> {
   return backendFetch<RegulatoryObligation>(`${base(caseId)}/${obligationId}`, { accessToken });
+}
+
+export async function updateFilingDetails(
+  accessToken: string,
+  caseId: string,
+  obligationId: string,
+  filingDetails: FilingDetails,
+): Promise<RegulatoryObligation> {
+  return backendFetch<RegulatoryObligation>(`${base(caseId)}/${obligationId}/filing-details`, { method: "PATCH", body: { filingDetails }, accessToken });
 }
 
 export async function submitObligation(

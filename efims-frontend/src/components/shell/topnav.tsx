@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, ChevronDown, LogOut } from "lucide-react";
+import { Bell, ChevronDown, LogOut, ShieldCheck } from "lucide-react";
 import { logoutAction } from "@/features/auth/actions";
 import type { SessionUser } from "@/features/auth/types";
 import { listNotifications } from "@/features/notifications/api";
@@ -47,6 +47,15 @@ export async function TopNav({ user, accessToken, institutionName = "Bank 1" }: 
             <span className="text-[11px] text-on-surface-variant">{user.role.replaceAll("_", " ")}</span>
           </div>
         </div>
+
+        <Link
+          href="/settings/security"
+          title="Security — manage your own MFA"
+          aria-label="Security settings"
+          className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface"
+        >
+          <ShieldCheck size={18} strokeWidth={2} />
+        </Link>
 
         <form action={logoutAction}>
           <button

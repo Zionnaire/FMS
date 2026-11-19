@@ -57,6 +57,9 @@ export interface CaseStats {
   totalRecovered: string;
   outstanding: string;
   currency: "NGN";
+  /** Mean `closedAt - createdAt` in days over this visible set's `CLOSED` cases — `null` if none
+   * are closed yet. */
+  meanDaysToClose: number | null;
 }
 
 export interface BulkCaseActionResult {

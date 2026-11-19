@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Landmark, Briefcase, Hourglass, AlertTriangle, Lock, CheckCircle2, type LucideIcon } from "lucide-react";
+import { Landmark, Briefcase, Hourglass, AlertTriangle, Lock, CheckCircle2, TrendingUp, Wrench, Radio, ArrowRight, type LucideIcon } from "lucide-react";
 import { getCaseStats } from "@/features/cases/api";
 import { getIncidentStats } from "@/features/incidents/api";
 import { getSeverityTrend } from "@/features/triage/api";
 import { getRecoveryRegister } from "@/features/recovery/api";
+import { getCapaRegister } from "@/features/capa/api";
+import { getSignalStats } from "@/features/signals/api";
 import { listTeams } from "@/features/teams/api";
 import { SEVERITY_COLOR } from "@/lib/severity-colors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +64,23 @@ const INCIDENT_STATUS_LABEL: Record<string, string> = {
   CLOSED_NO_CASE: "Closed (no case)",
 };
 
+/** Same "fixed status palette" reasoning as `INCIDENT_STATUS_COLOR` above, for the Outcomes
+ * tab's CAPA breakdown. */
+const CAPA_STATUS_COLOR: Record<string, { color: string; colorHex: string }> = {
+  OPEN: { color: "var(--color-outline)", colorHex: "#c7d0d9" },
+  IN_PROGRESS: { color: "var(--color-secondary)", colorHex: "#64748b" },
+  COMPLETED: { color: "var(--color-tertiary)", colorHex: "#167d83" },
+  VALIDATED: { color: "var(--color-success)", colorHex: "#2a6858" },
+  CANCELLED: { color: "var(--color-error)", colorHex: "#b94343" },
+};
+const CAPA_STATUS_LABEL: Record<string, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In progress",
+  COMPLETED: "Completed",
+  VALIDATED: "Validated",
+  CANCELLED: "Cancelled",
+};
+
 /** Executive/CRO's "Executive risk overview" — a bespoke aggregate rollup, not the generic
  * `QueueDashboard` shell: an executive wants the whole portfolio's shape at a glance (loss vs.
  * recovered, case mix, incident pipeline), not a flat queue of individual rows to click into.
@@ -70,11 +89,13 @@ const INCIDENT_STATUS_LABEL: Record<string, string> = {
  * population-level Analytics tab would be a dead control, not a 20-dashboard rollout. First real
  * consumer of `src/components/ui/tabs.tsx` (installed, previously unused anywhere). */
 export async function ExecutiveDashboard({ accessToken }: { accessToken: string }) {
-  const [caseStats, incidentStats, severityTrend, recoveryRegister, teams] = await Promise.all([
+  const [caseStats, incidentStats, severityTrend, recoveryRegister, capaRegister, signalStats, teams] = await Promise.all([
     getCaseStats(accessToken),
     getIncidentStats(accessToken),
     getSeverityTrend(accessToken, 30),
     getRecoveryRegister(accessToken),
+    getCapaRegister(accessToken),
+    getSignalStats(accessToken),
     listTeams(accessToken),
   ]);
 
@@ -96,6 +117,34 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
     ...SEVERITY_COLOR[tier],
   }));
 
+  // Outcomes tab — the one place this dashboard asks "what did EFIMS actually resolve," not
+  // "what does the current portfolio look like right now" (Operations) or "how has it moved over
+  // time" (Analytics). Every number here is derived from the exact same stats/registers already
+  // fetched above — no new backend aggregate beyond `CaseStats.meanDaysToClose` (added alongside
+  // this tab; everything else was already there).
+  const totalLossNum = Number(caseStats.totalLoss);
+  const recoveryRatePct = totalLossNum > 0 ? Math.round((Number(caseStats.totalRecovered) / totalLossNum) * 1000) / 10 : null;
+  const closureRatePct = caseStats.total > 0 ? Math.round((caseStats.byStatus.CLOSED / caseStats.total) * 1000) / 10 : null;
+
+  const capaTotal = capaRegister.length;
+  const capaByStatus: Record<string, number> = { OPEN: 0, IN_PROGRESS: 0, COMPLETED: 0, VALIDATED: 0, CANCELLED: 0 };
+  for (const a of capaRegister) capaByStatus[a.status]++;
+  const capaResolvedCount = capaByStatus.COMPLETED + capaByStatus.VALIDATED;
+  const capaEffectivenessPct = capaTotal > 0 ? Math.round((capaResolvedCount / capaTotal) * 1000) / 10 : null;
+  const capaParts: SegmentedBarPart[] = Object.entries(CAPA_STATUS_LABEL).map(([status, label]) => ({
+    key: status,
+    label,
+    value: capaByStatus[status] ?? 0,
+    ...CAPA_STATUS_COLOR[status],
+  }));
+
+  const lifecycleFunnel = [
+    { label: "Signals reported", value: signalStats.total, icon: Radio },
+    { label: "Incidents opened", value: incidentStats.total, icon: AlertTriangle },
+    { label: "Cases built", value: caseStats.total, icon: Briefcase },
+    { label: "Cases closed", value: caseStats.byStatus.CLOSED, icon: CheckCircle2 },
+  ];
+
   const incidentStatusParts: SegmentedBarPart[] = Object.entries(INCIDENT_STATUS_LABEL).map(([status, label]) => ({
     key: status,
     label,
@@ -114,6 +163,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
         <TabsList variant="line">
           <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="operations" className="flex flex-col gap-6 pt-4">
@@ -259,6 +309,61 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
               ) : (
                 <RecoveryBarChart data={recoveryBars} />
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="outcomes" className="flex flex-col gap-6 pt-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <KpiTile
+              label="Recovery rate"
+              value={recoveryRatePct !== null ? `${recoveryRatePct}%` : "—"}
+              sublabel={recoveryRatePct !== null ? `${formatNgn(caseStats.totalRecovered)} of ${formatNgn(caseStats.totalLoss)} identified loss` : "No loss recorded yet"}
+              icon={TrendingUp}
+              color="var(--color-success)"
+            />
+            <KpiTile
+              label="Case closure rate"
+              value={closureRatePct !== null ? `${closureRatePct}%` : "—"}
+              sublabel={
+                caseStats.meanDaysToClose !== null
+                  ? `${caseStats.byStatus.CLOSED} of ${caseStats.total} closed · avg ${caseStats.meanDaysToClose}d to close`
+                  : `${caseStats.byStatus.CLOSED} of ${caseStats.total} closed`
+              }
+              icon={CheckCircle2}
+              color="var(--color-tertiary)"
+            />
+            <KpiTile
+              label="CAPA effectiveness"
+              value={capaEffectivenessPct !== null ? `${capaEffectivenessPct}%` : "—"}
+              sublabel={capaTotal > 0 ? `${capaResolvedCount} of ${capaTotal} corrective actions completed or validated` : "No CAPA actions recorded yet"}
+              icon={Wrench}
+              color="var(--color-secondary)"
+            />
+          </div>
+
+          <Card className="border-outline-variant shadow-card">
+            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">The lifecycle, end to end</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {lifecycleFunnel.map((step, i) => (
+                  <div key={step.label} className="flex flex-1 items-center gap-3">
+                    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border border-outline-variant/50 bg-surface-container-low px-4 py-3 text-center">
+                      <step.icon size={18} strokeWidth={2} className="text-tertiary" />
+                      <span className="text-xl font-bold text-on-surface">{step.value}</span>
+                      <span className="text-[11px] text-on-surface-variant">{step.label}</span>
+                    </div>
+                    {i < lifecycleFunnel.length - 1 && <ArrowRight size={16} strokeWidth={2} className="hidden shrink-0 text-outline sm:block" />}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-outline-variant shadow-card">
+            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Corrective &amp; preventive action status</CardTitle></CardHeader>
+            <CardContent>
+              <SegmentedBar parts={capaParts} />
             </CardContent>
           </Card>
         </TabsContent>

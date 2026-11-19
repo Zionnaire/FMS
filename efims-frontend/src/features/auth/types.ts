@@ -50,7 +50,7 @@ export interface SessionUser {
   iat: number;
 }
 
-export interface LoginResult {
+export interface LoginSuccessResult {
   accessToken: string;
   refreshToken: string;
   user: {
@@ -61,3 +61,14 @@ export interface LoginResult {
     clearanceLevel: number;
   };
 }
+
+/** Returned from `POST /auth/login` instead of real tokens when the account has MFA enrolled
+ * (see `AuthService.login`'s own doc comment) — `mfaChallengeToken` is a short-lived (5 min),
+ * separately-signed token that only `POST /auth/mfa/verify` accepts, never a substitute for a
+ * real session. */
+export interface LoginMfaRequiredResult {
+  mfaRequired: true;
+  mfaChallengeToken: string;
+}
+
+export type LoginResult = LoginSuccessResult | LoginMfaRequiredResult;

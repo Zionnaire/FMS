@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { ApiError, backendFetch } from "@/lib/backend-client";
 import { clearSessionCookies, getRefreshToken, setSessionCookies } from "./session";
-import type { LoginResult } from "./types";
+import type { LoginResult, LoginSuccessResult } from "./types";
 
 const LoginSchema = z.object({
   tenantSlug: z
@@ -16,12 +16,26 @@ const LoginSchema = z.object({
   password: z.string().min(8, "Must be at least 8 characters"),
 });
 
+const VerifyMfaSchema = z.object({
+  mfaChallengeToken: z.string().min(10),
+  code: z.string().trim().min(6, "Enter your 6-digit code or a backup code").max(20),
+});
+
 export interface LoginState {
   error?: string;
-  fieldErrors?: Partial<Record<"tenantSlug" | "email" | "password", string>>;
+  fieldErrors?: Partial<Record<"tenantSlug" | "email" | "password" | "code", string>>;
+  /** Set only when the previous submit returned `mfaRequired` — the form re-renders as the MFA
+   * code step and carries this back as a hidden field on the next submit, which is how
+   * `loginAction` tells the two steps apart (no separate action/endpoint needed on this side). */
+  mfaChallengeToken?: string;
 }
 
 export async function loginAction(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const existingChallenge = formData.get("mfaChallengeToken");
+  if (typeof existingChallenge === "string" && existingChallenge) {
+    return verifyMfaStep(existingChallenge, formData);
+  }
+
   const parsed = LoginSchema.safeParse({
     tenantSlug: formData.get("tenantSlug"),
     email: formData.get("email"),
@@ -39,13 +53,13 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
     };
   }
 
+  let result: LoginResult;
   try {
-    const result = await backendFetch<LoginResult>("/auth/login", {
+    result = await backendFetch<LoginResult>("/auth/login", {
       method: "POST",
       body: parsed.data,
       skipAuth: true,
     });
-    await setSessionCookies(result.accessToken, result.refreshToken);
   } catch (error) {
     if (error instanceof ApiError && (error.status === 401 || error.status === 400)) {
       return { error: "Invalid tenant, email, or password." };
@@ -53,6 +67,37 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
     return { error: "Unable to reach EFIMS Core right now. Try again shortly." };
   }
 
+  if ("mfaRequired" in result) {
+    return { mfaChallengeToken: result.mfaChallengeToken };
+  }
+
+  await setSessionCookies(result.accessToken, result.refreshToken);
+  redirect("/");
+}
+
+async function verifyMfaStep(mfaChallengeToken: string, formData: FormData): Promise<LoginState> {
+  const parsed = VerifyMfaSchema.safeParse({ mfaChallengeToken, code: formData.get("code") });
+  if (!parsed.success) {
+    return { mfaChallengeToken, fieldErrors: { code: parsed.error.flatten().fieldErrors.code?.[0] } };
+  }
+
+  let result: LoginSuccessResult;
+  try {
+    result = await backendFetch<LoginSuccessResult>("/auth/mfa/verify", {
+      method: "POST",
+      body: parsed.data,
+      skipAuth: true,
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      // The challenge token itself may also have expired (5 min) — same message either way,
+      // same "don't help an attacker distinguish failure reasons" posture as the password step.
+      return { mfaChallengeToken, error: "Invalid or expired code. If it's been a few minutes, start over." };
+    }
+    return { mfaChallengeToken, error: "Unable to reach EFIMS Core right now. Try again shortly." };
+  }
+
+  await setSessionCookies(result.accessToken, result.refreshToken);
   redirect("/");
 }
 

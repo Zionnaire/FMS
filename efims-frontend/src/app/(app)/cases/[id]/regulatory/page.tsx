@@ -1,15 +1,19 @@
-import { Scale } from "lucide-react";
+import Link from "next/link";
+import { FileText, Scale } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
+import { getCase } from "@/features/cases/api";
 import { listObligations } from "@/features/regulatory/api";
 import { listApprovals } from "@/features/workflow/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shell/status-badge";
+import { Button } from "@/components/ui/button";
 import { NewObligationForm, SubmitObligationForm, WaiveObligationForm, AcknowledgeObligationForm } from "./regulatory-forms";
+import { FilingDetailsForm } from "./filing-details-form";
 
 export default async function CaseRegulatoryPage(props: PageProps<"/cases/[id]/regulatory">) {
   const { id } = await props.params;
   const { accessToken } = await requireSession();
-  const [obligations, approvals] = await Promise.all([listObligations(accessToken, id), listApprovals(accessToken, id)]);
+  const [obligations, approvals, caseRecord] = await Promise.all([listObligations(accessToken, id), listApprovals(accessToken, id), getCase(accessToken, id)]);
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -36,6 +40,25 @@ export default async function CaseRegulatoryPage(props: PageProps<"/cases/[id]/r
                 </div>
                 <p className="text-on-surface-variant">{ob.description}</p>
                 <p className="text-on-surface-variant">Deadline: {new Date(ob.deadline).toLocaleString()}</p>
+
+                {ob.status === "PENDING" && ob.obligationType !== "OTHER" && (
+                  <FilingDetailsForm
+                    caseId={id}
+                    obligationId={ob.id}
+                    obligationType={ob.obligationType}
+                    initialFilingDetails={ob.filingDetails}
+                    caseDescriptionSeed={caseRecord.description}
+                  />
+                )}
+                {ob.filingDetails && (
+                  <Link href={`/regulatory-preview/${id}/${ob.id}`} target="_blank">
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5">
+                      <FileText size={14} strokeWidth={2} />
+                      Preview filing
+                    </Button>
+                  </Link>
+                )}
+
                 {ob.status === "PENDING" && (
                   <div className="flex flex-wrap gap-2 border-t border-outline-variant pt-2">
                     {availableApprovals.length > 0 ? (
