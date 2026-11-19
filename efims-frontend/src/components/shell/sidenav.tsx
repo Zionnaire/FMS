@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Home, Radio, AlertTriangle, Radar, Briefcase, FileSearch, Archive, ShieldAlert,
   Landmark, Wrench, Gavel, FileText, CheckSquare, Bell, FolderLock, EyeOff, Settings,
-  Plug, Clock, Users, ShieldCheck, ChevronRight, ChevronDown, X, type LucideIcon,
+  Plug, Clock, Users, ShieldCheck, HeartPulse, ChevronRight, ChevronDown, X, type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { ROLES, type Role } from "@/features/auth/types";
@@ -116,6 +116,7 @@ const NAV_SECTIONS: NavSection[] = [
         children: [
           { href: "/settings/integrations", label: "Integrations", icon: Plug, roles: CONFIG_ROLES },
           { href: "/settings/retention", label: "Retention & legal holds", icon: Clock, roles: RETENTION_ROLES },
+          { href: "/settings/system-health", label: "System health", icon: HeartPulse, roles: CONFIG_ROLES },
         ],
       },
     ],

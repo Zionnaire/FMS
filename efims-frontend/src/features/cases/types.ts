@@ -78,6 +78,19 @@ export interface CaseUserFlag {
   flaggedAt: string;
 }
 
+/** `GET /cases/:id/team-conflict-check`'s shape — see `CasesService.checkTeamConflicts`'s own
+ * doc comment: advisory only, never blocks assignment. */
+export interface TeamConflictCheckResult {
+  teamId: string;
+  memberCount: number;
+  conflictedMembers: {
+    userId: string;
+    fullName: string;
+    flagType: CaseUserRelationType;
+    reason: string | null;
+  }[];
+}
+
 export interface CaseStatusHistoryEntry {
   id: string;
   tenantId: string;

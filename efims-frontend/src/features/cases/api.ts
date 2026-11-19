@@ -1,7 +1,7 @@
 import "server-only";
 import { backendFetch } from "@/lib/backend-client";
 import type { Compartment } from "@/features/auth/types";
-import type { BulkCaseActionResult, Case, CaseStats, CaseStatus, CaseStatusHistoryEntry, CaseUserFlag, CaseUserRelationType, ListCasesResult } from "./types";
+import type { BulkCaseActionResult, Case, CaseStats, CaseStatus, CaseStatusHistoryEntry, CaseUserFlag, CaseUserRelationType, ListCasesResult, TeamConflictCheckResult } from "./types";
 
 export interface ListCasesParams {
   accessToken: string;
@@ -79,6 +79,12 @@ export async function updateCaseStatus(
 
 export async function assignCaseTeam(accessToken: string, id: string, teamId: string): Promise<Case> {
   return backendFetch<Case>(`/cases/${id}/team`, { method: "POST", body: { teamId }, accessToken });
+}
+
+/** Advisory-only preview, called before actually assigning — see `TeamConflictCheckResult`'s own
+ * doc comment. */
+export async function checkTeamConflicts(accessToken: string, id: string, teamId: string): Promise<TeamConflictCheckResult> {
+  return backendFetch<TeamConflictCheckResult>(`/cases/${id}/team-conflict-check?teamId=${teamId}`, { accessToken });
 }
 
 export async function linkIncidentToCase(accessToken: string, id: string, incidentId: string): Promise<void> {

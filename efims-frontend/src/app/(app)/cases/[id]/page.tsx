@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SubmitButton } from "@/components/shell/submit-button";
 import { StatusBadge } from "@/components/shell/status-badge";
+import { TeamAssignmentForm } from "./team-assignment-form";
 
 export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) {
   const { id } = await props.params;
@@ -60,18 +61,7 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
             <SubmitButton size="sm">Update status</SubmitButton>
           </form>
 
-          <form action={assignTeam} className="space-y-2 border-t border-outline-variant pt-3">
-            <Label className="text-xs font-bold uppercase">Reassign team</Label>
-            <Select name="teamId" required>
-              <SelectTrigger className="w-full"><SelectValue placeholder={caseRecord.assignedTeamId ? teams.find((t) => t.id === caseRecord.assignedTeamId)?.name : "Unassigned"} /></SelectTrigger>
-              <SelectContent>
-                {teams.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <SubmitButton size="sm" variant="outline">Assign</SubmitButton>
-          </form>
+          <TeamAssignmentForm caseId={id} assignedTeamId={caseRecord.assignedTeamId} teams={teams} action={assignTeam} />
         </CardContent>
       </Card>
 
