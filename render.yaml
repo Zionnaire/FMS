@@ -44,6 +44,8 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: JWT_MFA_CHALLENGE_SECRET
+        generateValue: true
       - key: PLATFORM_JWT_SECRET
         generateValue: true
 
@@ -71,11 +73,15 @@ services:
         sync: false
 
       # ml-gateway (CLAUDE.md non-negotiable #4 — the only module allowed to call an external
-      # AI/ML provider). No real EFIMS AI Service is deployed anywhere yet (see
-      # docs/OPEN_ITEMS.md) — ml-gateway degrades to a clean 503 when this is unset/unreachable,
-      # not a crash, so leaving it as a placeholder is safe.
+      # AI/ML provider). The real EFIMS AI Service went live 2026-11-18 at this URL — free-tier
+      # hosting sleeps after 15 minutes idle, so the first request after a gap can take close to
+      # a minute (ml-service-client.ts's request timeout already accounts for this). Still
+      # degrades to a clean 503, not a crash, if this ever becomes unreachable.
       - key: ML_SERVICE_BASE_URL
-        value: http://127.0.0.1:8000
+        value: https://efims-ai.onrender.com
+      # Paste the real X-API-Key value the ML team supplied — never committed here.
+      - key: ML_SERVICE_API_KEY
+        sync: false
       # Paste a real key at https://console.groq.com/keys, or leave the dashboard prompt empty —
       # ml-gateway's severity-fallback and duplicate-detection capabilities both degrade to a
       # clean 503 (not a crash) when this is unconfigured.

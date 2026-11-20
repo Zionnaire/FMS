@@ -6,6 +6,470 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-19 (cont'd, 7th pass) — Production incident: Render backend crash-looping, fixed (`otplib` → `speakeasy`)
+
+The deployed Render backend was crash-looping at boot, every restart cycle, locking everyone out
+of the live system:
+
+```
+Error [ERR_REQUIRE_ESM]: require() of ES Module .../node_modules/@scure/base/index.js from
+.../node_modules/@otplib/plugin-base32-scure/dist/index.cjs not supported.
+```
+
+**Root cause**: `otplib` (added earlier this session for the MFA feature) transitively depends on
+`@otplib/plugin-base32-scure` → `@scure/base`, which is genuinely ESM-only (`"type": "module"`,
+no CJS build at all — confirmed by reading its `package.json` directly). otplib ships only one
+base32 plugin, so there was no CJS-safe alternative already in its own dependency tree. This is a
+different failure mode than the earlier `web-push` ESM crash this session already fixed: that one
+was *our own* import statement and could be hidden from `tsc` with a dynamic `import()`. This one
+is inside a third-party package's own precompiled `.cjs`, invisible to `tsc`/`nest build` and to
+local `nest start --watch` alike — it only surfaces when the actual compiled production artifact
+(`dist/main.js`) boots under plain `node`, which is exactly the Render startCommand
+(`npx prisma migrate deploy && npm run start`) and exactly what local dev never exercises.
+
+**Fix**: replaced `otplib` with `speakeasy` (`^2.0.0`) — a mature, pure-CommonJS TOTP/HOTP
+library (RFC 6238/4226) with zero ESM anywhere in its dependency tree (confirmed via its and its
+one dependency `base32.js`'s own `package.json`, and zero known security advisories). Rewrote all
+three MFA call sites in `efims-backend/src/modules/identity/auth.service.ts`
+(`startMfaEnrollment`, `confirmMfaEnrollment`, `verifyMfaAndLogin`) to speakeasy's API
+(`generateSecret`/`otpauthURL`/`totp.verify`, secrets stored/compared as base32 throughout).
+User-facing MFA behavior is unchanged — same enroll/QR/confirm/backup-code/disable flow, same
+~±30s clock-drift tolerance (`window: 1` replaces otplib's `epochTolerance: 30`).
+
+**Verified, not just asserted**: clean `tsc --noEmit`/lint/`nest build`; then the actual
+reproduction step that would have caught this before it ever reached Render — booted the
+compiled `dist/main.js` directly with plain `node` and confirmed it starts cleanly through full
+module init and route mapping with no `ERR_REQUIRE_ESM`. Then ran the full MFA flow live against
+the real Neon database end to end: login → enroll → confirm with a real generated TOTP code →
+status check → re-login correctly challenged → verify with a fresh TOTP code → a wrong code
+correctly rejected (401) → a backup code correctly accepted and consumed → disable → re-login no
+longer requires MFA. All 10 steps passed.
+
+**Not yet done**: this fix is committed to the working tree but deploying it to Render requires a
+push to the tracked branch, which wasn't done as part of this fix — flag to the user before
+assuming the live outage is resolved.
+
+---
+
+## 2026-11-19 (cont'd, 6th pass) — Two niche items: real team-conflict check, honest system health
+
+Fourth and fifth items off the stakeholder-gap list: team-assignment conflict check, and a real
+system-health view. Checked both closest-named mockups first, same discipline as every item
+before this one. Both were almost entirely fabricated: `team-assignment-conflict-check.html`
+modeled PEP/beneficial-ownership screening against a fictional "CBN LexisNexis Bridger Insight"
+and a fake hardware-token/dual-custody-key table; `system-health-telemetry.html` modeled a
+14-node Kubernetes cluster with named fake microservices (`efims-auth-enclave`,
+`mule-detection-heuristics`, ...), a fake HSM, a fake Istio service mesh, and fake CPU/RAM/IOPS
+metrics — directly contradicting this project's own documented modular-monolith architecture.
+Each mockup had exactly one real, honestly-buildable thing underneath the theater, and that's
+what got built.
+
+**Team-assignment conflict check**: new `GET /cases/:id/team-conflict-check?teamId=X` —
+before actually assigning a team to a case, checks whether any of its members already carry a
+`SUBJECT`/`CONFLICT` flag on that case (non-negotiable #6) and surfaces who, by name, with their
+flag type and reason. Purely advisory, never blocks the assignment — the real access control
+(denying that specific member regardless of team assignment) was already correct and unchanged;
+this just tells the assigner *before* they assign, instead of only at the moment someone tries
+to open the case and gets denied. Wired into the case overview's existing team-reassignment
+form, which now fires the check live as a candidate team is picked.
+
+**Real bug found and fixed, pre-existing, not introduced by this change**: the team-reassignment
+`<Select>` was never controlled, so picking a *different* team made the trigger fall back to
+showing the raw team UUID instead of its name — nothing before this had ever exercised
+re-selecting a team through that control. Fixed by controlling it properly.
+
+**System health**: new `/settings/system-health` page (CONFIG_ROLES-gated, alongside
+Integrations/Retention) — API/database reachability (`GET /health/ready`, a genuine `SELECT 1`,
+not just the DB-independent liveness check), audit hash-chain integrity (`GET /audit-events/
+verify`), CD-01..08 ratification count, and real user/team counts. Every number on this page is
+something the app can actually produce — no fabricated infrastructure, no invented metrics.
+
+**Found a real, separate issue while live-verifying this page**: `GET /audit-events/verify` has
+no pagination — it fetches every audit event for the tenant and recomputes a hash for each one
+in memory — and took over 30 seconds against this session's own accumulated test-data volume,
+risking a timeout for any caller, not just this new page (which degrades gracefully when that
+happens, showing "unable to verify right now" instead of crashing — confirmed live). The
+existing Audit page's own verify button would hit the identical slowdown. Flagged in
+`docs/OPEN_ITEMS.md` as a real fix needed later (paginate, or verify incrementally from a
+last-known-good checkpoint) — not fixed now, out of scope for this pass.
+
+Live-verified both features in a real browser end to end, including catching and correcting a
+test-harness false alarm along the way (an earlier verification attempt flagged the admin test
+account's *own* user id as a case conflict, which correctly — per non-negotiable #6, already
+documented as "correct, not a bug" elsewhere in this project's history — locked that same account
+out of viewing the case; re-ran with a different real team member once recognized). `tsc
+--noEmit`, lint, and `next build`/`nest build` clean on both apps.
+
+Closed both corresponding `docs/OPEN_ITEMS.md` lines. Next and last: network graph / entity risk
+scoring / customer 360 — the one item that genuinely needs new domain models, deserving its own
+design pass rather than being folded into this same quick sequence.
+
+---
+
+## 2026-11-19 (cont'd, 5th pass) — Keep-alive workflow: real login failures traced to free-tier cold starts
+
+User hit a real, live failure on the deployed Render instance: login returned "Unable to reach
+EFIMS Core right now. Try again shortly," and asked whether to migrate off Neon entirely. Rather
+than agreeing or pushing back reflexively, explained the actual mechanism first — this matches
+P1001/connection-pool flakiness hit repeatedly, live, throughout this project's own build
+sessions this week, and is a free-tier serverless *compute-suspend* behavior (Neon's free
+Postgres suspends after a short idle window, Render's free web services separately spin down
+after ~15 min idle), not a Neon-specific defect. Migrating providers without also paying for a
+non-free tier elsewhere likely just trades one cold-start profile for another, and a real
+migration (new connection strings, re-running every migration + RLS policy, re-seeding,
+re-verifying the whole app) is a nontrivial, risky undertaking — laid out the real options
+(keep-alive ping / upgrade off free tier / migrate providers) and let the user choose. They chose
+the keep-alive ping.
+
+**Built**: `.github/workflows/keep-alive.yml` — pings the backend's `GET /health/ready` (a real
+`SELECT 1` against Postgres, confirmed live keeps Neon's compute warm, not just the `GET /health`
+liveness check which deliberately never touches the database) and the frontend's `GET
+/api/health`, every 5 minutes, 24/7. Free: this repository is public, so GitHub Actions minutes
+aren't metered. Confirmed live that both inferred URLs
+(`https://efims-backend.onrender.com`, `https://efims-frontend.onrender.com`) actually resolve
+and return healthy before committing to them in the workflow, rather than guessing. Updated
+`docs/deployment.md`'s existing "before a live demo" section to describe this as the primary
+mitigation now, with manual pre-warming / upgrading off the free tier kept as fallbacks for if
+the workflow is ever disabled.
+
+## 2026-11-19 (cont'd, 4th pass) — Real structured STR/SAR and regulator-notification filing capture
+
+Third item off the stakeholder-gap list: bespoke STR/CBN regulatory filing generators (the
+`/regulatory` page was a real, generic obligation tracker, not a structured filing tool). Checked
+both closest-named mockups (`str-form-generator.html`, `cbn-incident-report.html`) before
+building. Verdict, same honesty discipline as MFA and the Outcomes tab:
+
+- **The CBN mockup was almost entirely unbuildable as a template** — nearly every field is static
+  read-only text, not a real input, and its action buttons ("Transmit Filing," "Cryptographically
+  Sign & Transmit") imply real transmission to CBN's actual portal plus HSM-based cryptographic
+  signing (fake "YubiHSM Key #8812," "FIPS 140-3 Level 4," a fake CBN gateway IP) and biometric
+  SMS-OTP dual sign-off — none of which exist or should be fabricated. (When the user asked why
+  these specifically weren't buildable: regulator transmission isn't buildable as *real* because
+  there's no public API/credential set for NFIU's goAML or CBN's BSD-CR-01 portal that this
+  project could call — not an effort problem, a "nothing real to call" problem. Basic software
+  signing and SMS OTP are technically buildable in the abstract, just not as the specific
+  fabricated hardware/compliance claims the mockups make, and not scoped into this pass.)
+- **The STR mockup had real, usable structure underneath the fabricated goAML-submission theater**:
+  reporting institution, subjects of report, a grounds-of-suspicion narrative, and a transaction
+  schedule are all genuine STR/SAR fields. Built that part for real, dropped the rest (the
+  "Submit to NFIU goAML" button, the fake sign-off chain, fabricated sample data).
+
+**Built**: `RegulatoryObligation` gained a `filingDetails Json?` field (migration
+`20261119203934_regulatory_filing_details`, applied to dev and the e2e test DB) — shape depends
+on `obligationType`, same pattern `AccessChangeRequest.payload` already uses. `STR_SAR_FILING`
+gets the four real sections above (subjects and transactions as repeatable rows — EFIMS has no
+customer/account/transaction entity to pick these from, so they're honestly hand-entered, not
+auto-populated from fake linked data); `REGULATOR_NOTIFICATION` gets a lighter shape (institution,
+incident classification, narrative, financial exposure). New `PATCH .../filing-details` endpoint,
+only while the obligation is still `PENDING` — once submitted, what was actually filed is a fact
+of record, not something anyone revises after. The grounds-of-suspicion/narrative field seeds
+from the case's own description on first open (real EFIMS data), never overwriting an existing
+draft. A new standalone `/regulatory-preview/[caseId]/[obligationId]` route — deliberately outside
+the app shell (no sidenav/topnav) — renders the filing as a clean document with a **"Print / Save
+as PDF"** button, not a "Submit"/"Transmit" button: nothing in this codebase sends this anywhere:
+a human prints or saves it and files it through whatever real channel the regulator provides, same
+honest line this project already draws for containment (non-negotiable #8 — request and wait,
+never act) and evidence (hash + pointer, never the file itself).
+
+**Real bug found and fixed during live verification, then one false alarm corrected**: calling
+`revalidatePath` after a filing-details save forced an immediate full Server Component refetch
+that could render ahead of the write's own read-after-write consistency, which is unnecessary for
+a draft an analyst may save many times while still editing — removed it, and added a "Preview
+filing" link driven by the form's own local state instead, so the preview is reachable immediately
+without a page reload. (The *false alarm*: this looked at first like saved data vanishing from the
+form, but it wasn't — a debug text dump was checked with `.innerText()`, which never includes
+`<input>` *values* at all, only surrounding text; direct database inspection confirmed the data
+was correctly persisted and pre-filled the entire time. Corrected before writing this up, rather
+than reporting a fix for a bug that was never actually there.)
+
+Live-verified twice end to end in a real browser: created an STR obligation, filled in all four
+sections (institution, a subject, the auto-seeded grounds-of-suspicion narrative, a transaction),
+saved, opened the standalone preview, and confirmed the exact entered values rendered correctly —
+zero console errors both times. Testing itself tripped the backend's own overload-protection
+filter once (connection-pool pressure from ~20 rapid test-created obligations on one case) —
+confirms that resilience feature still works as designed, not a regression. Test obligations
+cleaned up afterward (confirmed by case/decision, not unilaterally — per the user's prior approval
+pattern for this kind of cleanup this session). `tsc --noEmit`, lint, and `next build`/`nest build`
+clean on both apps.
+
+Closed the corresponding `docs/OPEN_ITEMS.md` line. Next up: the smaller niche items (team-
+assignment conflict check, a real system-health view) before the one genuinely big remaining
+piece — network graph / entity risk scoring / customer 360, which needs real new domain models.
+
+---
+
+## 2026-11-19 (cont'd, 3rd pass) — Outcomes tab: the incidents→cases→recovery→CAPA business story
+
+Second item off the stakeholder-gap list: "a unified business-value dashboard tying
+incidents→cases→recovery→CAPA into one outcomes/ROI story." Checked the closest-named mockup
+first (`executive-threat-briefing.html`) before building anything — it turned out to be a
+fabricated board-briefing deck, not a real reference: invented "Attack Topography" threat
+categories with no basis in CD-01, a fictional "EFIMS Neural Ingress Kernel v4.8" AI brand (this
+project's real `ml-gateway` has no such name or capability), and Thales HSM/NIBSS telemetry
+claims with no real infrastructure behind them — the same over-the-top theater problem the MFA
+mockup had. Built from this project's real data model instead, same discipline as that fix.
+
+**Additive, not a new page**: a third "Outcomes" tab on the existing `ExecutiveDashboard`,
+alongside "Operations" (current portfolio state) and "Analytics" (trend charts) — those two
+already covered most of the incidents→cases→recovery ground well; the real gaps were CAPA (not
+represented anywhere on this dashboard) and an explicit lifecycle view. Shows:
+
+- **Recovery rate** — `totalRecovered / totalLoss`, reusing `CasesService.stats()`'s existing
+  cross-case loss/recovery aggregate (no new backend work needed here).
+- **Case closure rate + mean days-to-close** — the closure rate also reuses existing data;
+  mean-days-to-close is new (`CaseStats.meanDaysToClose`, computed from real `closedAt`/
+  `createdAt` over the already-loaded visible case set — `null`, not `0`, when no case is closed
+  yet, since those are genuinely different facts).
+- **CAPA effectiveness** — % of corrective/preventive actions `COMPLETED` or `VALIDATED`, computed
+  from the existing `/capa` register endpoint (`CapaService.listAll`) — no new backend endpoint;
+  this is purely new frontend aggregation over data the app already exposes.
+- **A lifecycle funnel** (Signals reported → Incidents opened → Cases built → Cases closed) and a
+  **CAPA status breakdown** (reusing the existing `SegmentedBar` component, same pattern as the
+  severity/incident-status mixes already on the Operations tab).
+
+Live-verified in a real browser as the seeded `EXECUTIVE` user (the only role this dashboard
+renders for — `ADMIN` gets its own separate Administration dashboard, confirmed live when the
+first verification attempt against `admin@bank1.efims.local` correctly never found this page):
+clicked into the new tab, confirmed real computed numbers rendered (an honest, low recovery rate
+and closure rate given this is a small, mostly-open seed dataset — not inflated to look better),
+zero console errors. `tsc --noEmit`, lint, and `next build`/`nest build` clean on both apps.
+
+Closed the corresponding `docs/OPEN_ITEMS.md` line. Next up: the bespoke STR/CBN regulatory
+filing generators.
+
+---
+
+## 2026-11-19 (cont'd, 2nd pass) — Real TOTP MFA shipped, first of the stakeholder-gap feature list
+
+User asked to build out the full stakeholder-gap list from the audit above and left the build
+order to this session's own judgment. Started with MFA — self-contained, no new domain models,
+and a mockup (`login-mfa.html`) already existed to anchor the design.
+
+**Deliberately dropped the mockup's fabricated enterprise theater** (Thales Luna HSM, YubiKey/
+FIDO2 hardware tokens, a CBN anti-fraud telemetry pipeline, "air-gapped compliance enclave") —
+none of that infrastructure exists in this system, and the mockup itself names the real, honestly
+buildable standard underneath all of it: RFC 6238 (TOTP). Built that, for real:
+
+- **Schema**: `User` gained `mfaEnabled`/`mfaSecret`/`mfaBackupCodeHashes`/`mfaEnrolledAt`
+  (migration `20261119135808_user_mfa`, applied to dev and the e2e test DB). Opt-in, never
+  forced — every existing and new user stays `mfaEnabled: false` until they go through the
+  enroll/confirm flow themselves.
+- **Backend** (`AuthService`/`AuthController`, `otplib` + `qrcode`, both added with zero new
+  production-path npm-audit findings): `login()` now checks `mfaEnabled` and, if set, returns a
+  short-lived (5 min) challenge token signed with a brand-new, separate `JWT_MFA_CHALLENGE_SECRET`
+  instead of real tokens — same "different token kinds never share a signing key" discipline as
+  the platform layer. `POST /auth/mfa/verify` accepts either a live TOTP code or an unused backup
+  code (tries TOTP first, falls back to backup-code hash matching, consumes it on match) and only
+  then issues real tokens. Four self-service endpoints (`status`/`enroll/start`/`enroll/confirm`/
+  `disable`) act on the caller's own account only — no "admin enrolls someone else" path exists or
+  should. `enroll/confirm` returns 10 backup codes in plaintext exactly once; only their sha256
+  hashes are ever persisted. `disable` requires re-entering the password, not just a live session.
+- **Frontend**: the login form (`login-form.tsx`) now renders a second step when `loginAction`
+  gets back `mfaRequired` — a hidden `mfaChallengeToken` field tells the same server action apart
+  from a fresh password attempt, no separate route needed. New `/settings/security` page (reachable
+  from every role via a new topnav shield icon, not gated to admin roles — a second factor only
+  means something if the account holder set it up themselves) walks through QR-code enrollment
+  (with a manual-entry fallback), confirms with a real code, shows backup codes once, and lets a
+  user disable MFA with their password.
+- **Real bug found and fixed during live verification**: `otplib`'s `TOTP.verify()` throws
+  (`TokenLengthError`) rather than returning `{valid: false}` for anything that isn't exactly 6
+  digits — meaning a backup-code attempt (9 characters, "A1B2-C3D4") crashed the verify endpoint
+  with a 500 instead of falling through to backup-code matching. Fixed by only attempting TOTP
+  verification when the input matches `/^\d{6}$/`.
+
+**Live-verified twice**: first a full API-level script (login → enroll → confirm → status →
+MFA-challenged login → wrong code rejected → right code accepted → backup code accepted →
+backup-code reuse correctly rejected → disable → normal login resumes), then a real Playwright
+browser session driving the actual UI end to end (login → Security settings → Enable MFA → scan
+QR → confirm → backup codes shown → sign out → sign back in → correctly challenged → verify →
+disable) — **zero console errors**. `tsc --noEmit`, lint, and `next build`/`nest build` all clean
+on both apps.
+
+Added `JWT_MFA_CHALLENGE_SECRET` to `.env.example`, the real `.env`, `test/e2e/.env.test`,
+`.github/workflows/ci.yml`, and `render.yaml` (`generateValue: true`, same as the other JWT
+secrets). Closed the corresponding `docs/OPEN_ITEMS.md` line.
+
+---
+
+## 2026-11-19 (cont'd) — Four-way production-readiness audit ahead of a stakeholder demo
+
+User asked for a broader look — structure, principle, technical, design/UX, security, and feature
+completeness — explicitly framed as "stakeholder demo" readiness, distinct from the much larger
+"production for real bank data" bar (CD ratification, legal/NDPA, data residency — still
+out of scope, unchanged). Ran four parallel, independent audits (security; UX/design; technical/
+architecture; feature-completeness) mirroring the 2026-11-02 three-way audit pattern. Real
+findings, fixed same session:
+
+**Security — one real access-control gap, fixed.** The new (2026-11-18) generic
+`PATCH /ml-gateway/predictions/:predictionId/decision` endpoint checked tenant + role only, not
+the underlying entity's compartment/clearance — unlike every suggestion endpoint that produces
+these predictions, which already goes through `IncidentsService.getById`/`CasesService.getById`
+first. A non-reporter user in the same tenant could have recorded a decision on a prediction tied
+to an incident/case they have no real access to (e.g. a `WHISTLEBLOWING`-compartment incident),
+a real gap against non-negotiable #6. `ml-gateway` can't check this itself — `IncidentsModule`
+already imports `MlGatewayModule`, and `CasesModule` imports `TriageModule` which also imports it,
+so the reverse dependency would be circular. Fixed by splitting the route: `MlGatewayService`
+gained a read-only `getPredictionRecord`; `TriageController`/`RecoveryController` each gained
+their own entity-scoped `.../suggestion/:predictionId/decision` and `.../predict/:predictionId/
+decision` routes that run the real access check before deciding; the generic ml-gateway route now
+only accepts `ANOMALY` decisions (the one capability with no EFIMS entity to check), rejecting
+anything else with a clear message. Everything else came back clean: no new npm-audit findings
+in either app, `ML_SERVICE_API_KEY` never logged/leaked, RLS and tenant isolation still hold live,
+auth/role gates return correct 401/403 with no detail leakage.
+
+**Technical/architecture — found the e2e suite's documented status was false, and a real
+pre-existing bug nobody had hit.** `docs/OPEN_ITEMS.md` claimed "36 tests, ~65% coverage"; the
+suite actually failed to compile at all. Root cause, unrelated to anything from 2026-11-18:
+`CasesService.list()`'s `Promise.all([needsTeams ? this.teamsService.list(tx) : [], ...])`
+produced ambiguous tuple inference that only ts-jest's stricter config caught — `tsc --noEmit`
+on the main build stayed clean throughout, masking it. Fixed with explicit types on the
+`Promise.all` destructure and the two `Map` constructions it feeds. Separately found the
+dedicated `efims_test` database was missing two real migrations (`push_subscriptions`,
+`ml_prediction_records`) — never applied there since they shipped; applied both, re-ran RLS.
+Also confirmed, independently: non-negotiables #2/#3/#4/#5 all still hold on every file touched
+this week; no dead code or leftover duplication from today's refactors. One pre-existing,
+previously-unflagged #2 violation noted for later (not fixed now, out of scope for this pass):
+`RecoveryService.predictRecovery` reads `containmentRequest` directly instead of through a
+`ContainmentService` method.
+
+**Getting the suite to actually pass surfaced two more real, previously-invisible bugs**, both
+fixed:
+1. `NotificationsService`'s constructor ran the ESM `dynamicImportWebPush()` dynamic import
+   eagerly, the moment the service is instantiated — which crashed instantly under `ts-jest`
+   (`A dynamic import callback was invoked without --experimental-vm-modules`), since every one
+   of the 6 e2e spec files boots the app regardless of whether it ever sends a push notification.
+   Fixed by deferring the import to first actual use (`getWebpushModule()`, called only from
+   `sendPush`) instead of the constructor — strictly better even outside testing, since it also
+   stops paying this cost for any process lifetime that never sends a push.
+2. **A real e2e test-isolation gap, made newly dangerous by the 2026-11-18 integration**:
+   `test/e2e/.env.test` never overrode `ML_SERVICE_BASE_URL`/`ML_SERVICE_API_KEY` or the VAPID
+   keys, so NestJS's `ConfigModule` fell back to the real `.env` for all of them — meaning e2e
+   runs would silently call the *real, live* `https://efims-ai.onrender.com` with the real API
+   key instead of hitting the "service unreachable" path `ai-advisory-boundary.e2e-spec.ts`
+   assumes, consuming real vendor quota non-deterministically on every test run. Before
+   2026-11-18 this was harmless (`.env`'s old default was an unreachable `127.0.0.1:8000`
+   placeholder); it became a real problem the moment `.env` started pointing at a real, live
+   service. Fixed by pinning `ML_SERVICE_BASE_URL`/`ML_SERVICE_API_KEY`/`VAPID_*` to the same
+   safe-unreachable/blank values in `test/e2e/.env.test`, mirrored into `.github/workflows/
+   ci.yml`'s matching heredoc so CI (once its test-DB secrets are configured) never inherits the
+   same leak.
+
+**Feature-completeness — golden path passes 23/23** (signal → incident → triage/severity-suggest
+→ decide → case → approval with segregation-of-duties correctly rejecting self-approval →
+investigation → evidence → containment, correctly never faking "contained" → recovery → CAPA →
+regulatory → audit), verified at the API level against real data including the live AI service.
+Corrected a stale figure: the 2026-11-02 "~27/35 mockups unbuilt" claim is now closer to ~15/33
+(~45%) given everything shipped since — real progress worth reflecting honestly rather than
+leaving the old, now-too-pessimistic number standing. Ranked list of things a stakeholder is
+likely to ask about that genuinely don't exist yet (network graph/entity risk/customer 360, a
+unified business-value dashboard tying incidents→cases→recovery→CAPA into one outcomes story,
+MFA on login, bespoke STR/CBN regulatory filing generators vs. the current generic obligation
+tracker) recorded in `docs/OPEN_ITEMS.md` for the user to prioritize — none built unprompted.
+
+**UX/design — zero console errors anywhere, no demo-blocking bugs.** One concrete, fixed-same-day
+item: four leftover test accounts ("Playwright Test Investigator", "Second Test Admin", two "UI
+Test Admin" rows) were visible in the live Users directory — exactly what a stakeholder would see
+clicking into Administration. Deleted (with the one `AccessChangeRequest` row that referenced one
+of them as its target, removed first) after explicit confirmation. Two reminders for whoever runs
+the actual demo, not code changes: pre-warm both the backend and the live AI service a few minutes
+before (Render free-tier cold starts are real and visible), and demo off a production build
+(`next build && next start`), not `next dev` (whose build-activity badge can overlap the sidenav).
+
+Verification: `tsc --noEmit` and lint clean on both apps. Full e2e re-run confirms the fixes:
+**5 of 6 suites now pass completely, 30/36 tests** (up from 6/6 suites failing to even compile
+before this pass). The one remaining failure, `tenant-isolation.e2e-spec.ts`, is the already-
+documented pre-existing Neon/Prisma transaction-timeout flakiness in `OPEN_ITEMS.md` (not
+introduced by anything here) — this run added a concrete diagnostic clue (`CasesService.
+findOrThrow` hitting a closed-transaction error during the heavy two-tenant bootstrap fixture)
+recorded there for whoever eventually root-causes it.
+
+---
+
+## 2026-11-19 — Decide UI extended to all three ml-gateway panels; Next.js patched
+
+Two follow-ups from the 2026-11-18 entry below, both closed same-day:
+
+1. **Next.js security advisory.** The frontend build had started printing a Next.js-native
+   security nudge (separate from `npm audit`, which never flagged it — this check hits
+   `registry.npmjs.org/-/npm/v1/security/advisories/bulk` directly at build time). Investigated
+   rather than ignored: two moderate advisories (GHSA-mfr8-8qww-v76h, GHSA-vc7v-qv4w-wrv8,
+   CWE-362) affecting `'use cache'`/`unstable_cache()` root-param cache leaks, versions
+   `16.2.0–16.4.4`. Confirmed not exploitable here regardless — this codebase never uses either
+   API, and `backend-client.ts` already sets `cache: 'no-store'` on every request — but `16.4.6`
+   was already published with a fix, so upgraded (`16.4.3` → `16.4.6`) rather than leave a real,
+   named CVE sitting open ahead of a stakeholder demo. Clean rebuild, no nudge on the next build.
+2. **Decide UI was severity-only.** Extracted the "Accepted / Went a different way" controls
+   from `SeveritySuggestionPanel` into a shared `components/shell/prediction-decision-controls.tsx`
+   and wired it into the other two advisory panels that were missing it:
+   `RecoveryPredictionPanel` (always has a real `predictionId` — no Groq-fallback path exists for
+   recovery) and `TransactionRiskScoringForm` (same, for anomaly scoring). `tsc --noEmit`, lint,
+   and `next build` all clean.
+
+---
+
+## 2026-11-18 — The real EFIMS AI Service is live; `ml-gateway` wired to it, with real analyst-decision persistence
+
+The ML developer announced the real EFIMS AI Service (v1.0) is live at
+`https://efims-ai.onrender.com`, with a full integration spec (Swagger at `/docs`, an `X-API-Key`
+auth header, exact request/response shapes for `severity/predict`, `anomaly/score`, and
+`recovery/predict`, and five explicit integration rules). `ml-service-client.ts` — built in an
+earlier session in anticipation of exactly this — turned out to already match the real spec's
+field names, response envelope, and 422/503 handling verbatim; only two real gaps needed fixing:
+
+1. **No `X-API-Key` header was ever sent.** The client's constructor only took a `baseUrl`; the
+   real service 401s without the key. Added an optional `apiKey` constructor param, sourced from
+   a new `ML_SERVICE_API_KEY` env var (never hardcoded, never in frontend code, never logged),
+   plus an explicit 401 branch (`MlServiceClient.request`) distinguishing "wrong/missing key" from
+   a generic unavailable, since it points at a specific misconfiguration, not an outage.
+2. **The request timeout was 5 seconds.** The vendor's own rule #4: "Free hosting sleeps after 15
+   minutes idle. The first request can take about a minute, so use a 90 second timeout." Raised
+   `REQUEST_TIMEOUT_MS` to 90,000 — applied to every request, not just a detected-cold-start one,
+   since there's no reliable client-side "just woke up" signal worth building and an already-warm
+   instance still returns well inside 90s.
+
+**New: durable prediction persistence**, closing the vendor's rule #3 ("Store every
+`prediction_id` with the case, and record whether the analyst accepted or overrode it. That data
+is used for retraining") — nothing like this existed before; predictions were only ever mentioned
+in passing inside `AuditService` metadata, never queryable as their own record. Added
+`MlPredictionRecord` (new Prisma model + migration `20261118153708_ml_prediction_records`, RLS
+policy added to `rls-policies.sql`'s grant list and `FORCE ROW LEVEL SECURITY` loop): one row per
+structured-model prediction (never a Groq-fallback one — those carry no vendor `prediction_id`,
+so there's nothing to send back for retraining), `decision` starting `PENDING` and moving to
+`ACCEPTED`/`OVERRIDDEN` exactly once, same one-way-decide shape as `ApprovalRequest`'s own
+`decide()`. `MlGatewayService.suggestSeverity`/`scoreAnomaly`/`predictRecovery` now take an
+optional `MlPredictionLogContext` (tenant/entity/requester) that `TriageService`, `RecoveryService`,
+and `MlGatewayController.scoreAnomaly` all now pass through; a new
+`PATCH /ml-gateway/predictions/:predictionId/decision` endpoint (audited) lets any non-reporter
+role record a decision. Wired a minimal decide UI into the incident severity-suggestion panel
+("Accepted" / "Went a different way") — the anomaly and recovery panels don't have one yet
+(backend logging + the decide endpoint already cover all three capabilities; only that frontend
+wiring is still open, tracked in `docs/OPEN_ITEMS.md`).
+
+Also fixed a real stale-doc bug this surfaced: `MlGatewayService`'s own module-level doc comment
+still said Groq was "an automatic fallback for severity," contradicting the 2026-11-14 decision
+(elsewhere in the same file) that made it opt-in-only — corrected to match.
+
+**Live-verified against the real hosted instance** (not just the unconfigured/mocked path):
+health check (all three models `healthy`, `v1.0`), a real `severity/predict` call (S2 at 95.6%
+confidence, `requires_human_review: false`, real `prediction_id`), a real `anomaly/score` call
+through the full stack — login → controller → service → live vendor call → `MlPredictionRecord`
+row confirmed written with the full raw response — the decide endpoint moving it to `ACCEPTED`,
+and the one-way-decide guard correctly rejecting a second decision on the same prediction (400).
+Confirmed the no-key case fails as intended (401 → `MlServiceUnavailableError`). `tsc --noEmit`,
+lint, and `next build` all clean on both apps. Test data cleaned up after verification.
+
+Updated `.env.example` (both the new var and `ML_SERVICE_BASE_URL`'s default, now the real URL —
+previously `http://127.0.0.1:8000`), the real local `.env` (gitignored), and `render.yaml`
+(`ML_SERVICE_BASE_URL` now the real URL as a plain value; `ML_SERVICE_API_KEY` added as
+`sync: false`, prompted once at Blueprint creation, never committed). Closed the corresponding
+`docs/OPEN_ITEMS.md` entry ("The ML engineer's real inference API is not yet delivered").
+
+Carried over verbatim from the vendor's own doc rather than smoothed over, per this project's
+standing rule: **models are trained on synthetic data — "use for integration and testing, not for
+real decisions yet."**
+
+---
+
 ## 2026-11-16 — Live production bug: deterministic "Reference code collision" blocking all signal validation
 
 User hit a real, live-blocking bug: validating a signal into an incident (Triage Analyst account)

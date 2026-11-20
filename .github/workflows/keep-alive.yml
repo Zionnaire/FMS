@@ -1,0 +1,45 @@
+name: Keep-alive
+
+# Both Render's free web-service tier and Neon's free Postgres compute suspend after a short
+# idle window (Render: ~15 min with no inbound HTTP traffic; Neon: a few minutes with no active
+# connection) — found live, repeatedly, during this project's own build/verification sessions:
+# the first request after either goes idle can take several seconds to over ten, and has
+# occasionally failed outright before succeeding on an immediate retry. For a system meant to be
+# shown to stakeholders on short notice, that first-request latency/flakiness is a real problem,
+# not a cosmetic one — this workflow pings both services often enough that neither should ever
+# be allowed to go fully cold during normal usage.
+#
+# `GET /health` (both apps) is deliberately NOT what's pinged here for the backend — per that
+# route's own doc comment, it's a pure liveness check with no database call, so pinging it keeps
+# the Render *process* warm but does nothing for Neon. `GET /health/ready` runs a real `SELECT 1`
+# against Postgres (see `health.controller.ts`), which is what actually keeps Neon's compute from
+# suspending. The frontend's own `/api/health` only needs to keep that one Render service warm —
+# it's deliberately backend-independent (same route's own doc comment), so it's pinged
+# separately, not as a substitute for the backend check.
+#
+# Every 5 minutes, 24/7 — this repository is public, so GitHub Actions minutes are unlimited and
+# free; there's no cost reason to narrow this to business hours only, and a demo request can
+# arrive at any time. GitHub does not guarantee scheduled-workflow timing precisely under load,
+# so an occasional late run is expected and fine — the goal is "never idle long enough to fully
+# suspend," not split-second precision.
+#
+# Update BACKEND_URL/FRONTEND_URL below if either service's real Render URL ever changes (e.g. a
+# custom domain, or Render assigning a different subdomain than the service's plain name).
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+env:
+  BACKEND_URL: https://efims-backend.onrender.com
+  FRONTEND_URL: https://efims-frontend.onrender.com
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend /health/ready (wakes Render backend + Neon Postgres)
+        run: curl --fail --silent --show-error --max-time 60 "$BACKEND_URL/health/ready"
+
+      - name: Ping frontend /api/health (wakes Render frontend)
+        run: curl --fail --silent --show-error --max-time 60 "$FRONTEND_URL/api/health"

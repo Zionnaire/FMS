@@ -67,8 +67,20 @@ DATABASE_URL="<your DIRECT_URL>" npx prisma db execute --file prisma/rls-policie
 
 Both services are on Render's **free** plan by default (see `render.yaml`) — free services spin
 down after a period of inactivity, and the first request after that takes 30-60+ seconds to cold
--start. Before demoing live, either:
+-start. **Neon's free-tier Postgres compute separately suspends too** (found live, repeatedly,
+during this project's own build sessions — a request hitting a cold Neon instance can take
+several seconds to over ten, and has occasionally failed outright before succeeding on an
+immediate retry), independent of whether the Render backend itself is warm.
+
+`.github/workflows/keep-alive.yml` pings both services' real health-check endpoints every 5
+minutes, 24/7 (this repo is public, so Actions minutes are free) — specifically
+`GET /health/ready` on the backend (which runs a real `SELECT 1`, keeping Neon's compute warm
+too, not just the Render process) and `GET /api/health` on the frontend. As long as that
+workflow is enabled and running, neither service should go cold during normal use, and this
+section is mostly a fallback for the rare case it's been disabled or GitHub Actions itself is
+delayed. If you still want extra certainty right before a specific demo, or if you've turned the
+keep-alive workflow off:
 
 - Visit both services' URLs a few minutes beforehand to warm them up, or
-- Upgrade to a paid plan (change `plan: free` to a paid plan ID in `render.yaml`, e.g.
-  `starter`) for the duration of the demo.
+- Upgrade off the free tier — Render's paid web-service plans don't spin down, and Neon's paid
+  plans allow disabling or lengthening autosuspend — for the duration of the demo.

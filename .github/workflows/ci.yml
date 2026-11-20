@@ -74,6 +74,7 @@ jobs:
           JWT_ACCESS_TTL="15m"
           JWT_REFRESH_SECRET="ci-test-refresh-secret"
           JWT_REFRESH_TTL="7d"
+          JWT_MFA_CHALLENGE_SECRET="ci-test-mfa-secret"
           PORT=3099
           CORS_ORIGINS="http://localhost:3000"
           THROTTLE_TTL_MS=60000
@@ -82,6 +83,11 @@ jobs:
           PLATFORM_JWT_TTL="1h"
           GROQ_API_KEY="dev-only-change-me-groq"
           GROQ_MODEL="openai/gpt-oss-120b"
+          ML_SERVICE_BASE_URL="http://127.0.0.1:8000"
+          ML_SERVICE_API_KEY=""
+          VAPID_PUBLIC_KEY=""
+          VAPID_PRIVATE_KEY=""
+          VAPID_SUBJECT=""
           EOF
       - name: Run e2e suite
         run: npm run test:e2e
