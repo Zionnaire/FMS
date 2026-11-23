@@ -188,6 +188,28 @@ REVOKE UPDATE, DELETE ON audit_events FROM efims_app;
 GRANT SELECT, INSERT, UPDATE ON access_change_requests TO efims_app;
 REVOKE DELETE ON access_change_requests FROM efims_app;
 
+-- entities module (added 2026-11-23): unlike `cases`/`incidents` (a permanent record that
+-- something was reported/filed, even after closure), an `Entity` DOES allow DELETE — a
+-- speculatively-created or duplicate party (e.g. while mapping out a network and realizing two
+-- nodes are the same person) is a correctable mistake, not a historical record, the same
+-- reasoning as `case_user_flags`' own DELETE grant. The audit trail (`entities.entity.delete`)
+-- still permanently records that it happened even though the row itself is gone — same "the fact
+-- of the action survives in audit_events regardless of what happens to the row" posture as
+-- case_user_flags. `entity_identifiers`/`entity_risk_assessments` are pure append-only forensic
+-- records, same posture as interviews/findings/triage_assessments — SELECT/INSERT only.
+-- `entity_relationships`/`entity_case_links` also allow DELETE — a wrongly-drawn graph edge or a
+-- case link made in error is a legitimate correction, the exact same reasoning as
+-- incident_relations' own DELETE grant above, not a historical record to preserve.
+GRANT SELECT, INSERT, UPDATE, DELETE ON entities TO efims_app;
+GRANT SELECT, INSERT ON entity_identifiers TO efims_app;
+REVOKE UPDATE, DELETE ON entity_identifiers FROM efims_app;
+GRANT SELECT, INSERT, DELETE ON entity_relationships TO efims_app;
+REVOKE UPDATE ON entity_relationships FROM efims_app;
+GRANT SELECT, INSERT, DELETE ON entity_case_links TO efims_app;
+REVOKE UPDATE ON entity_case_links FROM efims_app;
+GRANT SELECT, INSERT ON entity_risk_assessments TO efims_app;
+REVOKE UPDATE, DELETE ON entity_risk_assessments FROM efims_app;
+
 -- The control-plane `tenants` table now gets INSERT/UPDATE too (added 2026-10-14): real tenant
 -- provisioning (POST /platform/tenants) and suspend/reactivate (PATCH /platform/tenants/:id) are
 -- now things the running app does, via the platform module — still no DELETE, a tenant is

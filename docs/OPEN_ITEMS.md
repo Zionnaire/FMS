@@ -100,8 +100,27 @@ reality.
   the mockups' bespoke consoles/filing generators), and **~15 (~45%) are genuinely not built at
   all** — still a real gap, just a smaller and more accurate one than "~27/35 (~77%)." Ranked by
   how likely a stakeholder is to ask about it, still not started, still awaiting prioritization:
-  (1) network graph / entity risk scoring / watchlist / customer 360 — the most visually
-  distinctive mockups, zero route exists for any of the three;
+  ~~(1) network graph / entity risk scoring / watchlist / customer 360 — the most visually
+  distinctive mockups, zero route exists for any of the three~~ **Closed 2026-11-23**: the real
+  domain models this always needed (`Entity`/`EntityIdentifier`/`EntityRelationship`/
+  `EntityCaseLink`/`EntityRiskAssessment`, all tenant-scoped + RLS) now exist, with a new
+  `entities` backend module and three real frontend routes (`/entities`, `/entities/:id`,
+  `/network-graph`). Dropped, same discipline as every other mockup pass: named fake AI models
+  ("FinCrime ML v4.2", "NFIU Synapse AI Resolution"), claimed live OFAC/UN/EU/NFIU/Interpol
+  sanctions-API sync, fabricated NIBSS biometric matching and device/IMEI/Tor-exit telemetry, and
+  the animated fund-flow replay (no `Transaction` ledger exists). Kept/built honestly instead: a
+  composite risk score (manual, append-only, reusing CD-02's S1-S4 band language — never a named
+  proprietary model), a manual audited watchlist flag with a required reason, a real multi-hop
+  relationship graph (bounded recursive CTE over plain Postgres per architecture.md §6's own
+  documented Neo4j trigger condition not being met), and — the one genuinely new/subtle piece —
+  case links filtered per-viewer through the exact same `CasesService.getVisibleCaseIds`/
+  `isAccessible` check every other module already uses, with a case outside the viewer's
+  compartment grant omitted entirely rather than shown redacted (live-verified cross-user: a
+  seeded `INVESTIGATOR` account correctly saw zero trace of an `AML_MLRO`-compartment case link
+  that a `ADMIN` session with full compartment grants could see). Explicitly deferred (Phase 2,
+  not started): ml-gateway-advisory risk suggestions, any real sanctions-vendor integration,
+  incident-level entity linking (case-only for v1), and any `Transaction` ledger. Full detail in
+  `docs/CHANGELOG.md`'s 2026-11-23 entry.
   ~~(2) a unified business-value dashboard tying incidents→cases→recovery→CAPA into one
   outcomes/ROI story~~ **Closed 2026-11-19**: added as a third "Outcomes" tab on the existing
   `ExecutiveDashboard` (alongside "Operations"/"Analytics" — additive, since those two already

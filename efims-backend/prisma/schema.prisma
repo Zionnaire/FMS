@@ -65,6 +65,11 @@ model Tenant {
   accessChangeRequests  AccessChangeRequest[]
   tasks                 Task[]
   mlPredictionRecords   MlPredictionRecord[]
+  entities              Entity[]
+  entityIdentifiers     EntityIdentifier[]
+  entityRelationships   EntityRelationship[]
+  entityCaseLinks       EntityCaseLink[]
+  entityRiskAssessments EntityRiskAssessment[]
 
   @@map("tenants")
 }
@@ -1853,4 +1858,201 @@ model MlPredictionRecord {
   @@index([tenantId, entityType, entityId])
   @@index([tenantId, decision])
   @@map("ml_prediction_records")
+}
+
+// ---------------------------------------------------------------------------------------------
+// entities module — the "Parties/Transactions" area the `cases` module's own doc comment (above)
+// named as deliberately out of scope, and the "entirely new domain models" docs/CHANGELOG.md
+// repeatedly cited as the reason network graph / entity risk scoring / customer 360 kept getting
+// deferred. `Entity` is a real-world party (person/company/account) that can be linked to many
+// `Case`s across its lifetime — orthogonal to Signal->Incident->Case, never collapsed into any of
+// them (non-negotiable #1). No `Transaction`/fund-flow ledger here — that's still out of scope
+// (nothing in EFIMS models a transaction yet; see ml-gateway's own anomaly-scoring doc comment).
+// Graph traversal is a bounded-depth recursive CTE over `EntityRelationship` at the service layer
+// — architecture.md §6's Neo4j trigger ("Phase 4, only if relationship/typology analysis becomes
+// an active, funded use case") isn't met, so this deliberately stays plain relational Postgres.
+// ---------------------------------------------------------------------------------------------
+
+enum EntityType {
+  PERSON
+  COMPANY
+  ACCOUNT
+}
+
+enum EntityIdentifierType {
+  BVN
+  NIN
+  RC_NUMBER
+  TIN
+  ACCOUNT_NUMBER
+  OTHER
+}
+
+enum EntityRelationshipType {
+  BENEFICIAL_OWNER
+  KINSHIP
+  SIGNATORY
+  ASSOCIATE
+  CONTROLS
+  TRANSACTED_WITH
+  OTHER
+}
+
+enum EntityCaseLinkRole {
+  SUBJECT
+  BENEFICIARY
+  COUNTERPARTY
+  WITNESS
+  OTHER
+}
+
+enum EntityRiskAssessmentSource {
+  MANUAL
+  ML_SUGGESTED
+}
+
+/// A real-world party — person, company, or account — that can be linked to one or more `Case`s.
+/// Tenant-wide, not scoped to a single case: the same entity (e.g. a repeat mule account) may
+/// legitimately appear across many cases over time, which is the entire point of a network-graph
+/// view. `watchlisted` is a manual, audited analyst flag with a required reason — the honest
+/// substitute for the mockup's fabricated live OFAC/UN/EU/NFIU/Interpol sync (no such vendor
+/// integration exists or is being procured; see docs/CHANGELOG.md's dated entry on this feature).
+/// Unlike `Case`/`Incident`, an `Entity` CAN be hard-deleted (DELETE is granted in
+/// rls-policies.sql) — a speculatively-created or duplicate party is a correctable mistake, not a
+/// permanent record that something was reported; the audit trail still records the deletion
+/// happened even though the row itself is gone, same posture as `CaseUserFlag`.
+model Entity {
+  id       String     @id @default(uuid())
+  tenantId String
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  type     EntityType
+
+  displayName String
+
+  /// Manual, audited flag — never an automated/live sanctions-screening result. A non-null
+  /// `watchlistReason` is required whenever `watchlisted` is true; enforced in EntitiesService,
+  /// not at the schema level (same discipline as every other conditionally-required field in
+  /// this codebase, e.g. ApprovalRequest's decision reason).
+  watchlisted      Boolean @default(false)
+  watchlistReason  String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  identifiers       EntityIdentifier[]
+  outgoingRelations EntityRelationship[] @relation("EntityRelationshipFrom")
+  incomingRelations EntityRelationship[] @relation("EntityRelationshipTo")
+  caseLinks         EntityCaseLink[]
+  riskAssessments   EntityRiskAssessment[]
+
+  @@index([tenantId, type])
+  @@index([tenantId, watchlisted])
+  @@map("entities")
+}
+
+/// A real-world identifying number for an entity (BVN, NIN, RC number, account number, ...).
+/// `verified` is a manual analyst flag ("I confirmed this against a document I hold"), never an
+/// automated biometric/NIBSS live-match claim — the mockup's "BVN Facial Match Discrepancy...
+/// NIBSS central repository" claim has no real backing integration and is dropped, not built.
+model EntityIdentifier {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  entityId String
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  type     EntityIdentifierType
+  value    String
+  verified Boolean @default(false)
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, entityId])
+  @@map("entity_identifiers")
+}
+
+/// One directed graph edge between two entities (e.g. "A is the beneficial owner of B"). Symmetric
+/// relationship types (ASSOCIATE) are still stored directionally — the service/UI layer treats
+/// them as undirected, not the schema. This, not a graph database, is what architecture.md §6's
+/// documented Neo4j deferral means by "Postgres recursive queries cover basic lookups until then."
+model EntityRelationship {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  fromEntityId String
+  fromEntity   Entity @relation("EntityRelationshipFrom", fields: [fromEntityId], references: [id], onDelete: Cascade)
+  toEntityId   String
+  toEntity     Entity @relation("EntityRelationshipTo", fields: [toEntityId], references: [id], onDelete: Cascade)
+
+  relationshipType EntityRelationshipType
+  rationale        String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, fromEntityId])
+  @@index([tenantId, toEntityId])
+  @@map("entity_relationships")
+}
+
+/// Links an `Entity` to a `Case` it's connected to. Creating one requires the linking user to
+/// already pass `CasesService.getById` for that case (EntitiesService calls it directly, same
+/// discipline as every other case-scoped module — non-negotiable #2: never a raw `cases` table
+/// read from this module). Reading an entity's case links back out is filtered per-viewer through
+/// `CasesService.getVisibleCaseIds`, never the raw link rows — see EntitiesService's own doc
+/// comment on why a case the viewer can't access is omitted entirely, not shown redacted.
+model EntityCaseLink {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  entityId String
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  caseId   String
+
+  role EntityCaseLinkRole
+
+  linkedBy String
+  linkedAt DateTime @default(now())
+
+  @@unique([entityId, caseId])
+  @@index([tenantId, caseId])
+  @@map("entity_case_links")
+}
+
+/// One risk-assessment event for an entity, never mutated after creation — the exact same
+/// "append, don't overwrite, chain to the previous one" posture as `TriageAssessment`, reusing its
+/// own `SeverityTier` (S1-S4) for the risk band rather than inventing an unrelated 0-100 scale
+/// with its own color ramp (CD-02's severity language and design tokens, adapted here, not copied
+/// literally — CD-02 itself is case-severity-specific). `source: MANUAL` is the only path in v1 —
+/// never a named proprietary model like the mockup's fabricated "FinCrime ML v4.2". `ML_SUGGESTED`
+/// exists as a schema seam for a documented, not-yet-built Phase 2 (an ml-gateway-advisory
+/// suggestion a human still has to confirm into a MANUAL-equivalent record — non-negotiable #4:
+/// no AI suggestion from any provider is ever auto-applied).
+model EntityRiskAssessment {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  entityId String
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  band    SeverityTier
+  /// Array of `{label, weight, rationale}` — analyst-entered, never a vendor payload.
+  factors Json
+  source  EntityRiskAssessmentSource @default(MANUAL)
+
+  previousAssessmentId String?
+  previousAssessment   EntityRiskAssessment?  @relation("EntityAssessmentRevision", fields: [previousAssessmentId], references: [id])
+  revisedBy            EntityRiskAssessment[] @relation("EntityAssessmentRevision")
+
+  assessedBy String
+  assessedAt DateTime @default(now())
+
+  @@index([tenantId, entityId])
+  @@map("entity_risk_assessments")
 }

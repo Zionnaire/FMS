@@ -25,6 +25,7 @@ import { RecoveryModule } from './modules/recovery/recovery.module';
 import { CapaModule } from './modules/capa/capa.module';
 import { RegulatoryModule } from './modules/regulatory/regulatory.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { EntitiesModule } from './modules/entities/entities.module';
 import { PlatformModule } from './platform/platform.module';
 
 @Module({
@@ -83,6 +84,7 @@ import { PlatformModule } from './platform/platform.module';
     CapaModule,
     RegulatoryModule,
     TasksModule,
+    EntitiesModule,
     PlatformModule,
   ],
   providers: [

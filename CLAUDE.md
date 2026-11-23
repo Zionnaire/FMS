@@ -236,6 +236,29 @@ similarity list from the backend in a `finally` block instead of trusting local 
 (~15–20s combined per action, since the full candidate set re-scores via Groq again) but correct and
 self-healing regardless of the race. Full detail in `docs/CHANGELOG.md`'s dated follow-up entry.
 
+**2026-11-23 — network graph / entity risk scoring / customer 360 (new `entities` domain).** The
+one stakeholder-gap item repeatedly deferred across every prior pass because it genuinely needed
+new domain models — none existed. Given its own design pass (plan-mode, parallel research into
+the mockups, schema/module conventions, and architecture.md §6's deferred-infra triggers) before
+any code was written, per the user's own explicit request for this item specifically. New
+tenant-scoped + RLS models (`Entity`, `EntityIdentifier`, `EntityRelationship`, `EntityCaseLink`,
+`EntityRiskAssessment`) and a new `entities` backend module, with real frontend routes (`/entities`,
+`/entities/:id`, `/network-graph`, a `d3-force`-rendered relationship graph — this codebase's first
+new charting dependency since Recharts). Built as plain Postgres (a bounded recursive CTE), not
+Neo4j — §6's own documented trigger for that ("an active, funded use case") isn't met. The
+mockups' fabricated infrastructure (named fake AI models, a claimed live OFAC/UN/EU/NFIU/Interpol
+sync, fake biometric/device telemetry, an animated fund-flow replay with no backing `Transaction`
+ledger) was dropped, same discipline as every prior pass; real buildable shapes (a composite risk
+score, a manual audited watchlist flag, a relationship graph, case linkage) were kept. The one
+genuinely new/subtle piece: an entity's case links are filtered per-viewer through the existing
+`CasesService.getVisibleCaseIds` check, and a case outside the viewer's compartment grant is
+**omitted entirely**, never shown redacted — live-verified cross-user against the real database
+(a zero-compartment-grant seeded user correctly saw nothing of an `AML_MLRO`-linked case that a
+fully-granted admin could see, including in the graph endpoint's case counts). Full detail,
+what's explicitly deferred (ml-gateway-advisory risk scoring, a real sanctions integration,
+incident-level linking, any `Transaction` ledger), and the live-verification steps are in
+`docs/CHANGELOG.md`'s 2026-11-23 entry.
+
 **Next**: the full production-readiness gap list from 2026-11-02 is still the real backlog —
 automated test infrastructure is probably the single highest-leverage next step, but nothing in
 that list should be started without the user picking it. Smaller pre-existing follow-ups, still not

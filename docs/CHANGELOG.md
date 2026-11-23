@@ -6,6 +6,92 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-23 (cont'd) — Network graph / entity risk scoring / customer 360 (new `entities` domain)
+
+The last item on the stakeholder-gap roadmap, and the only one repeatedly deferred across every
+prior pass on the explicit grounds that it needed **entirely new domain models** — no `Entity`/
+`Account`/`Customer`/`Party` concept, and no relationship/graph edge beyond `Incident`↔`Incident`,
+existed anywhere in the schema. Given its own full design pass (plan-mode, 4 parallel research
+agents covering the mockups, the schema/module conventions, architecture.md's deferred-infra
+triggers, and the exact case-access/audit-hash mechanics) before any code was written.
+
+**Three mockups drove this**: `network-graph.html`, `entity-risk-scoring-watchlist.html`,
+`customer-360-entity-profile.html`. Same discipline as every prior pass — real, buildable UI
+shapes (composite risk score with weighted factors, ownership/kinship relationship chains, a
+linked-account portfolio, a watchlist flag, a multi-hop relationship graph) were kept; fabricated
+infrastructure was dropped: named fake AI/ML engines ("FinCrime ML v4.2", "NFIU Synapse AI
+Resolution"), a claimed live direct sync with UN/OFAC/EU/UK HMT/NFIU/Interpol plus an "NLP Crawler
+(840 Media Outlets)", fabricated NIBSS biometric facial-matching and device/IMEI/Tor-exit-IP
+telemetry, and an animated fund-flow replay with a precise "Total Flow Tracked" figure (implies a
+`Transaction` ledger this project doesn't have and doesn't build here). "Isolate & freeze
+sub-cluster" / "Generate SAR memo" / "Add to evidentiary docket" are left as documented seams onto
+the already-real `containment`/`regulatory`/`evidence` modules rather than new autonomous actions
+(non-negotiables #4/#8) — not wired up in this pass, which focused on the new domain model itself.
+
+**Architectural decisions made during research, not left open**: relational Postgres, not Neo4j
+— architecture.md §6's own documented trigger ("Phase 4, only if relationship/typology analysis
+becomes an active, funded use case") isn't met, so the multi-hop graph is a bounded-depth (max 4,
+matching the mockup's own hop-depth selector) recursive CTE over a plain `EntityRelationship`
+edge table, exactly the fallback that section already prescribes. Case-only entity linking for
+v1, not incident-level too (extending `Case`'s already-proven 7-condition access check to
+`Incident` in the same pass would double the access-control surface to get right at once).
+Risk banding reuses the existing `SeverityTier` (S1-S4) enum and color tokens — not a new 0-100
+scale — for visual/conceptual consistency, CD-02's own language adapted rather than copied
+literally. New frontend dependency: `d3-force` (just the physics simulation), rendered through a
+hand-built SVG component matching the existing chart family's theme-token, no-3D-flourish
+discipline — Recharts (the only charting lib already in this project) has no node-link primitive.
+
+**The critical design point**: an entity can legitimately touch many cases across compartments a
+given viewer may not all hold. Every case-link read is filtered through the exact same
+`CasesService.getVisibleCaseIds`/`getCaseSummariesByIds` every other module already uses — a case
+outside the viewer's access is **omitted entirely**, never shown redacted or even counted (a
+redacted "1 hidden case" placeholder would itself leak linkage to a compartment like
+`WHISTLEBLOWING`, where even inferring linkage risks indirectly exposing a reporter — the exact
+concern non-negotiable #7's separate identity vault exists to prevent). Live-verified cross-user
+against the real Neon database, not just asserted: seeded `admin@bank1.efims.local` (granted every
+compartment) correctly saw both a `STANDARD`-case link and an `AML_MLRO`-case link on the same
+entity; the seeded `investigator@bank1.efims.local` (zero compartment grants) correctly saw only
+the `STANDARD` link — the `AML_MLRO` one vanished entirely from both the entity-detail response
+and the graph endpoint's `visibleCaseCount`, and a direct attempt to link/view that case as
+investigator correctly 403'd.
+
+**New domain model** (migration `20261123150528_add_entities_network_graph`, all tables
+tenant-scoped + RLS): `Entity` (PERSON/COMPANY/ACCOUNT), `EntityIdentifier` (BVN/NIN/RC number/
+etc., a manual `verified` flag only — never an automated biometric claim), `EntityRelationship`
+(the graph edge), `EntityCaseLink`, `EntityRiskAssessment` (append-only, mirrors
+`TriageAssessment`'s own revision-chain pattern). New backend module `entities/` (CRUD,
+identifiers, relationships, case-links, risk assessments, watchlist, the recursive-CTE `/graph`
+endpoint) — gated `EXCEPT_REPORTER_ROLES` throughout, the same "non-case-scoped investigative
+tool" precedent `MlGatewayController`'s transaction-risk-scoring route already set, since (unlike
+every other module in this codebase) an `Entity` is tenant-wide, not case-scoped, so there's no
+per-record `CasesService.getById` to lean on as the fine-grained gate for ordinary reads/writes —
+only `linkCase`/`unlinkCase` call into `cases` at all, exactly where non-negotiable #2 says
+cross-module access belongs. One real design call made mid-build: unlike `Case`/`Incident`
+(a permanent record that something was reported, even after closure), an `Entity` CAN be
+hard-deleted — a speculative/duplicate party is a correctable mistake, not a historical record,
+the same reasoning as `CaseUserFlag`'s own DELETE grant; the audit trail still permanently records
+that a deletion happened even though the row itself is gone.
+
+**New frontend**: `/entities` (list/search/filter), `/entities/:id` (identity, identifiers,
+relationships, linked cases, risk-assessment history, watchlist — the honest "customer 360," no
+biometric/device-telemetry panels), `/network-graph` (the `d3-force` relationship graph, click a
+node to re-center). Sidenav gained "Entities" and "Network Graph" under Manage.
+
+**Verified, not just asserted**: backend — clean `tsc`/lint/build, then the same "boot the actual
+compiled `dist/main.js`" reproduction the `otplib` incident taught this project to always run
+before trusting a change; a full live CRUD pass against the real Neon database (create, identify,
+relate, self-relationship correctly rejected, risk-assess, watchlist-without-reason correctly
+400'd, link/unlink a case, delete). Frontend — clean `tsc`/lint/production build, then a full
+real-browser (Playwright/Chromium) pass through create → identifier → relationship → watchlist →
+network-graph render, zero console errors, confirmed by reading the actual screenshots rather than
+trusting a script's own pass/fail text (one script-side false alarm — a page screenshot captured
+mid-render during a dev-server recompile made a just-created relationship edge look missing — was
+caught and corrected by reloading fresh and re-screenshotting before being written up as real).
+All test data created during verification was deleted afterward via the entity module's own new
+DELETE endpoint (the live dataset should look like what a stakeholder would actually see).
+
+---
+
 ## 2026-11-23 — Keep-alive workflow found to be ineffective; login resilience added
 
 User still hit "Unable to reach EFIMS Core right now" on login days after the keep-alive workflow
