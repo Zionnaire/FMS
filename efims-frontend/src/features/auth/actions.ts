@@ -21,6 +21,32 @@ const VerifyMfaSchema = z.object({
   code: z.string().trim().min(6, "Enter your 6-digit code or a backup code").max(20),
 });
 
+/** Render's and Neon's free tiers both suspend when idle (see `.github/workflows/keep-alive.yml`'s
+ * own doc comment) — a cold first request can take up to ~50-60s to come back, confirmed live. A
+ * ApiError with a real 401/400 means the (warm) backend genuinely rejected the credentials/code —
+ * never retry that. Anything else (a network failure, a gateway timeout, a 502/503/504 while the
+ * service is mid-boot) is retried a few times with backoff, since a retry a few seconds later
+ * typically lands on an already-warm (or now-warmed-up) instance — confirmed live: a cold
+ * `/health/ready` took 47-57s on its own, but the very next request right after was 4.2s. */
+async function withColdStartRetry<T>(fn: () => Promise<T>): Promise<T> {
+  const backoffMs = [5000, 10000, 15000];
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= backoffMs.length; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 400)) {
+        throw error;
+      }
+      lastError = error;
+      if (attempt < backoffMs.length) {
+        await new Promise((resolve) => setTimeout(resolve, backoffMs[attempt]));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export interface LoginState {
   error?: string;
   fieldErrors?: Partial<Record<"tenantSlug" | "email" | "password" | "code", string>>;
@@ -55,16 +81,18 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
 
   let result: LoginResult;
   try {
-    result = await backendFetch<LoginResult>("/auth/login", {
-      method: "POST",
-      body: parsed.data,
-      skipAuth: true,
-    });
+    result = await withColdStartRetry(() =>
+      backendFetch<LoginResult>("/auth/login", {
+        method: "POST",
+        body: parsed.data,
+        skipAuth: true,
+      }),
+    );
   } catch (error) {
     if (error instanceof ApiError && (error.status === 401 || error.status === 400)) {
       return { error: "Invalid tenant, email, or password." };
     }
-    return { error: "Unable to reach EFIMS Core right now. Try again shortly." };
+    return { error: "The server is waking up from being idle — this can take up to a minute. Please try again." };
   }
 
   if ("mfaRequired" in result) {
@@ -83,18 +111,20 @@ async function verifyMfaStep(mfaChallengeToken: string, formData: FormData): Pro
 
   let result: LoginSuccessResult;
   try {
-    result = await backendFetch<LoginSuccessResult>("/auth/mfa/verify", {
-      method: "POST",
-      body: parsed.data,
-      skipAuth: true,
-    });
+    result = await withColdStartRetry(() =>
+      backendFetch<LoginSuccessResult>("/auth/mfa/verify", {
+        method: "POST",
+        body: parsed.data,
+        skipAuth: true,
+      }),
+    );
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       // The challenge token itself may also have expired (5 min) — same message either way,
       // same "don't help an attacker distinguish failure reasons" posture as the password step.
       return { mfaChallengeToken, error: "Invalid or expired code. If it's been a few minutes, start over." };
     }
-    return { mfaChallengeToken, error: "Unable to reach EFIMS Core right now. Try again shortly." };
+    return { mfaChallengeToken, error: "The server is waking up from being idle — this can take up to a minute. Please try again." };
   }
 
   await setSessionCookies(result.accessToken, result.refreshToken);

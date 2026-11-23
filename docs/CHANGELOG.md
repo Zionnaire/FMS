@@ -6,6 +6,54 @@ Newest entries at the top.
 
 ---
 
+## 2026-11-23 — Keep-alive workflow found to be ineffective; login resilience added
+
+User still hit "Unable to reach EFIMS Core right now" on login days after the keep-alive workflow
+(2026-11-19 entry below) shipped, and shared Neon console screenshots suspecting the backend
+wasn't actually connected to the right database.
+
+**Investigated, nothing was actually disconnected**: hit the live backend's `/auth/login` directly
+while warm — real tokens back in 4.2s, confirming the Neon connection, credentials, and the
+earlier MFA/crash fix are all working correctly. The Neon screenshots were a red herring; the
+hostname in them (`ep-broad-fog-b50ufhyz-pooler...`) matches the backend's own `DATABASE_URL`
+exactly.
+
+**Real cause**: pulled the keep-alive workflow's actual run history from the GitHub API. It's
+configured `*/5 * * * *` (every 5 minutes) and every run so far has succeeded — but the real gaps
+between runs are 4–8.5 hours, not 5 minutes (11 runs total over 3 days where ~860 were expected).
+This is a known GitHub Actions platform limitation: GitHub heavily deprioritizes high-frequency
+scheduled workflows on lower-activity/public repos, with no guarantee of the configured interval
+— not something fixable by editing the cron expression, the workflow file itself is correct.
+Between those multi-hour gaps, Render and Neon's free tiers go fully idle as before, so the
+original cold-start problem (CHANGELOG's earlier "Add a free keep-alive ping" entry) was barely
+mitigated in practice.
+
+**Fix, two parts**:
+1. Recommended the user add an external cron pinger (e.g. cron-job.org's free tier, confirmed via
+   its own FAQ to support reliable 1-minute intervals, unlike GitHub Actions' best-effort
+   scheduler) hitting the same `/health/ready` and `/api/health` URLs the GitHub workflow already
+   pings — this is the user's own action (a third-party account), not something committed here.
+   The GitHub workflow stays as a harmless redundant backup.
+2. **Built now**: `efims-frontend/src/features/auth/actions.ts`'s `loginAction`/`verifyMfaStep`
+   no longer dead-end on the first failed request. A new `withColdStartRetry` wraps both
+   `backendFetch` calls — a real `401`/`400` (a warm backend genuinely rejecting bad credentials/
+   code) is never retried, but anything else (network failure, a 502/503/504 while the service is
+   mid-boot) retries up to 3 more times with backoff (5s/10s/15s), since a retry a few seconds
+   later typically lands on an already-warming-up or now-warm instance — confirmed live: a cold
+   `/health/ready` took 47–57s on its own, but the very next request right after was 4.2s. The
+   fallback error message is also more honest now ("The server is waking up from being idle —
+   this can take up to a minute") instead of implying something is actually broken. Scoped
+   deliberately to just these two auth call sites, not `backendFetch` globally — login/MFA-verify
+   are safe to retry blindly (a lost response just means re-authenticating), but a generic retry
+   across every `backendFetch` caller could double-submit a non-idempotent write (e.g. case
+   creation) if the server's response was lost after it had already succeeded.
+
+Verified: `tsc --noEmit`, lint (one pre-existing, unrelated `require()` lint error in
+`scripts/audit-guard.js` from 2026-11-10, untouched by this change), and a full production build,
+all clean.
+
+---
+
 ## 2026-11-19 (cont'd, 7th pass) — Production incident: Render backend crash-looping, fixed (`otplib` → `speakeasy`)
 
 The deployed Render backend was crash-looping at boot, every restart cycle, locking everyone out
