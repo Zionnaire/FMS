@@ -36,6 +36,12 @@ export async function pauseSlaClockAction(incidentId: string, clockId: string, _
   return {};
 }
 
+// `_prevState` is required by `useActionState`'s action signature but unused here — no ignore
+// pattern is configured for this project's `@typescript-eslint/no-unused-vars` rule, and since
+// it's the trailing argument (nothing used after it), the default `args: "after-used"` policy
+// doesn't exempt it the way it does for `startSlaClockAction`/`pauseSlaClockAction` above
+// (where a used `formData` follows it).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function resumeSlaClockAction(incidentId: string, clockId: string, _prevState: FormState): Promise<FormState> {
   const { accessToken } = await requireSession();
   try {
@@ -47,6 +53,7 @@ export async function resumeSlaClockAction(incidentId: string, clockId: string, 
   return {};
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- same reason as resumeSlaClockAction above
 export async function stopSlaClockAction(incidentId: string, clockId: string, _prevState: FormState): Promise<FormState> {
   const { accessToken } = await requireSession();
   try {
