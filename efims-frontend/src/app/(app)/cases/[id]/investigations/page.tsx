@@ -20,7 +20,7 @@ export default async function CaseInvestigationsPage(props: PageProps<"/cases/[i
   const latestPlan = plans[0];
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5">
       <Card className="rounded-xl border-outline-variant/60 shadow-card">
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><ShieldCheck size={16} className="text-tertiary" />Investigation plan {latestPlan && `(v${latestPlan.version})`}</CardTitle></CardHeader>
         <CardContent className="space-y-3">

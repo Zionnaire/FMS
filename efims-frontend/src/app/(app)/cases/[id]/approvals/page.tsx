@@ -24,7 +24,7 @@ export default async function CaseApprovalsPage(props: PageProps<"/cases/[id]/ap
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5">
         <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
           <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Gavel size={16} className="text-tertiary" />Request approval</CardTitle></CardHeader>
           <CardContent><RequestApprovalForm caseId={id} /></CardContent>

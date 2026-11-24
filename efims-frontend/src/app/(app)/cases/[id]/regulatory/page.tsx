@@ -16,7 +16,7 @@ export default async function CaseRegulatoryPage(props: PageProps<"/cases/[id]/r
   const [obligations, approvals, caseRecord] = await Promise.all([listObligations(accessToken, id), listApprovals(accessToken, id), getCase(accessToken, id)]);
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5">
       <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Scale size={16} className="text-tertiary" />New obligation</CardTitle></CardHeader>
         <CardContent><NewObligationForm caseId={id} /></CardContent>

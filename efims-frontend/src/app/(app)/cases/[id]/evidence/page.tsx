@@ -12,7 +12,7 @@ export default async function CaseEvidencePage(props: PageProps<"/cases/[id]/evi
   const items = await listEvidence(accessToken, id);
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5">
       <Card className="rounded-xl border-outline-variant/60 shadow-card lg:col-span-1">
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><Lock size={16} className="text-tertiary" />Ingest evidence</CardTitle></CardHeader>
         <CardContent><IngestForm caseId={id} /></CardContent>

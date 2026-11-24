@@ -32,7 +32,7 @@ export default async function CaseRecoveryPage(props: PageProps<"/cases/[id]/rec
         <Card className="rounded-xl border-outline-variant/60 shadow-card"><CardHeader><CardTitle className="flex items-center gap-1.5 text-[11px] uppercase text-on-surface-variant"><Landmark size={14} className="text-error" />Outstanding</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-error">{formatNgn(summary.outstanding)}</p></CardContent></Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5">
         <Card className="rounded-xl border-outline-variant/60 shadow-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-sm font-bold text-on-surface"><TrendingDown size={16} className="text-error" />Record loss</CardTitle></CardHeader>
           <CardContent><LossForm caseId={id} /></CardContent>
@@ -57,7 +57,7 @@ export default async function CaseRecoveryPage(props: PageProps<"/cases/[id]/rec
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card lg:grid-cols-3 text-xs">
+      <div className="grid grid-cols-1 gap-5 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card text-xs">
         <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Losses</p><ul className="space-y-1.5">{losses.map((l) => (<li key={l.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(l.amount))} — {l.category}</li>))}</ul></div>
         <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Recoveries</p><ul className="space-y-1.5">{recoveries.map((r) => (<li key={r.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(r.amount))} — {r.method.replaceAll("_", " ")}</li>))}</ul></div>
         <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Write-offs</p><ul className="space-y-1.5">{writeOffs.map((w) => (<li key={w.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(w.amount))} — {w.justification}</li>))}</ul></div>
