@@ -3,7 +3,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { CancelTaskDto } from './dto/cancel-task.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TasksService } from './tasks.service';
@@ -13,6 +13,8 @@ import { TasksService } from './tasks.service';
  * same pattern as every other case-scoped controller in this codebase. */
 
 @Controller('cases/:caseId/tasks')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
@@ -56,6 +58,8 @@ export class TasksController {
  * reasoning as `EvidenceQueueController`/`ContainmentQueueController`): no `@Roles()` gate, access
  * enforced purely via `getVisibleCaseIds` filtering inside `listAll`. */
 @Controller('tasks')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class TasksQueueController {
   constructor(private readonly tasksService: TasksService) {}
 

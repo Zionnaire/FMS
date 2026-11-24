@@ -585,7 +585,7 @@ export class CasesService {
     const [memberIds, flags, users] = await Promise.all([
       this.teamsService.listMemberIds(teamId),
       this.prisma.forCurrentTenant((tx) => tx.caseUserFlag.findMany({ where: { caseId: id } })),
-      this.usersService.list(),
+      this.usersService.list(actor),
     ]);
 
     const flagByUserId = new Map(flags.map((f) => [f.userId, f]));

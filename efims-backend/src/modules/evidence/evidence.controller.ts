@@ -3,7 +3,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES, LEGAL_HOLD_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES, LEGAL_HOLD_ROLES } from '../../common/constants/roles';
 import { IngestEvidenceDto } from './dto/ingest-evidence.dto';
 import { RecordCustodyEventDto } from './dto/record-custody-event.dto';
 import { SetLegalHoldDto } from './dto/set-legal-hold.dto';
@@ -16,6 +16,8 @@ import { EvidenceService } from './evidence.service';
  * relative to their own module's routine actions. */
 
 @Controller('cases/:caseId/evidence')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class EvidenceController {
   constructor(private readonly evidenceService: EvidenceService) {}
 
@@ -87,6 +89,8 @@ export class EvidenceController {
  * `CasesService.getVisibleCaseIds`, same "the access check that matters isn't a role gate"
  * reasoning as every other read route in this module. */
 @Controller('evidence')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class EvidenceQueueController {
   constructor(private readonly evidenceService: EvidenceService) {}
 

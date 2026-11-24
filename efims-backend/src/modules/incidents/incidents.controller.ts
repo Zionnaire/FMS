@@ -1,7 +1,10 @@
-import { Controller, Get, Param, ParseUUIDPipe, Patch, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Patch, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
+import { EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { IncidentsService } from './incidents.service';
 import { ListIncidentsDto } from './dto/list-incidents.dto';
 import { MergeIncidentDto } from './dto/merge-incident.dto';
@@ -11,9 +14,16 @@ import { WhistleblowerVaultService } from './whistleblower-vault.service';
 
 /**
  * No `POST /incidents` here — see the doc comment on IncidentsService.createFromSignal for why
- * incident creation only happens through `POST /signals/:id/validate`. Read/relate/merge routes
- * carry no `@Roles()` gate of their own: IncidentsService.getById already enforces compartment
- * visibility (and audits denials) for every actor, which is the check that actually matters here.
+ * incident creation only happens through `POST /signals/:id/validate`.
+ *
+ * Per-route (not class-level) `@Roles(...EXCEPT_REPORTER_ROLES)` added 2026-11-24 — see
+ * `CasesController`'s own doc comment for the full story on why this controller had no role gate
+ * at all, found live via an RBAC audit. `getOne` is deliberately the ONE route left open to
+ * `INCIDENT_REPORTER` too (every other route here excludes it) — `ReporterDashboard`'s "View
+ * incident" link depends on a reporter being able to open the one incident their own validated
+ * report became; `IncidentsService.getById` now enforces that specific relationship itself (see
+ * its own doc comment) rather than leaving it to a controller-level role gate that can't express
+ * "only your own."
  */
 @Controller('incidents')
 export class IncidentsController {
@@ -23,6 +33,8 @@ export class IncidentsController {
   ) {}
 
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   list(@CurrentUser() actor: AuthenticatedUser, @Query() dto: ListIncidentsDto) {
     return this.incidentsService.list(
       actor,
@@ -43,6 +55,8 @@ export class IncidentsController {
    * inconvenience. A richer cross-module incidents dashboard is a real follow-up, not solved by
    * forcing that cycle here. */
   @Get('stats')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   stats(@CurrentUser() actor: AuthenticatedUser) {
     return this.incidentsService.stats(actor);
   }
@@ -56,11 +70,15 @@ export class IncidentsController {
    * its own since `getById` inside it already enforces the compartment-visibility check that
    * matters, same reasoning as every other read route in this controller. */
   @Get(':id/similar')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   findSimilar(@CurrentUser() actor: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.incidentsService.findSimilarIncidents(actor, id);
   }
 
   @Post(':id/relate')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   relate(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
@@ -70,6 +88,8 @@ export class IncidentsController {
   }
 
   @Post(':id/merge')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   merge(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
@@ -81,6 +101,8 @@ export class IncidentsController {
   /** Structured facts the EFIMS AI Service's severity model needs — see
    * `IncidentsService.updateRiskFactors`'s own doc comment. */
   @Patch(':id/risk-factors')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   updateRiskFactors(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
@@ -95,6 +117,8 @@ export class IncidentsController {
    * gating lives entirely in WhistleblowerVaultService.getIdentity, not here — see its doc
    * comment for why every access, not just denials, is audited. */
   @Get(':signalId/whistleblower-identity')
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   getWhistleblowerIdentity(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('signalId', ParseUUIDPipe) signalId: string,

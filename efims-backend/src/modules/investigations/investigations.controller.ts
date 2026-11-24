@@ -4,7 +4,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { CreateFindingDto } from './dto/create-finding.dto';
 import { CreateInterviewDto } from './dto/create-interview.dto';
 import { CreateInvestigationPlanDto } from './dto/create-investigation-plan.dto';
@@ -18,6 +18,8 @@ import { InvestigationsService } from './investigations.service';
  * controller. */
 
 @Controller('cases/:caseId')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class InvestigationsController {
   constructor(private readonly investigationsService: InvestigationsService) {}
 
@@ -112,6 +114,8 @@ export class InvestigationsController {
  * `ContainmentQueueController`: no `@Roles()` gate, access enforced purely via `getVisibleCaseIds`
  * filtering inside `listAll`. */
 @Controller('investigations')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class InvestigationsQueueController {
   constructor(private readonly investigationsService: InvestigationsService) {}
 

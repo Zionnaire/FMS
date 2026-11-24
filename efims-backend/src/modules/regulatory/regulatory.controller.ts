@@ -4,7 +4,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { AcknowledgeObligationDto } from './dto/acknowledge-obligation.dto';
 import { CreateObligationDto } from './dto/create-obligation.dto';
 import { SubmitObligationDto } from './dto/submit-obligation.dto';
@@ -18,6 +18,8 @@ import { RegulatoryService } from './regulatory.service';
  * CD-04-gated actions. */
 
 @Controller('cases/:caseId/regulatory-obligations')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class RegulatoryController {
   constructor(private readonly regulatoryService: RegulatoryService) {}
 
@@ -104,6 +106,8 @@ export class RegulatoryController {
  * `ContainmentQueueController`: no `@Roles()` gate, access enforced purely via `getVisibleCaseIds`
  * filtering inside `listAll`. */
 @Controller('regulatory-obligations')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class RegulatoryQueueController {
   constructor(private readonly regulatoryService: RegulatoryService) {}
 

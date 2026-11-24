@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { AuditOutcome, Compartment, Prisma, Signal, SignalSource, SignalStatus } from '@prisma/client';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { AuditOutcome, Compartment, Prisma, Role, Signal, SignalSource, SignalStatus } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
@@ -57,7 +57,16 @@ export class SignalsService {
     });
   }
 
+  /**
+   * `INCIDENT_REPORTER` gets `reportedBy` force-set to `actor.sub` here, overriding whatever the
+   * caller passed — added 2026-11-24 after an RBAC audit found `reportedBy` was previously only
+   * applied when the *caller* opted in (`?mine=true`), a client-side convenience, not a real
+   * restriction: a raw API call omitting it returned every tenant signal to a reporter, who per
+   * this project's own "own reports only, no enterprise case browsing" doctrine should never see
+   * anyone else's. Every other role keeps the existing optional-`mine`-filter behavior.
+   */
   async list(
+    actor: AuthenticatedUser,
     status?: SignalStatus,
     limit = DEFAULT_PAGE_SIZE,
     offset = 0,
@@ -65,11 +74,12 @@ export class SignalsService {
     q?: string,
     reportedBy?: string,
   ): Promise<{ signals: Signal[]; total: number }> {
+    const effectiveReportedBy = actor.role === Role.INCIDENT_REPORTER ? actor.sub : reportedBy;
     const where: Prisma.SignalWhereInput = {
       ...(status ? { status } : {}),
       ...(source ? { source } : {}),
       ...(q ? { summary: { contains: q, mode: 'insensitive' } } : {}),
-      ...(reportedBy ? { reportedBy } : {}),
+      ...(effectiveReportedBy ? { reportedBy: effectiveReportedBy } : {}),
     };
     const [signals, total] = await this.prisma.forCurrentTenant((tx) =>
       Promise.all([
@@ -97,10 +107,26 @@ export class SignalsService {
     return { total, byStatus, whistleblowerCount };
   }
 
-  async getById(id: string): Promise<Signal> {
+  /** `actor` is optional only because `validate`/`reject` call this internally after their own
+   * `TRIAGE_ROLES` gate has already run (they never pass an `INCIDENT_REPORTER` actor in
+   * practice) — every controller-facing call site must pass it. `INCIDENT_REPORTER` can only
+   * fetch a signal they themselves reported, added 2026-11-24 alongside the same fix to `list()`. */
+  async getById(id: string, actor?: AuthenticatedUser): Promise<Signal> {
     const signal = await this.prisma.forCurrentTenant((tx) => tx.signal.findUnique({ where: { id } }));
     if (!signal) {
       throw new NotFoundException('Signal not found');
+    }
+    if (actor?.role === Role.INCIDENT_REPORTER && signal.reportedBy !== actor.sub) {
+      await this.auditService.record({
+        tenantId: actor.tenantId,
+        actorUserId: actor.sub,
+        action: 'incidents.signal.view',
+        entityType: 'Signal',
+        entityId: id,
+        outcome: AuditOutcome.DENIED,
+        metadata: { reason: 'not_own_report' },
+      });
+      throw new ForbiddenException('Not authorized to view this signal');
     }
     return signal;
   }

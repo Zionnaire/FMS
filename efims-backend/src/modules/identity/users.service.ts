@@ -16,6 +16,14 @@ export interface UserProfile {
   compartments: Compartment[];
 }
 
+/** What `list()` actually returns to a non-`ADMIN` caller — the shape every name-lookup dropdown
+ * consumer in the frontend genuinely needs (`userDisplayNameMap` only ever reads `id`/`fullName`).
+ * Added 2026-11-24 after an RBAC audit found `GET /users` handing every tenant user's exact
+ * `email`/`role`/`clearanceLevel`/full `compartments` array to any authenticated user, including
+ * `INCIDENT_REPORTER` — org-structure and access metadata with no legitimate reason to leave the
+ * admin-facing user-management pages that already only render for `ADMIN`. */
+export type UserDirectoryEntry = Pick<UserProfile, 'id' | 'fullName' | 'status'>;
+
 /** A grant is "active" if it was never revoked and hasn't passed its `expiresAt` (both added
  * 2026-10-14 for "temporary grants") — a permanent grant has neither set. Used everywhere a
  * user's *current* compartment set matters; the revoked/expired rows themselves are never
@@ -105,7 +113,7 @@ export class UsersService {
    * on a user row itself" reasoning `TeamsController.list` already documents for `Team` — an
    * email/full name/role within your own tenant isn't compartment-grant-sensitive, so this is
    * open to any authenticated user, not admin-gated like `createUser`. */
-  async list(): Promise<UserProfile[]> {
+  async list(actor: AuthenticatedUser): Promise<UserProfile[] | UserDirectoryEntry[]> {
     const users = await this.prisma.forCurrentTenant((tx) =>
       tx.user.findMany({
         where: { status: 'ACTIVE' },
@@ -113,7 +121,10 @@ export class UsersService {
         orderBy: { fullName: 'asc' },
       }),
     );
-    return users.map(toProfile);
+    if (actor.role === Role.ADMIN) {
+      return users.map(toProfile);
+    }
+    return users.map((u) => ({ id: u.id, fullName: u.fullName, status: u.status }));
   }
 
   /** Narrow cross-module read for other modules' compartment-visibility checks (e.g.

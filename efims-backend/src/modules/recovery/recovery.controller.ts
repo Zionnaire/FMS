@@ -15,7 +15,13 @@ import { RecoveryService } from './recovery.service';
  * consequential gate is the CD-04 `LOSS_WRITE_OFF` approval already required to record one — see
  * `RecoveryService.recordWriteOff`. */
 
+/** Class-level `@Roles(...EXCEPT_REPORTER_ROLES)` added 2026-11-24 — see `CasesController`'s own
+ * doc comment for the full story. This controller's `losses`/`recoveries`/`write-offs`/`summary`
+ * GET routes had no role gate at all; only the separate `RecoveryQueueController` below had
+ * already picked up `EXCEPT_REPORTER_ROLES` at some earlier point, never propagated here. */
 @Controller('cases/:caseId/recovery')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class RecoveryController {
   constructor(private readonly recoveryService: RecoveryService) {}
 

@@ -4,7 +4,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES, CAPA_VALIDATION_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, CAPA_VALIDATION_ROLES, EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { CancelCapaActionDto } from './dto/cancel-capa-action.dto';
 import { CompleteCapaActionDto } from './dto/complete-capa-action.dto';
 import { CreateCapaActionDto } from './dto/create-capa-action.dto';
@@ -12,7 +12,13 @@ import { CreateRootCauseDto } from './dto/create-root-cause.dto';
 import { ValidateCapaActionDto } from './dto/validate-capa-action.dto';
 import { CapaService } from './capa.service';
 
+/** Class-level `@Roles(...EXCEPT_REPORTER_ROLES)` added 2026-11-24 — see `CasesController`'s own
+ * doc comment for the full story: read routes in this family of controllers had no role gate at
+ * all, found live via an RBAC audit. Method-level `@Roles(...CASE_ROLES)`/`CAPA_VALIDATION_ROLES`
+ * below still take precedence (narrower subsets, `RolesGuard` checks method before class). */
 @Controller('cases/:caseId')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class CapaController {
   constructor(private readonly capaService: CapaService) {}
 
@@ -119,6 +125,8 @@ export class CapaController {
  * `CONTROL_OWNER`'s and `EFFECTIVENESS_REVIEWER`'s dashboards need genuinely different queries
  * (own-owned vs. pending-validation-excluding-own), not one list sliced two ways client-side. */
 @Controller('capa')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class CapaQueueController {
   constructor(private readonly capaService: CapaService) {}
 

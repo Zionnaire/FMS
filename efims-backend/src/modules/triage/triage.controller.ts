@@ -89,6 +89,8 @@ export class TriageController {
  * controller for a cross-case/tenant-wide concern" pattern as `EvidenceQueueController`/
  * `RecoveryQueueController`. */
 @Controller('triage')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class TriageTrendController {
   constructor(private readonly triageService: TriageService) {}
 

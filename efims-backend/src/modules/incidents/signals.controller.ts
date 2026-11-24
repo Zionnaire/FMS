@@ -30,6 +30,7 @@ export class SignalsController {
   @Get()
   list(@CurrentUser() actor: AuthenticatedUser, @Query() dto: ListSignalsDto) {
     return this.signalsService.list(
+      actor,
       dto.status,
       dto.limit ?? DEFAULT_PAGE_SIZE,
       dto.offset ?? 0,
@@ -47,8 +48,8 @@ export class SignalsController {
   }
 
   @Get(':id')
-  getOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.signalsService.getById(id);
+  getOne(@CurrentUser() actor: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.signalsService.getById(id, actor);
   }
 
   @Post(':id/validate')

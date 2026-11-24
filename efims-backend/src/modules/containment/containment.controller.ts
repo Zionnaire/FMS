@@ -3,7 +3,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
-import { CASE_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { CancelContainmentDto } from './dto/cancel-containment.dto';
 import { ConfirmContainmentDto } from './dto/confirm-containment.dto';
 import { RejectContainmentDto } from './dto/reject-containment.dto';
@@ -14,7 +14,12 @@ import { ContainmentService } from './containment.service';
  * cancel: the consequential gate is the CD-04 `CONTAINMENT` approval already required to create
  * the request in the first place — see `ContainmentService.create`. */
 
+/** Class-level `@Roles(...EXCEPT_REPORTER_ROLES)` added 2026-11-24 — see `CasesController`'s own
+ * doc comment for the full story: read routes in this family of controllers had no role gate at
+ * all, found live via an RBAC audit. */
 @Controller('cases/:caseId/containment-requests')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class ContainmentController {
   constructor(private readonly containmentService: ContainmentService) {}
 
@@ -85,6 +90,8 @@ export class ContainmentController {
  * `RecoveryQueueController`/`CapaQueueController`: no `@Roles()` gate, access enforced purely via
  * `getVisibleCaseIds` filtering inside `listAll`. */
 @Controller('containment-requests')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class ContainmentQueueController {
   constructor(private readonly containmentService: ContainmentService) {}
 

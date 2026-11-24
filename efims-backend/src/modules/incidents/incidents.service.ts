@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { AuditOutcome, CdKey, Compartment, Incident, IncidentStatus, Prisma } from '@prisma/client';
+import { AuditOutcome, CdKey, Compartment, Incident, IncidentStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
@@ -218,7 +218,16 @@ export class IncidentsService {
   /** Throws NotFoundException if the incident doesn't exist in this tenant at all, or
    * ForbiddenException (with an audited denial) if it exists but the actor's compartment
    * grants don't cover it — see the doc comment on `Incident.compartment` in schema.prisma for
-   * why this check exists here and not only at the future `cases` level. */
+   * why this check exists here and not only at the future `cases` level.
+   *
+   * `INCIDENT_REPORTER` gets a second, narrower check added 2026-11-24: this route deliberately
+   * stays reachable by that role at all (unlike `list`/`stats`/`relate`/`merge`, which are
+   * `EXCEPT_REPORTER_ROLES`-gated at the controller) because `ReporterDashboard`'s own "View
+   * incident" link needs it — a reporter should be able to see the one incident their own
+   * validated report became. Relying on the incident's UUID being hard to guess was the gap an
+   * RBAC audit flagged instead of actually checking the relationship; this now requires a real
+   * `Signal` row proving THIS incident came from THEIR OWN report before letting a reporter
+   * through, not just tenant+compartment like every other role. */
   async getById(actor: AuthenticatedUser, id: string): Promise<Incident> {
     const [incident, grantedCompartments] = await this.prisma.forCurrentTenant((tx) =>
       Promise.all([tx.incident.findUnique({ where: { id } }), this.getGrantedCompartments(actor, tx)]),
@@ -238,6 +247,24 @@ export class IncidentsService {
         metadata: { compartment: incident.compartment },
       });
       throw new ForbiddenException('Not authorized to view this incident\'s compartment');
+    }
+
+    if (actor.role === Role.INCIDENT_REPORTER) {
+      const ownSignal = await this.prisma.forCurrentTenant((tx) =>
+        tx.signal.findFirst({ where: { incidentId: id, reportedBy: actor.sub } }),
+      );
+      if (!ownSignal) {
+        await this.auditService.record({
+          tenantId: actor.tenantId,
+          actorUserId: actor.sub,
+          action: 'incidents.incident.view',
+          entityType: 'Incident',
+          entityId: id,
+          outcome: AuditOutcome.DENIED,
+          metadata: { reason: 'not_own_report' },
+        });
+        throw new ForbiddenException('Not authorized to view this incident');
+      }
     }
 
     return incident;

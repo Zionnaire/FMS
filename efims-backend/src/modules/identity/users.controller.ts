@@ -17,8 +17,8 @@ export class UsersController {
   }
 
   @Get()
-  list() {
-    return this.usersService.list();
+  list(@CurrentUser() actor: AuthenticatedUser) {
+    return this.usersService.list(actor);
   }
 
   @Post()

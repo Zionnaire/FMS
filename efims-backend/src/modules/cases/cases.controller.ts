@@ -4,7 +4,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { DEFAULT_PAGE_SIZE } from '../../common/dto/pagination-query.dto';
-import { CASE_ROLES, FLAG_ROLES } from '../../common/constants/roles';
+import { CASE_ROLES, EXCEPT_REPORTER_ROLES, FLAG_ROLES } from '../../common/constants/roles';
 import { ApprovalService } from '../workflow/approval.service';
 import { AddCaseUserFlagDto } from './dto/add-case-user-flag.dto';
 import { AssignCaseTeamDto } from './dto/assign-case-team.dto';
@@ -19,12 +19,25 @@ import { DecideApprovalDto } from '../workflow/dto/decide-approval.dto';
 import { RequestApprovalDto } from '../workflow/dto/request-approval.dto';
 
 /** `CASE_ROLES`/`FLAG_ROLES` now live in `common/constants/roles.ts` — single source of truth
- * shared across every case-scoped controller, see that file's own doc comment for why. Read
- * routes carry no `@Roles()` gate of their own: `CasesService` enforces the full 7-condition
- * access check (the actual point of non-negotiable #6) on every read, which is the check that
- * matters, not a coarse role gate. */
-
+ * shared across every case-scoped controller, see that file's own doc comment for why.
+ *
+ * Class-level `@Roles(...EXCEPT_REPORTER_ROLES)` gate added 2026-11-24 after a live audit found
+ * every read route here (`list`, `getOne`, `stats`, `listFlags`, `listStatusHistory`,
+ * `getSummary`, `listApprovals`) had no role gate at all — `CasesService`'s 7-condition check
+ * documents role as one of the seven, but never actually implements it (only team/subject/
+ * conflict/clearance/compartment are checked there; tenant is RLS; role was always supposed to
+ * be this controller's job, per the same split `recovery`/`evidence`/every other case-scoped
+ * module already uses). With no `@Roles()` anywhere, that fifth-of-seven condition was simply
+ * never enforced — live-confirmed `INCIDENT_REPORTER` (seeded with zero compartment grants, meant
+ * to see "own reports only, no enterprise case browsing" per the frontend sidenav's own
+ * `EXCEPT_REPORTER` comment) could read every unassigned case in the tenant. Method-level
+ * `@Roles(...CASE_ROLES)` on the write routes below is a narrower subset of
+ * `EXCEPT_REPORTER_ROLES` and still takes precedence (`RolesGuard` uses
+ * `reflector.getAllAndOverride`, method before class), so this is additive, not a behavior change
+ * for anything that already had its own gate. */
 @Controller('cases')
+@UseGuards(RolesGuard)
+@Roles(...EXCEPT_REPORTER_ROLES)
 export class CasesController {
   constructor(
     private readonly casesService: CasesService,
