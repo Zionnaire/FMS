@@ -29,8 +29,7 @@ export default async function ReferralsPage(props: PageProps<"/referrals">) {
       <div>
         <h1 className="text-2xl font-bold text-on-surface">HR &amp; legal referrals</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          Cases compartmented to HR or Legal Privilege — visible only to roles with that compartment grant, enforced by the backend&apos;s own
-          7-condition access rule, not by this tab.
+          Cases compartmented to HR or Legal Privilege. Only visible to users granted access to that compartment.
         </p>
       </div>
 

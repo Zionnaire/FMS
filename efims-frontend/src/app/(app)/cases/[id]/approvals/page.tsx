@@ -20,7 +20,7 @@ export default async function CaseApprovalsPage(props: PageProps<"/cases/[id]/ap
         <span className="rounded-xl bg-error-container p-2 text-on-error-container"><Hourglass size={16} /></span>
         <div>
           <p className="text-sm font-bold text-on-surface">{pendingCount} pending decision{pendingCount === 1 ? "" : "s"}</p>
-          <p className="text-xs text-on-surface-variant">CD-04 approval matrix — no autonomous adverse action fires without a human decision.</p>
+          <p className="text-xs text-on-surface-variant">Under the CD-04 approval matrix, no autonomous adverse action fires without a human decision.</p>
         </div>
       </div>
 
@@ -40,7 +40,7 @@ export default async function CaseApprovalsPage(props: PageProps<"/cases/[id]/ap
             <Card key={approval.id} className={`rounded-xl border-l-4 shadow-card ${approval.status === "APPROVED" ? "border-l-tertiary border-outline-variant" : approval.status === "REJECTED" ? "border-l-error border-outline-variant" : "border-l-secondary border-outline-variant"}`}>
               <CardContent className="space-y-2 pt-4 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-on-surface">{approval.action.replaceAll("_", " ")} — {approval.severityBand.replace("_", "/")}</span>
+                  <span className="font-semibold text-on-surface">{approval.action.replaceAll("_", " ")} ({approval.severityBand.replace("_", "/")})</span>
                   <StatusBadge status={approval.status} tone={approval.status === "APPROVED" ? "positive" : approval.status === "REJECTED" ? "critical" : "warning"} />
                 </div>
                 <p className="text-on-surface-variant">{approval.requestNotes}</p>

@@ -63,7 +63,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Audit trail</h1>
-          <p className="mt-1 text-xs text-on-surface-variant">{stats.total} events — append-only, tamper-evident hash chain.</p>
+          <p className="mt-1 text-xs text-on-surface-variant">{stats.total} events in an append-only, tamper-evident hash chain.</p>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
           </div>
           <span className={`text-[28px] leading-none font-bold ${chain.intact ? "text-on-surface" : "text-error"}`}>{chain.intact ? "Intact" : "Broken"}</span>
           <p className="text-xs text-on-surface-variant">
-            {chain.eventsChecked} events verified{chain.breaks.length > 0 && ` — ${chain.breaks.length} break${chain.breaks.length === 1 ? "" : "s"}`}
+            {chain.eventsChecked} events verified{chain.breaks.length > 0 && ` (${chain.breaks.length} break${chain.breaks.length === 1 ? "" : "s"})`}
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
           </div>
           <span className="text-[28px] leading-none font-bold text-on-surface">{stats.byOutcome.SUCCESS}</span>
           <p className="text-xs text-on-surface-variant">
-            of {stats.total} total — <span className="font-semibold text-on-surface">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
+            of {stats.total} total: <span className="font-semibold text-on-surface">{stats.total > 0 ? Math.round((stats.byOutcome.SUCCESS / stats.total) * 100) : 0}%</span>
           </p>
         </div>
 
@@ -106,7 +106,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
             <span className="text-xs font-semibold text-on-surface-variant">Denied</span>
           </div>
           <span className="text-[28px] leading-none font-bold text-on-surface">{stats.byOutcome.DENIED}</span>
-          <p className="text-xs text-on-surface-variant">Access-control denials — CLAUDE.md #6</p>
+          <p className="text-xs text-on-surface-variant">Access-control denials</p>
         </div>
 
         <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
@@ -122,7 +122,7 @@ export default async function AuditPage(props: PageProps<"/audit">) {
       </div>
 
       <Card className="border-outline-variant shadow-card">
-        <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Outcome trend — last 30 days</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Outcome trend (last 30 days)</CardTitle></CardHeader>
         <CardContent>
           {trend.length === 0 ? (
             <p className="py-6 text-center text-xs text-on-surface-variant">No events in this window yet.</p>
@@ -143,13 +143,12 @@ export default async function AuditPage(props: PageProps<"/audit">) {
         <div className="space-y-3 rounded-xl border border-error/30 bg-error-container/20 p-5 shadow-card">
           <div className="flex items-center gap-2">
             <ShieldAlert size={18} strokeWidth={2} className="text-error" />
-            <h2 className="text-sm font-bold text-on-error-container">Chain breaks — {chain.breaks.length} event{chain.breaks.length === 1 ? "" : "s"} don&apos;t verify</h2>
+            <h2 className="text-sm font-bold text-on-error-container">Chain breaks: {chain.breaks.length} event{chain.breaks.length === 1 ? "" : "s"} don&apos;t verify</h2>
           </div>
           <p className="text-xs text-on-error-container/80">
-            Per CLAUDE.md non-negotiable #3, audit rows can never be rewritten — even to correct a hashing bug in the code
-            that wrote them — so a documented historical break stays visible here permanently rather than being silently
-            repaired. Each row below is independently verified; a break doesn&apos;t cascade into flagging events written
-            after it.
+            Audit rows can never be rewritten, even to correct a bug in the system that wrote them. A documented
+            historical break stays visible here permanently rather than being silently repaired. Each row below is
+            independently verified; a break doesn&apos;t cascade into flagging events written after it.
           </p>
           <ul className="space-y-1.5">
             {chain.breaks.map((b) => (

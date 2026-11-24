@@ -184,7 +184,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
             </span>
           </div>
           <p className="mt-1 text-xs text-on-surface-variant">
-            {stats.total} accessible under the 7-condition case-access rule — tenant, role, team, subject/conflict, clearance, compartment.
+            {stats.total} cases you currently have access to, based on your role, team, and clearance.
           </p>
         </div>
         <Link href="/cases/new" className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90">

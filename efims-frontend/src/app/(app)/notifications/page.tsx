@@ -12,7 +12,7 @@ export default async function NotificationsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Notifications</h1>
-          <p className="mt-1 text-xs text-on-surface-variant">{total} total — live via the realtime gateway, no reload needed.</p>
+          <p className="mt-1 text-xs text-on-surface-variant">{total} total. New notifications appear here automatically.</p>
         </div>
         <PushNotificationToggle />
       </div>

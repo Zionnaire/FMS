@@ -53,7 +53,7 @@ export default async function CaseCapaPage(props: PageProps<"/cases/[id]/capa">)
                 <StatusBadge status={action.status} tone={action.status === "VALIDATED" ? "positive" : action.status === "CANCELLED" ? "critical" : "warning"} />
               </div>
               <p className="text-on-surface-variant">{action.description}</p>
-              <p className="text-on-surface-variant">Owner: {nameOf.get(action.ownerId) ?? action.ownerId} — Due {new Date(action.dueDate).toLocaleDateString()}</p>
+              <p className="text-on-surface-variant">Owner: {nameOf.get(action.ownerId) ?? action.ownerId} · Due {new Date(action.dueDate).toLocaleDateString()}</p>
               <div className="flex flex-wrap gap-2 border-t border-outline-variant pt-2">
                 {action.status === "OPEN" && (
                   <form action={startCapaActionAction.bind(null, id, action.id)}><SubmitButton size="sm" variant="outline">Start</SubmitButton></form>

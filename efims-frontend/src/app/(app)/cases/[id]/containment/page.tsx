@@ -20,7 +20,7 @@ export default async function CaseContainmentPage(props: PageProps<"/cases/[id]/
         <CardContent>
           {availableApprovals.length === 0 ? (
             <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-4 text-xs text-on-surface-variant">
-              No unused APPROVED CONTAINMENT request exists yet — request one on the Approvals tab first.
+              No unused APPROVED CONTAINMENT request exists yet. Request one on the Approvals tab first.
             </div>
           ) : (
             <RequestContainmentForm caseId={id} availableApprovals={availableApprovals} />
@@ -38,7 +38,7 @@ export default async function CaseContainmentPage(props: PageProps<"/cases/[id]/
           <Card key={req.id} className="rounded-xl border-outline-variant/60 shadow-card">
             <CardContent className="space-y-2 pt-4 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-on-surface">{req.actionType.replaceAll("_", " ")} — {req.targetDescription}</span>
+                <span className="font-semibold text-on-surface">{req.actionType.replaceAll("_", " ")}: {req.targetDescription}</span>
                 <StatusBadge status={req.status} tone={req.status === "CONFIRMED" ? "positive" : req.status === "REJECTED" || req.status === "CANCELLED" ? "critical" : "warning"} />
               </div>
               <p className="text-on-surface-variant">{req.rationale}</p>

@@ -30,7 +30,7 @@ export default async function ApprovalsPage(props: PageProps<"/approvals">) {
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Approvals</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          {allRows.length} request{allRows.length === 1 ? "" : "s"} across every case you can access — CD-04&apos;s approval matrix, segregation of duties enforced.
+          {allRows.length} request{allRows.length === 1 ? "" : "s"} across every case you can access. Governed by CD-04&apos;s approval matrix, with segregation of duties enforced.
         </p>
       </div>
 

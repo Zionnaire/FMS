@@ -14,7 +14,7 @@ export default async function ConfigurationPage() {
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Configuration</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          CD-01 through CD-08 — working defaults for build purposes, not yet formally ratified policy (non-negotiable #9).
+          CD-01 through CD-08 are the platform&apos;s configuration decisions. These are working defaults, not yet formally ratified policy.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

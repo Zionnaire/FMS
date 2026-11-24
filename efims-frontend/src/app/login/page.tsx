@@ -37,7 +37,7 @@ export default function LoginPage() {
             </p>
           </div>
           <p className="font-mono text-[10px] text-on-primary/50">
-            AI in this system is advisory-only and human-overridable — see non-negotiable #4.
+            AI-assisted suggestions in this system are advisory only; a human always makes the final decision.
           </p>
         </section>
 

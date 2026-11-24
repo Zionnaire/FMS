@@ -42,7 +42,7 @@ export default async function SystemHealthPage() {
       <div>
         <h1 className="text-2xl font-bold text-on-surface">System health</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          What EFIMS can actually tell you about its own integrity right now — no fabricated infrastructure, no numbers this app can&apos;t really produce.
+          Live status of the API, database, and audit trail.
         </p>
       </div>
 
