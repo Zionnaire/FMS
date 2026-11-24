@@ -13,7 +13,10 @@ import { Badge } from "@/components/ui/badge";
 export async function AdminDashboard({ accessToken }: { accessToken: string }) {
   const [users, teams] = await Promise.all([listUsers(accessToken), listTeams(accessToken)]);
   const byRole = new Map<string, number>();
-  for (const u of users) byRole.set(u.role, (byRole.get(u.role) ?? 0) + 1);
+  for (const u of users) {
+    if (!u.role) continue;
+    byRole.set(u.role, (byRole.get(u.role) ?? 0) + 1);
+  }
 
   return (
     <>
@@ -73,10 +76,10 @@ export async function AdminDashboard({ accessToken }: { accessToken: string }) {
                 <p className="truncate text-xs text-on-surface-variant">{u.email}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {u.compartments.length > 0 && (
-                  <span className="text-xs text-on-surface-variant">{u.compartments.length} compartment{u.compartments.length === 1 ? "" : "s"}</span>
+                {(u.compartments?.length ?? 0) > 0 && (
+                  <span className="text-xs text-on-surface-variant">{u.compartments!.length} compartment{u.compartments!.length === 1 ? "" : "s"}</span>
                 )}
-                <Badge variant="outline" className="border-outline-variant text-on-surface-variant">{u.role.replaceAll("_", " ")}</Badge>
+                <Badge variant="outline" className="border-outline-variant text-on-surface-variant">{u.role?.replaceAll("_", " ") ?? "—"}</Badge>
               </div>
             </li>
           ))}

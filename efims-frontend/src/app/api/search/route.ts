@@ -58,13 +58,16 @@ export async function GET(request: Request) {
       href: `/signals/${s.id}`,
     })),
     ...users
-      .filter((u) => u.fullName.toLowerCase().includes(q.toLowerCase()) || u.email.toLowerCase().includes(q.toLowerCase()))
+      .filter((u) => u.fullName.toLowerCase().includes(q.toLowerCase()))
       .slice(0, 5)
       .map((u) => ({
         kind: "user" as const,
         id: u.id,
         title: u.fullName,
-        subtitle: u.email,
+        subtitle: "User",
+        // `/users/:id` is ADMIN-only (see `(app)/users/layout.tsx`) — a non-admin searcher still
+        // sees the name (useful for "who is this person" context elsewhere in the app, e.g.
+        // assignee lookups) but the link itself 404s for them rather than leaking a profile.
         href: `/users/${u.id}`,
       })),
   ];

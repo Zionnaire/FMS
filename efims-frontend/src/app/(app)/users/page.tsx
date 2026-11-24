@@ -50,7 +50,7 @@ export default async function UsersPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-xs text-on-surface-variant">{u.email}</TableCell>
-                <TableCell className="font-mono text-xs text-on-surface-variant">{u.role.replaceAll("_", " ")}</TableCell>
+                <TableCell className="font-mono text-xs text-on-surface-variant">{u.role?.replaceAll("_", " ") ?? "—"}</TableCell>
                 <TableCell className="text-xs text-on-surface-variant">{u.clearanceLevel}</TableCell>
                 <TableCell><StatusBadge status={u.status} tone={u.status === "ACTIVE" ? "positive" : u.status === "SUSPENDED" ? "warning" : "critical"} /></TableCell>
               </TableRow>

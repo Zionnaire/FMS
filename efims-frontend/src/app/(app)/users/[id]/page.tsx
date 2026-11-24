@@ -28,14 +28,14 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
 
       <Card className="border-outline-variant shadow-card">
         <CardContent className="grid grid-cols-2 gap-3 pt-4 text-xs sm:grid-cols-4">
-          <div><p className="text-on-surface-variant uppercase">Role</p><p className="font-medium text-on-surface">{target.role.replaceAll("_", " ")}</p></div>
-          <div><p className="text-on-surface-variant uppercase">Clearance</p><p className="font-medium text-on-surface">{target.clearanceLevel}</p></div>
+          <div><p className="text-on-surface-variant uppercase">Role</p><p className="font-medium text-on-surface">{target.role?.replaceAll("_", " ") ?? "—"}</p></div>
+          <div><p className="text-on-surface-variant uppercase">Clearance</p><p className="font-medium text-on-surface">{target.clearanceLevel ?? "—"}</p></div>
           <div><p className="text-on-surface-variant uppercase">Status</p><StatusBadge status={target.status} tone={target.status === "ACTIVE" ? "positive" : target.status === "SUSPENDED" ? "warning" : "critical"} /></div>
           <div>
             <p className="text-on-surface-variant uppercase">Compartments</p>
             <div className="mt-1 flex flex-wrap gap-1">
-              {target.compartments.length === 0 && <span className="text-on-surface-variant">STANDARD only</span>}
-              {target.compartments.map((c) => <Badge key={c} className="bg-surface-container-high text-on-surface-variant">{c}</Badge>)}
+              {(target.compartments?.length ?? 0) === 0 && <span className="text-on-surface-variant">STANDARD only</span>}
+              {target.compartments?.map((c) => <Badge key={c} className="bg-surface-container-high text-on-surface-variant">{c}</Badge>)}
             </div>
           </div>
         </CardContent>

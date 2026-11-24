@@ -1,13 +1,19 @@
 import type { Compartment, Role } from "@/features/auth/types";
 
+/** `email`/`role`/`clearanceLevel`/`compartments` are only present when the caller is `ADMIN` —
+ * every other role gets just `{id, fullName, status}` back from `GET /users` (see
+ * `UsersService.list`'s own doc comment: this endpoint used to hand every tenant user's exact
+ * role/clearance/email/compartments to any authenticated caller, including `INCIDENT_REPORTER`,
+ * found live via an RBAC audit). The name-lookup consumers throughout this app (`userDisplayNameMap`
+ * and friends) only ever need `id`/`fullName`, which are always present regardless of viewer role. */
 export interface UserProfile {
   id: string;
-  email: string;
+  email?: string;
   fullName: string;
-  role: Role;
-  clearanceLevel: number;
+  role?: Role;
+  clearanceLevel?: number;
   status: "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
-  compartments: Compartment[];
+  compartments?: Compartment[];
 }
 
 export interface CreateUserInput {
