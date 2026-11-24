@@ -7,8 +7,8 @@ import { RiskFactorsForm } from "./risk-factors-form";
 import { assessIncidentAction, escalateIncidentAction } from "@/features/triage/actions";
 import { getCurrentTriage, getTriageHistory } from "@/features/triage/api";
 import { SEVERITY_TIERS } from "@/features/triage/types";
-import { startSlaClockAction, pauseSlaClockAction, resumeSlaClockAction, stopSlaClockAction } from "@/features/workflow/actions";
 import { getCurrentSlaClock } from "@/features/workflow/api";
+import { SlaClockPanel } from "./sla-clock-panel";
 import { listTeams } from "@/features/teams/api";
 import { listUsers, userDisplayNameMap } from "@/features/users/api";
 import { ApiError } from "@/lib/backend-client";
@@ -54,7 +54,6 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
 
   const assessAction = assessIncidentAction.bind(null, id);
   const escalateAction = escalateIncidentAction.bind(null, id);
-  const startClockAction = startSlaClockAction.bind(null, id);
   const relateAction = relateIncidentsAction.bind(null, id);
   const mergeAction = mergeIncidentAction.bind(null, id);
 
@@ -183,44 +182,7 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
             <CardTitle className="text-sm font-bold text-on-surface">SLA clock</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {slaClock ? (
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <StatusBadge status={slaClock.status} tone={slaClock.isBreached ? "critical" : slaClock.status === "RUNNING" ? "positive" : "neutral"} />
-                  <span className="font-mono text-on-surface-variant">{slaClock.calendarName}</span>
-                </div>
-                <p className="text-on-surface-variant">Deadline: {new Date(slaClock.targetDeadline).toLocaleString()}</p>
-                {slaClock.isBreached && <p className="font-semibold text-error">Breached</p>}
-                {slaClock.remainingMs !== null && !slaClock.isBreached && (
-                  <p className="text-on-surface-variant">{Math.round(slaClock.remainingMs / 60000)} minutes remaining</p>
-                )}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {slaClock.status === "RUNNING" && (
-                    <form action={async (fd: FormData) => { "use server"; await pauseSlaClockAction(id, slaClock.id, fd); }} className="flex items-center gap-2">
-                      <Input name="reason" placeholder="Pause reason (min 10 chars)" className="h-8 text-xs" required minLength={10} />
-                      <SubmitButton size="sm" variant="outline">Pause</SubmitButton>
-                    </form>
-                  )}
-                  {slaClock.status === "PAUSED" && (
-                    <form action={async () => { "use server"; await resumeSlaClockAction(id, slaClock.id); }}>
-                      <SubmitButton size="sm" variant="outline">Resume</SubmitButton>
-                    </form>
-                  )}
-                  {slaClock.status !== "STOPPED" && (
-                    <form action={async () => { "use server"; await stopSlaClockAction(id, slaClock.id); }}>
-                      <SubmitButton size="sm" variant="outline">Stop</SubmitButton>
-                    </form>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <form action={startClockAction} className="space-y-2">
-                <p className="text-xs text-on-surface-variant">No SLA clock started for this incident yet.</p>
-                <Label htmlFor="targetDeadline" className="text-xs">Target deadline</Label>
-                <Input id="targetDeadline" name="targetDeadline" type="datetime-local" required />
-                <SubmitButton size="sm">Start clock</SubmitButton>
-              </form>
-            )}
+            <SlaClockPanel incidentId={id} slaClock={slaClock} hasTriage={currentTriage !== null} />
           </CardContent>
         </Card>
       </div>
