@@ -47,7 +47,7 @@ export default async function CaseLayout({ children, params }: LayoutProps<"/cas
           </div>
         </div>
 
-        <div className="relative mt-6 grid grid-cols-2 gap-4 border-t border-outline-variant/20 pt-6 sm:grid-cols-4">
+        <div className="relative mt-6 grid grid-cols-1 grid-rows-4 gap-4 border-t border-outline-variant/20 pt-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2">
           <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
             <span className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant uppercase">
               Outstanding exposure
