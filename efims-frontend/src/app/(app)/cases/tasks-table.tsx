@@ -9,6 +9,7 @@ import type { FormState } from "@/lib/form-state";
 import { Mono } from "@/components/ui/mono";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/shell/submit-button";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { isPastDeadline } from "@/lib/time";
@@ -107,7 +108,7 @@ export function TasksTable({ rows }: { rows: MergedTaskRow[] }) {
                 </span>
               </TableCell>
               <TableCell className={`text-xs ${isOverdue(row) ? "font-bold text-error" : "text-on-surface-variant"}`}>
-                {row.dueAt ? new Date(row.dueAt).toLocaleDateString() : "—"}
+                <ClientDate value={row.dueAt} />
               </TableCell>
               <TableCell className="text-right">
                 <TaskActions row={row} />
@@ -152,7 +153,7 @@ export function TasksTable({ rows }: { rows: MergedTaskRow[] }) {
               {selected.dueAt && (
                 <div>
                   <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Due</p>
-                  <Mono className={isOverdue(selected) ? "text-error" : "text-on-surface"}>{new Date(selected.dueAt).toLocaleDateString()}</Mono>
+                  <Mono className={isOverdue(selected) ? "text-error" : "text-on-surface"}><ClientDate value={selected.dueAt} /></Mono>
                 </div>
               )}
             </div>

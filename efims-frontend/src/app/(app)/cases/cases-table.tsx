@@ -10,6 +10,7 @@ import type { FormState } from "@/lib/form-state";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { SubmitButton } from "@/components/shell/submit-button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -337,12 +338,12 @@ export function CasesTable({ cases, teams }: { cases: CaseListItem[]; teams: Tea
               </div>
               <div>
                 <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Opened</p>
-                <Mono className="text-on-surface">{new Date(selected.createdAt).toLocaleDateString()}</Mono>
+                <Mono className="text-on-surface"><ClientDate value={selected.createdAt} /></Mono>
               </div>
               {selected.closedAt && (
                 <div>
                   <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Closed</p>
-                  <Mono className="text-on-surface">{new Date(selected.closedAt).toLocaleDateString()}</Mono>
+                  <Mono className="text-on-surface"><ClientDate value={selected.closedAt} /></Mono>
                 </div>
               )}
             </div>

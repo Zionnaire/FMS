@@ -6,6 +6,7 @@ import { useRealtimeNotifications } from "@/features/notifications/use-realtime-
 import type { Notification } from "@/features/notifications/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ClientDate } from "@/components/shell/client-date";
 
 export function NotificationsLiveList({ initialNotifications }: { initialNotifications: Notification[] }) {
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -34,7 +35,7 @@ export function NotificationsLiveList({ initialNotifications }: { initialNotific
                 {n.priority === "HIGH" && <Badge className="bg-error-container text-on-error-container">HIGH</Badge>}
               </div>
               <p className="mt-1 text-on-surface-variant">{n.body}</p>
-              <p className="mt-1 text-on-surface-variant">{new Date(n.createdAt).toLocaleString()}</p>
+              <p className="mt-1 text-on-surface-variant"><ClientDate value={n.createdAt} mode="datetime" /></p>
             </div>
             {!n.readAt && (
               <button

@@ -7,6 +7,7 @@ import type { ContainmentRegisterRow, ContainmentStatus } from "@/features/conta
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -50,7 +51,7 @@ export function ContainmentTable({ rows }: { rows: ContainmentRegisterRow[] }) {
               <TableCell><Badge variant="outline" className="border-outline-variant text-on-surface-variant">{r.actionType.replaceAll("_", " ")}</Badge></TableCell>
               <TableCell className="max-w-xs truncate text-xs text-on-surface-variant">{r.targetDescription}</TableCell>
               <TableCell><StatusBadge status={r.status} tone={STATUS_TONE[r.status]} /></TableCell>
-              <TableCell className="text-xs text-on-surface-variant">{new Date(r.requestedAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-xs text-on-surface-variant"><ClientDate value={r.requestedAt} /></TableCell>
               <TableCell className="text-center">
                 <Link
                   href={`/cases/${r.caseId}/containment`}

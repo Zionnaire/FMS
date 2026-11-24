@@ -7,6 +7,7 @@ import type { ObligationStatus, RegulatoryRegisterRow } from "@/features/regulat
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { isPastDeadline } from "@/lib/time";
@@ -53,7 +54,7 @@ export function RegulatoryTable({ rows }: { rows: RegulatoryRegisterRow[] }) {
               <TableCell className="text-xs text-on-surface-variant">{r.regulatorName ?? "—"}</TableCell>
               <TableCell><StatusBadge status={r.status} tone={STATUS_TONE[r.status]} /></TableCell>
               <TableCell className={`text-xs ${isOverdue(r) ? "font-bold text-error" : "text-on-surface-variant"}`}>
-                {new Date(r.deadline).toLocaleDateString()} {isOverdue(r) && "(overdue)"}
+                <ClientDate value={r.deadline} /> {isOverdue(r) && "(overdue)"}
               </TableCell>
               <TableCell className="text-center">
                 <Link
@@ -100,7 +101,7 @@ export function RegulatoryTable({ rows }: { rows: RegulatoryRegisterRow[] }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Deadline</p>
-                <Mono className="text-on-surface">{new Date(selected.deadline).toLocaleDateString()}</Mono>
+                <Mono className="text-on-surface"><ClientDate value={selected.deadline} /></Mono>
               </div>
               {selected.regulatorName && (
                 <div>

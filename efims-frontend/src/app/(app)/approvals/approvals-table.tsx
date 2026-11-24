@@ -7,6 +7,7 @@ import type { ApprovalRegisterRow, ApprovalStatus } from "@/features/workflow/ty
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -49,7 +50,7 @@ export function ApprovalsTable({ rows }: { rows: ApprovalRegisterRow[] }) {
               <TableCell><Badge variant="outline" className="border-outline-variant text-on-surface-variant">{r.action.replaceAll("_", " ")}</Badge></TableCell>
               <TableCell className="text-xs text-on-surface-variant">{r.severityBand.replace("_", "-")}</TableCell>
               <TableCell><StatusBadge status={r.status} tone={STATUS_TONE[r.status]} /></TableCell>
-              <TableCell className="text-xs text-on-surface-variant">{new Date(r.requestedAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-xs text-on-surface-variant"><ClientDate value={r.requestedAt} /></TableCell>
               <TableCell className="text-center">
                 <Link
                   href={`/cases/${r.caseId}/approvals`}
@@ -101,12 +102,12 @@ export function ApprovalsTable({ rows }: { rows: ApprovalRegisterRow[] }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Requested</p>
-                <Mono className="text-on-surface">{new Date(selected.requestedAt).toLocaleDateString()}</Mono>
+                <Mono className="text-on-surface"><ClientDate value={selected.requestedAt} /></Mono>
               </div>
               {selected.decidedAt && (
                 <div>
                   <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Decided</p>
-                  <Mono className="text-on-surface">{new Date(selected.decidedAt).toLocaleDateString()}</Mono>
+                  <Mono className="text-on-surface"><ClientDate value={selected.decidedAt} /></Mono>
                 </div>
               )}
             </div>

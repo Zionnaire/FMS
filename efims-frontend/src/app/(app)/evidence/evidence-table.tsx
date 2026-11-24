@@ -6,6 +6,7 @@ import { BadgeCheck, Clock, Gavel, Eye, ArrowRight } from "lucide-react";
 import type { EvidenceRegisterRow } from "@/features/evidence/types";
 import { Badge } from "@/components/ui/badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -61,7 +62,7 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
                   <span className="text-xs text-on-surface-variant">—</span>
                 )}
               </TableCell>
-              <TableCell className="text-xs text-on-surface-variant">{new Date(item.collectedAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-xs text-on-surface-variant"><ClientDate value={item.collectedAt} /></TableCell>
               <TableCell className="text-center">
                 <Link
                   href={`/cases/${item.caseId}/evidence`}
@@ -117,7 +118,7 @@ export function EvidenceTable({ items }: { items: EvidenceRegisterRow[] }) {
               </div>
               <div>
                 <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Collected</p>
-                <Mono className="text-on-surface">{new Date(selected.collectedAt).toLocaleDateString()}</Mono>
+                <Mono className="text-on-surface"><ClientDate value={selected.collectedAt} /></Mono>
               </div>
               {selected.legalHoldReason && (
                 <div className="col-span-2">

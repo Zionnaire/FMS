@@ -6,6 +6,7 @@ import { Eye, ArrowRight } from "lucide-react";
 import type { InvestigationPlanStatus, InvestigationRegisterRow } from "@/features/investigations/types";
 import { StatusBadge } from "@/components/shell/status-badge";
 import { Mono } from "@/components/ui/mono";
+import { ClientDate } from "@/components/shell/client-date";
 import { DetailDrawer } from "@/components/shell/detail-drawer";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -52,7 +53,7 @@ export function InvestigationsTable({ rows }: { rows: InvestigationRegisterRow[]
                   {r.openIssueCount}
                 </span>
               </TableCell>
-              <TableCell className="text-xs text-on-surface-variant">{new Date(r.lastActivityAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-xs text-on-surface-variant"><ClientDate value={r.lastActivityAt} /></TableCell>
               <TableCell className="text-center">
                 <Link
                   href={`/cases/${r.caseId}/investigations`}
@@ -99,7 +100,7 @@ export function InvestigationsTable({ rows }: { rows: InvestigationRegisterRow[]
               </div>
               <div>
                 <p className="mb-1 text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">Last activity</p>
-                <Mono className="text-on-surface">{new Date(selected.lastActivityAt).toLocaleDateString()}</Mono>
+                <Mono className="text-on-surface"><ClientDate value={selected.lastActivityAt} /></Mono>
               </div>
             </div>
           </div>
