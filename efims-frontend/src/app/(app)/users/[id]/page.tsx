@@ -70,7 +70,7 @@ export default async function UserDetailPage(props: PageProps<"/users/[id]">) {
                   <p className="text-on-surface-variant">{change.requestNotes}</p>
                   {change.decisionNotes && <p className="text-on-surface-variant">Decision: {change.decisionNotes}</p>}
                   {change.status === "PENDING" && change.requestedBy === actor.sub && (
-                    <p className="border-t border-outline-variant pt-2 text-on-surface-variant">Awaiting a different admin&apos;s decision — you requested this change.</p>
+                    <p className="border-t border-outline-variant pt-2 text-on-surface-variant">Awaiting a different admin&apos;s decision. You requested this change.</p>
                   )}
                   {change.status === "PENDING" && change.requestedBy !== actor.sub && (
                     <div className="flex gap-2 border-t border-outline-variant pt-2">

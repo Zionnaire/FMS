@@ -283,7 +283,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
 
         <TabsContent value="analytics" className="flex flex-col gap-6 pt-4">
           <Card className="border-outline-variant shadow-card">
-            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Severity trend — last 30 days</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Severity trend: last 30 days</CardTitle></CardHeader>
             <CardContent>
               {severityTrend.length === 0 ? (
                 <p className="py-6 text-center text-xs text-on-surface-variant">No triage assessments in this window yet.</p>
@@ -302,7 +302,7 @@ export async function ExecutiveDashboard({ accessToken }: { accessToken: string 
           </Card>
 
           <Card className="border-outline-variant shadow-card">
-            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Recovery — verified loss vs. reconciled recovery</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm font-bold text-on-surface">Recovery: verified loss vs. reconciled recovery</CardTitle></CardHeader>
             <CardContent>
               {recoveryBars.length === 0 ? (
                 <p className="py-6 text-center text-xs text-on-surface-variant">No loss/recovery activity recorded yet.</p>

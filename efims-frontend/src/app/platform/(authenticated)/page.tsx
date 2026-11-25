@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/shell/status-badge";
 import { CreateTenantForm } from "./create-tenant-form";
 
 export const metadata: Metadata = {
-  title: "Tenants — EFIMS Platform",
+  title: "Tenants | EFIMS Platform",
 };
 
 /** The platform's one real page: list every bank tenant (with real per-tenant case/user counts —

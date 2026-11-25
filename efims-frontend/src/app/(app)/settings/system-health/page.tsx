@@ -74,7 +74,7 @@ export default async function SystemHealthPage() {
                 {!auditChain.intact && (
                   <ul className="list-disc space-y-0.5 pl-4 text-on-surface-variant">
                     {auditChain.breaks.slice(0, 5).map((b, i) => (
-                      <li key={i}>{b.action} on {b.entityType} {b.entityId} — {b.reason}</li>
+                      <li key={i}>{b.action} on {b.entityType} {b.entityId}: {b.reason}</li>
                     ))}
                   </ul>
                 )}

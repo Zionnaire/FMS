@@ -38,22 +38,32 @@ export async function deleteEntityAction(entityId: string): Promise<void> {
   redirect("/entities");
 }
 
-export async function addIdentifierAction(entityId: string, formData: FormData): Promise<void> {
+export async function addIdentifierAction(entityId: string, _prevState: FormState, formData: FormData): Promise<FormState> {
   const { accessToken } = await requireSession();
-  await api.addIdentifier(accessToken, entityId, formData.get("type") as EntityIdentifierType, String(formData.get("value") ?? ""));
+  try {
+    await api.addIdentifier(accessToken, entityId, formData.get("type") as EntityIdentifierType, String(formData.get("value") ?? ""));
+  } catch (error) {
+    return parseActionError(error);
+  }
   revalidatePath(`/entities/${entityId}`);
+  return {};
 }
 
-export async function addRelationshipAction(entityId: string, formData: FormData): Promise<void> {
+export async function addRelationshipAction(entityId: string, _prevState: FormState, formData: FormData): Promise<FormState> {
   const { accessToken } = await requireSession();
-  await api.addRelationship(
-    accessToken,
-    entityId,
-    String(formData.get("toEntityId") ?? ""),
-    formData.get("relationshipType") as EntityRelationshipType,
-    (formData.get("rationale") as string) || undefined,
-  );
+  try {
+    await api.addRelationship(
+      accessToken,
+      entityId,
+      String(formData.get("toEntityId") ?? ""),
+      formData.get("relationshipType") as EntityRelationshipType,
+      (formData.get("rationale") as string) || undefined,
+    );
+  } catch (error) {
+    return parseActionError(error);
+  }
   revalidatePath(`/entities/${entityId}`);
+  return {};
 }
 
 export async function removeRelationshipAction(entityId: string, relationshipId: string): Promise<void> {
@@ -62,10 +72,15 @@ export async function removeRelationshipAction(entityId: string, relationshipId:
   revalidatePath(`/entities/${entityId}`);
 }
 
-export async function linkCaseAction(entityId: string, formData: FormData): Promise<void> {
+export async function linkCaseAction(entityId: string, _prevState: FormState, formData: FormData): Promise<FormState> {
   const { accessToken } = await requireSession();
-  await api.linkCase(accessToken, entityId, String(formData.get("caseId") ?? ""), formData.get("role") as EntityCaseLinkRole);
+  try {
+    await api.linkCase(accessToken, entityId, String(formData.get("caseId") ?? ""), formData.get("role") as EntityCaseLinkRole);
+  } catch (error) {
+    return parseActionError(error);
+  }
   revalidatePath(`/entities/${entityId}`);
+  return {};
 }
 
 export async function unlinkCaseAction(entityId: string, caseId: string): Promise<void> {
@@ -77,16 +92,26 @@ export async function unlinkCaseAction(entityId: string, caseId: string): Promis
 /** `factors` arrives as a JSON string from a hidden field — the risk-factor editor is a Client
  * Component (add/remove rows before submit), so it serializes its working array into one hidden
  * input rather than needing N separate `useActionState` round trips. */
-export async function recordRiskAssessmentAction(entityId: string, formData: FormData): Promise<void> {
+export async function recordRiskAssessmentAction(entityId: string, _prevState: FormState, formData: FormData): Promise<FormState> {
   const { accessToken } = await requireSession();
   const factors = JSON.parse(String(formData.get("factors") ?? "[]")) as RiskFactor[];
-  await api.recordRiskAssessment(accessToken, entityId, formData.get("band") as RiskBand, factors);
+  try {
+    await api.recordRiskAssessment(accessToken, entityId, formData.get("band") as RiskBand, factors);
+  } catch (error) {
+    return parseActionError(error);
+  }
   revalidatePath(`/entities/${entityId}`);
+  return {};
 }
 
-export async function setWatchlistAction(entityId: string, formData: FormData): Promise<void> {
+export async function setWatchlistAction(entityId: string, _prevState: FormState, formData: FormData): Promise<FormState> {
   const { accessToken } = await requireSession();
   const watchlisted = formData.get("watchlisted") === "true";
-  await api.setWatchlist(accessToken, entityId, watchlisted, (formData.get("reason") as string) || undefined);
+  try {
+    await api.setWatchlist(accessToken, entityId, watchlisted, (formData.get("reason") as string) || undefined);
+  } catch (error) {
+    return parseActionError(error);
+  }
   revalidatePath(`/entities/${entityId}`);
+  return {};
 }

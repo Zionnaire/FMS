@@ -42,7 +42,7 @@ export function CreateTenantForm() {
       )}
       {state.success && (
         <p className="rounded-lg border border-tertiary/30 bg-tertiary-fixed/30 px-3 py-2 text-xs font-medium text-on-tertiary-fixed-variant">
-          Tenant provisioned — it now appears in the list below.
+          Tenant provisioned. It now appears in the list below.
         </p>
       )}
 

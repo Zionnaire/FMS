@@ -1,8 +1,8 @@
 import { Landmark, CreditCard, ShieldAlert, Activity, BadgeCheck, Mail, Unlink, type LucideIcon } from "lucide-react";
 
 const SOURCE_SYSTEMS: { name: string; icon: LucideIcon; note: string }[] = [
-  { name: "Core banking", icon: Landmark, note: "Account freeze / card block requests (containment) have no real downstream integration yet — EFIMS only requests and waits for confirmation." },
-  { name: "Cards & payments processor", icon: CreditCard, note: "Same containment-request seam as core banking — no live connector." },
+  { name: "Core banking", icon: Landmark, note: "Account freeze / card block requests (containment) have no real downstream integration yet. EFIMS only requests and waits for confirmation." },
+  { name: "Cards & payments processor", icon: CreditCard, note: "Same containment-request seam as core banking, no live connector." },
   { name: "SIEM", icon: ShieldAlert, note: "No inbound signal ingestion from a real SIEM yet; signals are logged manually or via the signal-intake form." },
   { name: "AML transaction monitoring", icon: Activity, note: "No live alert feed; AML-flagged signals are logged the same way as any other signal source." },
   { name: "HRIS", icon: BadgeCheck, note: "No employee-directory sync; HR-compartment case subjects are entered manually." },

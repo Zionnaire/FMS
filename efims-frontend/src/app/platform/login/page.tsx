@@ -3,7 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { PlatformLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Platform sign in — EFIMS",
+  title: "Platform sign in | EFIMS",
 };
 
 /**
@@ -26,7 +26,7 @@ export default function PlatformLoginPage() {
           </div>
         </div>
         <p className="mb-6 text-xs text-on-surface-variant">
-          This is the cross-tenant platform console — not a bank tenant login. Looking for the regular EFIMS sign-in?{" "}
+          This is the cross-tenant platform console, not a bank tenant login. Looking for the regular EFIMS sign-in?{" "}
           <a href="/login" className="font-semibold text-primary underline underline-offset-2">
             Go there instead
           </a>

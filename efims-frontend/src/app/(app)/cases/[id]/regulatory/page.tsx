@@ -35,7 +35,7 @@ export default async function CaseRegulatoryPage(props: PageProps<"/cases/[id]/r
             <Card key={ob.id} className="rounded-xl border-outline-variant/60 shadow-card">
               <CardContent className="space-y-2 pt-4 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-on-surface">{ob.obligationType.replaceAll("_", " ")} {ob.regulatorName && `— ${ob.regulatorName}`}</span>
+                  <span className="font-semibold text-on-surface">{ob.obligationType.replaceAll("_", " ")} {ob.regulatorName && `(${ob.regulatorName})`}</span>
                   <StatusBadge status={ob.status} tone={ob.status === "ACKNOWLEDGED" ? "positive" : ob.status === "WAIVED" ? "neutral" : "warning"} />
                 </div>
                 <p className="text-on-surface-variant">{ob.description}</p>

@@ -1,28 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SubmitButton } from "@/components/shell/submit-button";
 import { RISK_BANDS, RISK_BAND_LABEL, type RiskFactor } from "@/features/entities/types";
+import type { FormState } from "@/lib/form-state";
 
 const EMPTY_FACTOR: RiskFactor = { label: "", weight: 50, rationale: "" };
+const initialState: FormState = {};
 
 /** Analyst-entered weighted factors — never a vendor payload (see EntityRiskAssessment's own
  * schema.prisma doc comment on why `source` stays MANUAL). Dynamic add/remove needs client state
  * before submit, so the working array is serialized into one hidden JSON field rather than N
- * separate inputs — see `recordRiskAssessmentAction`'s own doc comment. */
-export function RiskAssessmentForm({ action }: { action: (formData: FormData) => void }) {
+ * separate inputs — see `recordRiskAssessmentAction`'s own doc comment. `useActionState` shows a
+ * rejected submission (e.g. a factor with a label but no rationale) inline instead of crashing
+ * the whole page — found live 2026-11-24, same class of bug as the SLA clock incident. */
+export function RiskAssessmentForm({ action }: { action: (prevState: FormState, formData: FormData) => Promise<FormState> }) {
   const [factors, setFactors] = useState<RiskFactor[]>([{ ...EMPTY_FACTOR }]);
+  const [state, formAction] = useActionState(action, initialState);
 
   function updateFactor(index: number, patch: Partial<RiskFactor>) {
     setFactors((prev) => prev.map((f, i) => (i === index ? { ...f, ...patch } : f)));
   }
 
   return (
-    <form action={action} className="space-y-3">
+    <form action={formAction} className="space-y-3">
       <div>
         <Label className="mb-1 text-[10px] font-bold uppercase">Risk band</Label>
         <Select name="band" required defaultValue="S3">
@@ -43,6 +48,7 @@ export function RiskAssessmentForm({ action }: { action: (formData: FormData) =>
               placeholder="Factor (e.g. Beneficial ownership opacity)"
               value={factor.label}
               onChange={(e) => updateFactor(i, { label: e.target.value })}
+              required
             />
             <Input
               type="number"
@@ -56,6 +62,7 @@ export function RiskAssessmentForm({ action }: { action: (formData: FormData) =>
               placeholder="Rationale"
               value={factor.rationale}
               onChange={(e) => updateFactor(i, { rationale: e.target.value })}
+              required
             />
             <button
               type="button"
@@ -79,6 +86,7 @@ export function RiskAssessmentForm({ action }: { action: (formData: FormData) =>
       </div>
 
       <input type="hidden" name="factors" value={JSON.stringify(factors.filter((f) => f.label.trim()))} />
+      {state.error && <p className="text-xs font-medium text-error">{state.error}</p>}
       <SubmitButton size="sm" variant="outline" pendingText="Recording…">Record risk assessment</SubmitButton>
     </form>
   );

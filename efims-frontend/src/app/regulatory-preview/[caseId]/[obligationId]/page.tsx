@@ -25,7 +25,7 @@ export default async function RegulatoryFilingPreviewPage({ params }: { params: 
     <div className="mx-auto max-w-3xl px-6 py-10 text-sm text-on-surface print:p-0">
       <div className="mb-6 flex items-center justify-between print:hidden">
         <p className="text-xs text-on-surface-variant">
-          This is a draft preview of an unsubmitted filing — case <strong>{caseRecord.referenceCode}</strong>. It is not transmitted anywhere automatically.
+          This is a draft preview of an unsubmitted filing for case <strong>{caseRecord.referenceCode}</strong>. It is not transmitted anywhere automatically.
         </p>
         <PrintButton />
       </div>
@@ -38,7 +38,7 @@ export default async function RegulatoryFilingPreviewPage({ params }: { params: 
         )}
 
         <p className="mt-10 border-t border-outline-variant/40 pt-4 text-[10px] text-on-surface-variant">
-          Draft prepared in EFIMS from case {caseRecord.referenceCode} — not a confirmation of filing. Generated {new Date().toLocaleString()}.
+          Draft prepared in EFIMS from case {caseRecord.referenceCode}, not a confirmation of filing. Generated {new Date().toLocaleString()}.
         </p>
       </div>
     </div>
@@ -59,12 +59,12 @@ function StrDocument({ filing, caseRef, caseTitle }: { filing: StrFilingDetails;
     <div className="space-y-6 font-mono text-sm">
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest text-on-surface-variant uppercase">Suspicious Transaction Report</p>
-        <h1 className="mt-1 text-xl font-bold text-on-surface">Draft — {caseRef}</h1>
+        <h1 className="mt-1 text-xl font-bold text-on-surface">Draft: {caseRef}</h1>
         <p className="mt-0.5 text-xs text-on-surface-variant">{caseTitle}</p>
       </div>
 
       <section>
-        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section A — Reporting institution</h2>
+        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section A: Reporting institution</h2>
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label="Institution name" value={filing.reportingInstitutionName} />
           <Field label="CBN institution code" value={filing.cbnInstitutionCode} />
@@ -73,7 +73,7 @@ function StrDocument({ filing, caseRef, caseTitle }: { filing: StrFilingDetails;
       </section>
 
       <section>
-        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section B — Subject(s) of report</h2>
+        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section B: Subject(s) of report</h2>
         {filing.subjects.length === 0 ? (
           <p className="text-on-surface-variant">No subjects recorded.</p>
         ) : (
@@ -99,12 +99,12 @@ function StrDocument({ filing, caseRef, caseTitle }: { filing: StrFilingDetails;
       </section>
 
       <section>
-        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section C — Grounds of suspicion</h2>
+        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section C: Grounds of suspicion</h2>
         <p className="whitespace-pre-wrap text-on-surface">{filing.groundsOfSuspicion || "—"}</p>
       </section>
 
       <section>
-        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section D — Transaction schedule</h2>
+        <h2 className="mb-2 text-xs font-bold tracking-wider text-tertiary uppercase">Section D: Transaction schedule</h2>
         {filing.transactions.length === 0 ? (
           <p className="text-on-surface-variant">No transactions recorded.</p>
         ) : (
@@ -139,7 +139,7 @@ function NotificationDocument({ filing, caseRef, caseTitle }: { filing: Regulato
     <div className="space-y-6 font-mono text-sm">
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest text-on-surface-variant uppercase">Regulator Incident Notification</p>
-        <h1 className="mt-1 text-xl font-bold text-on-surface">Draft — {caseRef}</h1>
+        <h1 className="mt-1 text-xl font-bold text-on-surface">Draft: {caseRef}</h1>
         <p className="mt-0.5 text-xs text-on-surface-variant">{caseTitle}</p>
       </div>
 

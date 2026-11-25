@@ -32,7 +32,7 @@ export async function ReporterDashboard({ accessToken }: { accessToken: string }
       <div className="overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest shadow-card">
         {signals.length === 0 ? (
           <div className="p-8 text-center text-sm text-on-surface-variant">
-            You haven&apos;t submitted a report yet — use &quot;Report incident&quot; to file one.
+            You haven&apos;t submitted a report yet. Use &quot;Report incident&quot; to file one.
           </div>
         ) : (
           <ul className="divide-y divide-outline-variant/20">

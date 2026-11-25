@@ -41,7 +41,7 @@ export async function SignalsPageContent(searchParams: { [key: string]: string |
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Signal queue</h1>
-          <p className="mt-1 text-xs text-on-surface-variant">{stats.total} total — unvalidated reports awaiting a triage decision.</p>
+          <p className="mt-1 text-xs text-on-surface-variant">{stats.total} total, unvalidated reports awaiting a triage decision.</p>
         </div>
         <Link href="/signals/new" className="flex items-center gap-2 rounded-lg bg-tertiary px-5 py-2.5 text-xs font-semibold text-on-tertiary shadow-card transition-colors hover:bg-tertiary/90">
           <Plus size={16} strokeWidth={2.5} />

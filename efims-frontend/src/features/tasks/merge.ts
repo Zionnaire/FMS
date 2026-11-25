@@ -78,7 +78,7 @@ export function mergeTaskRows(
       key: `containment:${c.id}`,
       kind: "containment",
       sourceId: c.id,
-      title: `${c.actionType.replaceAll("_", " ")} — ${c.targetDescription}`,
+      title: `${c.actionType.replaceAll("_", " ")}: ${c.targetDescription}`,
       caseId: c.caseId,
       caseRef: c.case.referenceCode,
       caseTitle: c.case.title,

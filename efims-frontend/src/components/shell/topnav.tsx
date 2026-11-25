@@ -50,7 +50,7 @@ export async function TopNav({ user, accessToken, institutionName = "Bank 1" }: 
 
         <Link
           href="/settings/security"
-          title="Security — manage your own MFA"
+          title="Security: manage your own MFA"
           aria-label="Security settings"
           className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface"
         >

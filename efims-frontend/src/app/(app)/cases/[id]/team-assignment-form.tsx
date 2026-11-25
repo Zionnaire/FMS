@@ -76,16 +76,16 @@ export function TeamAssignmentForm({
           <ul className="list-disc space-y-0.5 pl-4">
             {check.result.conflictedMembers.map((m) => (
               <li key={m.userId}>
-                {m.fullName} — {m.flagType === "SUBJECT" ? "Subject" : "Conflict"}
-                {m.reason && ` (${m.reason})`}
+                {m.fullName} ({m.flagType === "SUBJECT" ? "Subject" : "Conflict"})
+                {m.reason && `: ${m.reason}`}
               </li>
             ))}
           </ul>
-          <span>They&apos;ll be individually denied access to this case regardless of team assignment — you can still assign this team if the rest of it should work the case.</span>
+          <span>They&apos;ll be individually denied access to this case regardless of team assignment. You can still assign this team if the rest of it should work the case.</span>
         </div>
       )}
       {check.result && check.result.conflictedMembers.length === 0 && (
-        <p className="text-[11px] text-tertiary">No conflicts — all {check.result.memberCount} team member(s) clear.</p>
+        <p className="text-[11px] text-tertiary">No conflicts. All {check.result.memberCount} team member(s) clear.</p>
       )}
 
       <SubmitButton size="sm" variant="outline">Assign</SubmitButton>

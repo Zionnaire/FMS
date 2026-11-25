@@ -48,7 +48,7 @@ export default async function CaseRecoveryPage(props: PageProps<"/cases/[id]/rec
           <CardContent>
             {availableApprovals.length === 0 ? (
               <div className="rounded-xl border border-dashed border-outline-variant/50 bg-surface-container-low p-4 text-xs text-on-surface-variant">
-                No unused APPROVED LOSS_WRITE_OFF request — request one on the Approvals tab first.
+                No unused APPROVED LOSS_WRITE_OFF request. Request one on the Approvals tab first.
               </div>
             ) : (
               <WriteOffForm caseId={id} availableApprovals={availableApprovals} />
@@ -58,9 +58,9 @@ export default async function CaseRecoveryPage(props: PageProps<"/cases/[id]/rec
       </div>
 
       <div className="grid grid-cols-1 gap-5 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card text-xs">
-        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Losses</p><ul className="space-y-1.5">{losses.map((l) => (<li key={l.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(l.amount))} — {l.category}</li>))}</ul></div>
-        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Recoveries</p><ul className="space-y-1.5">{recoveries.map((r) => (<li key={r.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(r.amount))} — {r.method.replaceAll("_", " ")}</li>))}</ul></div>
-        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Write-offs</p><ul className="space-y-1.5">{writeOffs.map((w) => (<li key={w.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(w.amount))} — {w.justification}</li>))}</ul></div>
+        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Losses</p><ul className="space-y-1.5">{losses.map((l) => (<li key={l.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(l.amount))} ({l.category})</li>))}</ul></div>
+        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Recoveries</p><ul className="space-y-1.5">{recoveries.map((r) => (<li key={r.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(r.amount))} ({r.method.replaceAll("_", " ")})</li>))}</ul></div>
+        <div><p className="mb-2 font-bold text-on-surface-variant uppercase">Write-offs</p><ul className="space-y-1.5">{writeOffs.map((w) => (<li key={w.id} className="rounded-xl bg-surface-container-low p-2.5">{formatNgn(String(w.amount))}: {w.justification}</li>))}</ul></div>
       </div>
 
       <Card className="rounded-xl border-outline-variant/60 shadow-card">

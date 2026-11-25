@@ -10,7 +10,7 @@ export default async function NewCasePage() {
     <>
       <div>
         <h1 className="text-2xl font-bold text-on-surface">New case</h1>
-        <p className="mt-1 text-xs text-on-surface-variant">Sensitivity is required — see the doc comment on why it&apos;s never auto-derived from a linked incident.</p>
+        <p className="mt-1 text-xs text-on-surface-variant">Sensitivity is required. It is never auto-derived from a linked incident.</p>
       </div>
       <div className="max-w-xl rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-card">
         <CaseForm teams={teams} />

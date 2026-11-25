@@ -34,7 +34,7 @@ export async function confirmMfaEnrollmentAction(code: string): Promise<{ backup
     revalidatePath("/settings/security");
     return { backupCodes: data.backupCodes };
   } catch (error) {
-    return { error: error instanceof ApiError ? error.message : "Invalid code — check your authenticator app and try again." };
+    return { error: error instanceof ApiError ? error.message : "Invalid code. Check your authenticator app and try again." };
   }
 }
 

@@ -41,7 +41,7 @@ function StartClockForm({ incidentId, hasTriage }: { incidentId: string; hasTria
   if (!hasTriage) {
     return (
       <p className="text-xs text-on-surface-variant">
-        Complete the initial triage assessment above first — the SLA clock&apos;s calendar comes from that assessment.
+        Complete the initial triage assessment above first. The SLA clock&apos;s calendar comes from that assessment.
       </p>
     );
   }

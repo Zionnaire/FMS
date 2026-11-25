@@ -86,7 +86,7 @@ async function TasksTabContent({ accessToken, currentUserId, filter }: { accessT
       </div>
       <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-card">
         <div className="border-b border-outline-variant/20 bg-surface-container-low/40 px-5 py-3 text-xs text-on-surface-variant">
-          {rows.length} item{rows.length === 1 ? "" : "s"} across every case you can access — a real freestanding to-do, an open
+          {rows.length} item{rows.length === 1 ? "" : "s"} across every case you can access: a real freestanding to-do, an open
           remediation action, a pending approval, or a requested containment action.
         </div>
         <TasksTable rows={rows} />
@@ -133,7 +133,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Cases</h1>
           <p className="mt-1 text-xs text-on-surface-variant">
-            Cases and Tasks are two views of the same work — this tab is everything due across your accessible cases.
+            Cases and Tasks are two views of the same work. This tab is everything due across your accessible cases.
           </p>
         </div>
         <CaseTaskTabBar tab="tasks" />
@@ -338,7 +338,7 @@ export default async function CasesPage(props: PageProps<"/cases">) {
               <h3 className="text-base font-bold text-on-surface">Approval requests awaiting a decision</h3>
               <p className="mt-0.5 max-w-2xl text-sm text-on-surface-variant">
                 {stats.pendingApprovals} request{stats.pendingApprovals === 1 ? "" : "s"} across your accessible cases need a Team Lead,
-                Fraud/Risk Manager, or MLRO decision — segregation of duties means the requester cannot self-approve. Open each
+                Fraud/Risk Manager, or MLRO decision. Segregation of duties means the requester cannot self-approve. Open each
                 case&apos;s Approvals tab to decide.
               </p>
             </div>

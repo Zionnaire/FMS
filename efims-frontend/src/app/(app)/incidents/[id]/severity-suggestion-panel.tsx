@@ -48,7 +48,7 @@ export function SeveritySuggestionPanel({ incidentId }: { incidentId: string }) 
     <div className="rounded-lg border border-tertiary/30 bg-tertiary-container/20 p-3 text-xs">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-tertiary uppercase">
         <Lightbulb size={14} strokeWidth={2} />
-        AI suggestion — advisory only, not a decision
+        AI suggestion: advisory only, not a decision
       </div>
       {state.loading && <p className="text-on-surface-variant">Asking the model…</p>}
       {state.error && (
@@ -74,7 +74,7 @@ export function SeveritySuggestionPanel({ incidentId }: { incidentId: string }) 
           {state.result.requiresHumanReview && (
             <p className="flex items-center gap-1 text-[11px] font-semibold text-error">
               <Flag size={12} strokeWidth={2} />
-              Flagged for human review — treat this suggestion with extra caution.
+              Flagged for human review. Treat this suggestion with extra caution.
             </p>
           )}
           <p className="text-on-surface">{state.result.rationale}</p>

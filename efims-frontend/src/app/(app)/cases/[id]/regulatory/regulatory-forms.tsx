@@ -32,7 +32,7 @@ export function NewObligationForm({ caseId }: { caseId: string }) {
         <SelectContent>{OBLIGATION_TYPES.map((t) => (<SelectItem key={t} value={t}>{t.replaceAll("_", " ")}</SelectItem>))}</SelectContent>
       </Select>
       <Textarea name="description" placeholder="Description (min 10 chars)" required minLength={10} />
-      <Input name="regulatorName" placeholder="Regulator (e.g. NFIU, CBN — optional)" />
+      <Input name="regulatorName" placeholder="Regulator (e.g. NFIU, CBN, optional)" />
       <Input name="deadline" type="datetime-local" required />
       <ErrorBanner state={state} />
       <SubmitButton size="sm" pendingText="Creating…">Create</SubmitButton>

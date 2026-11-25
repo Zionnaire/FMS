@@ -59,7 +59,7 @@ export function RequestAccessChangeForm({ userId }: { userId: string }) {
 
       {changeType === "GRANT_COMPARTMENT" && (
         <div>
-          <Label htmlFor="expiresAt" className="mb-1 text-[11px] font-semibold text-outline uppercase">Expires (optional — omit for a permanent grant)</Label>
+          <Label htmlFor="expiresAt" className="mb-1 text-[11px] font-semibold text-outline uppercase">Expires (optional, omit for a permanent grant)</Label>
           <Input id="expiresAt" name="expiresAt" type="datetime-local" />
         </div>
       )}

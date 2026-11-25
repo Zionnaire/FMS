@@ -55,7 +55,7 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
             )}
             <p className="text-[11px] text-on-surface-variant">
               {approvedClosure
-                ? "An approved CASE_CLOSURE request exists — closing will reference it automatically."
+                ? "An approved CASE_CLOSURE request exists. Closing will reference it automatically."
                 : "Closing requires an approved CASE_CLOSURE request first (see Approvals tab)."}
             </p>
             <SubmitButton size="sm">Update status</SubmitButton>
@@ -74,7 +74,7 @@ export default async function CaseOverviewPage(props: PageProps<"/cases/[id]">) 
               <li key={flag.id} className="flex items-center justify-between rounded-xl bg-surface-container-low p-2.5 text-xs">
                 <span>
                   <StatusBadge status={flag.type} tone={flag.type === "SUBJECT" ? "critical" : "warning"} />{" "}
-                  {nameOf.get(flag.userId) ?? flag.userId} {flag.reason && `— ${flag.reason}`}
+                  {nameOf.get(flag.userId) ?? flag.userId} {flag.reason && `(${flag.reason})`}
                 </span>
                 <form action={removeCaseFlagAction.bind(null, id, flag.id)}>
                   <SubmitButton size="sm" variant="ghost" pendingText="…">Clear</SubmitButton>

@@ -42,7 +42,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
         </p>
         <p className="mt-1 max-w-md text-xs text-on-error-container/80">
           {transient
-            ? "The server didn't respond in time — this is usually a brief hosting hiccup, not a lost action. If you just submitted something, check whether it actually went through before submitting again."
+            ? "The server didn't respond in time. This is usually a brief hosting hiccup, not a lost action. If you just submitted something, check whether it actually went through before submitting again."
             : error.message || "An unexpected error occurred."}
         </p>
       </div>

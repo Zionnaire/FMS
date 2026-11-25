@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Standalone Node CommonJS utility scripts run directly via `node scripts/*.js`, outside the
+  // Next.js/webpack bundle — package.json has no "type": "module", so require() is how they
+  // actually load modules, not a style choice the TS-oriented import rule should flag.
+  {
+    files: ["scripts/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -108,7 +108,7 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
         </CardHeader>
         <CardContent>
           <p className="mb-3 text-xs text-on-surface-variant">
-            Structured facts the AI severity model uses — fill in what you know; every field is optional.
+            Structured facts the AI severity model uses. Fill in what you know; every field is optional.
           </p>
           <RiskFactorsForm incidentId={id} incident={incident} />
         </CardContent>
@@ -168,7 +168,7 @@ export default async function IncidentDetailPage(props: PageProps<"/incidents/[i
                 <ul className="mt-2 space-y-1">
                   {triageHistory.map((t) => (
                     <li key={t.id} className="rounded bg-surface-container-low p-2">
-                      {t.severity} — {new Date(t.assessedAt).toLocaleString()}
+                      {t.severity} ({new Date(t.assessedAt).toLocaleString()})
                     </li>
                   ))}
                 </ul>

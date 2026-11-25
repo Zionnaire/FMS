@@ -29,7 +29,7 @@ export default async function RetentionPage() {
 
       <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-on-surface">CD-05 — retention schedule</h2>
+          <h2 className="text-sm font-bold text-on-surface">CD-05: retention schedule</h2>
           {!cd05.current && (
             <span className="rounded-full bg-error-container px-2.5 py-1 text-[11px] font-bold text-on-error-container">No ratified value yet</span>
           )}
@@ -38,7 +38,7 @@ export default async function RetentionPage() {
           <>
             <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary-container px-2.5 py-1 text-[11px] font-bold text-on-secondary-container">
               <Clock size={14} strokeWidth={2} />
-              {cd05.current.status === "RATIFIED" ? "Ratified" : "Unratified working default"} — v{cd05.current.version}
+              {cd05.current.status === "RATIFIED" ? "Ratified" : "Unratified working default"}, v{cd05.current.version}
             </span>
             <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {Object.entries(cd05.current.value).map(([k, v]) => (
@@ -51,7 +51,7 @@ export default async function RetentionPage() {
           </>
         ) : (
           <p className="mt-2 text-sm text-on-surface-variant">
-            No CD-05 draft has been created yet for this tenant — see Settings → Configuration.
+            No CD-05 draft has been created yet for this tenant. See Settings → Configuration.
           </p>
         )}
       </div>

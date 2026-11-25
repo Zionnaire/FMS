@@ -104,7 +104,7 @@ export async function IncidentsPageContent(searchParams: { [key: string]: string
             <span className="text-[28px] leading-none font-bold text-on-surface">{stats.restrictedCompartmentCount}</span>
             <span className="text-sm font-semibold text-on-surface">Compartmented</span>
           </div>
-          <p className="text-xs text-on-surface-variant">Outside STANDARD — requires an explicit grant</p>
+          <p className="text-xs text-on-surface-variant">Outside STANDARD, requires an explicit grant</p>
         </div>
 
         <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-5 shadow-card">

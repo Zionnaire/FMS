@@ -92,7 +92,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
     if (error instanceof ApiError && (error.status === 401 || error.status === 400)) {
       return { error: "Invalid tenant, email, or password." };
     }
-    return { error: "The server is waking up from being idle — this can take up to a minute. Please try again." };
+    return { error: "The server is waking up from being idle. This can take up to a minute. Please try again." };
   }
 
   if ("mfaRequired" in result) {
@@ -124,7 +124,7 @@ async function verifyMfaStep(mfaChallengeToken: string, formData: FormData): Pro
       // same "don't help an attacker distinguish failure reasons" posture as the password step.
       return { mfaChallengeToken, error: "Invalid or expired code. If it's been a few minutes, start over." };
     }
-    return { mfaChallengeToken, error: "The server is waking up from being idle — this can take up to a minute. Please try again." };
+    return { mfaChallengeToken, error: "The server is waking up from being idle. This can take up to a minute. Please try again." };
   }
 
   await setSessionCookies(result.accessToken, result.refreshToken);

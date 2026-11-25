@@ -73,7 +73,7 @@ export default async function SignalDetailPage(props: PageProps<"/signals/[id]">
       {signal.status === "NEW" && !canTriage && (
         <Card className="border-outline-variant shadow-card">
           <CardContent className="pt-4 text-sm text-on-surface-variant">
-            Awaiting triage review — your role doesn&apos;t validate or reject signals.
+            Awaiting triage review. Your role doesn&apos;t validate or reject signals.
           </CardContent>
         </Card>
       )}

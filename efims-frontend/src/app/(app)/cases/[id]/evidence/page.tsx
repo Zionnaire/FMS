@@ -38,7 +38,7 @@ export default async function CaseEvidencePage(props: PageProps<"/cases/[id]/evi
               {item.custodyEvents && item.custodyEvents.length > 0 && (
                 <ul className="space-y-0.5 text-on-surface-variant">
                   {item.custodyEvents.map((ev) => (
-                    <li key={ev.id}>{ev.action} — {new Date(ev.occurredAt).toLocaleString()} {ev.notes && `(${ev.notes})`}</li>
+                    <li key={ev.id}>{ev.action} ({new Date(ev.occurredAt).toLocaleString()}){ev.notes && `: ${ev.notes}`}</li>
                   ))}
                 </ul>
               )}

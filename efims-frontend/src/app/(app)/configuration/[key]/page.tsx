@@ -76,7 +76,7 @@ export default async function ConfigurationKeyPage(props: PageProps<"/configurat
         {isUnratified && (
           <span className="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2.5 py-1 text-[11px] font-bold text-on-secondary-container">
             <Clock size={14} strokeWidth={2} />
-            Unratified — working default only
+            Unratified, working default only
           </span>
         )}
       </div>
@@ -121,7 +121,7 @@ export default async function ConfigurationKeyPage(props: PageProps<"/configurat
               {!baseline && !proposedAmendment ? (
                 <p className="text-xs text-on-surface-variant">No ratified baseline or proposed amendment exists yet for this tenant.</p>
               ) : !proposedAmendment ? (
-                <p className="text-xs text-on-surface-variant">No pending amendment — the current value is already the ratified baseline.</p>
+                <p className="text-xs text-on-surface-variant">No pending amendment. The current value is already the ratified baseline.</p>
               ) : (
                 <table className="w-full text-xs">
                   <thead>

@@ -25,7 +25,7 @@ export default async function EntitiesPage({ searchParams }: { searchParams: Pro
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Entities</h1>
           <p className="mt-1 text-xs text-on-surface-variant">
-            Real-world parties — people, companies, accounts — linked across cases. See a party&apos;s full web of
+            Real-world parties (people, companies, accounts) linked across cases. See a party&apos;s full web of
             connections in the <Link href="/network-graph" className="underline underline-offset-2">Network Graph</Link>.
           </p>
         </div>

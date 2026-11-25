@@ -47,7 +47,7 @@ export function UserForm() {
         </div>
       </div>
       <div>
-        <Label className="mb-1.5 text-xs font-bold uppercase">Compartments (optional — STANDARD is visible to everyone by default)</Label>
+        <Label className="mb-1.5 text-xs font-bold uppercase">Compartments (optional, STANDARD is visible to everyone by default)</Label>
         <div className="grid grid-cols-3 gap-2 rounded-lg border border-outline-variant/40 p-3">
           {COMPARTMENTS.filter((c) => c !== "STANDARD").map((c) => (
             <label key={c} className="flex items-center gap-1.5 text-xs text-on-surface">

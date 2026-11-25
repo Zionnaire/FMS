@@ -100,10 +100,17 @@ export function CommandPalette() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 pt-[12vh] backdrop-blur-[2px]" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 pt-[12vh] backdrop-blur-[2px]"
+          onClick={() => setOpen(false)}
+          role="presentation"
+        >
           <div
             className="w-full max-w-xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-modal"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search EFIMS"
           >
             <div className="flex items-center gap-2 border-b border-outline-variant px-4 py-3">
               <Search size={18} className="text-on-surface-variant" />

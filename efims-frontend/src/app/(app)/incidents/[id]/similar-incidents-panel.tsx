@@ -63,7 +63,7 @@ export function SimilarIncidentsPanel({ incidentId }: { incidentId: string }) {
     <div className="rounded-lg border border-tertiary/30 bg-tertiary-container/20 p-3 text-xs">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-tertiary uppercase">
         <ScanSearch size={14} strokeWidth={2} />
-        AI similarity — advisory only, you decide whether to relate or merge
+        AI similarity: advisory only, you decide whether to relate or merge
       </div>
       {state.loading && <p className="text-on-surface-variant">Scanning open incidents…</p>}
       {state.error && <p className="text-error">{state.error}</p>}

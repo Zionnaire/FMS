@@ -3,11 +3,10 @@ import { Network, Trash2, ShieldAlert, Fingerprint } from "lucide-react";
 import { requireSession } from "@/features/auth/session";
 import { getEntity, listEntities } from "@/features/entities/api";
 import { listCases } from "@/features/cases/api";
-import { RISK_BAND_LABEL, RISK_BAND_COLOR, ENTITY_IDENTIFIER_TYPES } from "@/features/entities/types";
+import { RISK_BAND_LABEL, RISK_BAND_COLOR } from "@/features/entities/types";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SubmitButton } from "@/components/shell/submit-button";
 import {
   addIdentifierAction,
@@ -24,6 +23,7 @@ import { RelationshipForm } from "./relationship-form";
 import { CaseLinkForm } from "./case-link-form";
 import { RiskAssessmentForm } from "./risk-assessment-form";
 import { WatchlistForm } from "./watchlist-form";
+import { IdentifierForm } from "./identifier-form";
 
 export default async function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -92,30 +92,13 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
             ))}
             {entity.identifiers.length === 0 && <p className="text-xs text-on-surface-variant">No identifiers recorded yet.</p>}
           </div>
-          <form action={addIdentifierAction.bind(null, entity.id)} className="flex items-end gap-2 border-t border-outline-variant pt-3">
-            <div>
-              <Label className="mb-1 text-[10px] font-bold uppercase">Type</Label>
-              <Select name="type" required defaultValue="BVN">
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ENTITY_IDENTIFIER_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1">
-              <Label className="mb-1 text-[10px] font-bold uppercase">Value</Label>
-              <Input name="value" required />
-            </div>
-            <SubmitButton size="sm" variant="outline">Add</SubmitButton>
-          </form>
+          <IdentifierForm action={addIdentifierAction.bind(null, entity.id)} />
         </section>
 
         <section className="space-y-3 rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card">
           <h2 className="text-sm font-bold text-on-surface">Watchlist</h2>
           <p className="text-xs text-on-surface-variant">
-            A manual, audited flag with a required reason — not a live sanctions-registry sync (no such integration
+            A manual, audited flag with a required reason, not a live sanctions-registry sync (no such integration
             exists).
           </p>
           <WatchlistForm watchlisted={entity.watchlisted} reason={entity.watchlistReason} action={setWatchlistAction.bind(null, entity.id)} />
@@ -135,7 +118,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     <Link href={other ? `/entities/${other.id}` : "#"} className="font-semibold text-primary hover:underline">
                       {other?.displayName ?? otherId}
                     </Link>
-                    {rel.rationale && <span className="text-on-surface-variant"> — {rel.rationale}</span>}
+                    {rel.rationale && <span className="text-on-surface-variant"> ({rel.rationale})</span>}
                   </span>
                   <form action={removeRelationshipAction.bind(null, entity.id, rel.id)}>
                     <SubmitButton variant="ghost" size="sm" pendingText="…">Remove</SubmitButton>
@@ -153,7 +136,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         <section className="space-y-3 rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card lg:col-span-2">
           <h2 className="text-sm font-bold text-on-surface">Linked cases</h2>
           <p className="text-xs text-on-surface-variant">
-            Only cases you have access to are shown here — a case in a compartment you&apos;re not granted is omitted
+            Only cases you have access to are shown here. A case in a compartment you&apos;re not granted is omitted
             entirely, never shown redacted.
           </p>
           <div className="space-y-1.5">
@@ -163,8 +146,8 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                   <Badge variant="outline" className="mr-2">{link.role}</Badge>
                   <Link href={`/cases/${link.caseId}`} className="font-semibold text-primary hover:underline">
                     {link.referenceCode}
-                  </Link>{" "}
-                  — {link.title}
+                  </Link>{": "}
+                  {link.title}
                 </span>
                 <form action={unlinkCaseAction.bind(null, entity.id, link.caseId)}>
                   <SubmitButton variant="ghost" size="sm" pendingText="…">Unlink</SubmitButton>
@@ -181,7 +164,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         <section className="space-y-3 rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card lg:col-span-2">
           <h2 className="text-sm font-bold text-on-surface">Risk assessment history</h2>
           <p className="text-xs text-on-surface-variant">
-            Analyst-entered, append-only — never a named proprietary model. Band reuses the same S1-S4 severity scale
+            Analyst-entered, append-only, never a named proprietary model. Band reuses the same S1-S4 severity scale
             used across the rest of EFIMS.
           </p>
           <div className="space-y-2">
@@ -195,7 +178,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                 <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-on-surface-variant">
                   {ra.factors.map((f, i) => (
                     <li key={i}>
-                      {f.label} ({f.weight}) — {f.rationale}
+                      {f.label} ({f.weight}): {f.rationale}
                     </li>
                   ))}
                 </ul>

@@ -18,7 +18,7 @@ export default async function AccessChangeRequestsPage() {
     <>
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Access change requests</h1>
-        <p className="mt-1 text-xs text-on-surface-variant">{pending.length} pending decision{pending.length === 1 ? "" : "s"} — maker-checker: the requester cannot decide their own request.</p>
+        <p className="mt-1 text-xs text-on-surface-variant">{pending.length} pending decision{pending.length === 1 ? "" : "s"}. The requester cannot decide their own request.</p>
       </div>
 
       <div className="space-y-3">
@@ -41,7 +41,7 @@ export default async function AccessChangeRequestsPage() {
               <p className="text-on-surface-variant">Requested by {nameOf.get(change.requestedBy) ?? change.requestedBy}</p>
               {change.decisionNotes && <p className="text-on-surface-variant">Decision: {change.decisionNotes}</p>}
               {change.status === "PENDING" && change.requestedBy === actor.sub && (
-                <p className="border-t border-outline-variant pt-2 text-on-surface-variant">Awaiting a different admin&apos;s decision — you requested this change.</p>
+                <p className="border-t border-outline-variant pt-2 text-on-surface-variant">Awaiting a different admin&apos;s decision. You requested this change.</p>
               )}
               {change.status === "PENDING" && change.requestedBy !== actor.sub && (
                 <div className="flex gap-2 border-t border-outline-variant pt-2">

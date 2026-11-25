@@ -125,7 +125,7 @@ function StrForm({ caseId, obligationId, initial, hadInitialData }: { caseId: st
 
   return (
     <div className="space-y-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-4 text-xs">
-      <p className="text-[11px] font-bold tracking-wide text-tertiary uppercase">STR/SAR filing details — reporting institution</p>
+      <p className="text-[11px] font-bold tracking-wide text-tertiary uppercase">STR/SAR filing details: reporting institution</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div>
           <Label className="text-[10px] text-on-surface-variant uppercase">Institution name</Label>

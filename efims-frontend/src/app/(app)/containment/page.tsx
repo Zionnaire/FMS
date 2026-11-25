@@ -30,7 +30,7 @@ export default async function ContainmentPage(props: PageProps<"/containment">) 
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Containment</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          {allRows.length} request{allRows.length === 1 ? "" : "s"} — EFIMS only ever requests and waits for a positive confirmation, never acts itself.
+          {allRows.length} request{allRows.length === 1 ? "" : "s"}. EFIMS only ever requests and waits for a positive confirmation, never acts itself.
         </p>
       </div>
 

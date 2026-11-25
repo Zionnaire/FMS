@@ -3,7 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Sign in — EFIMS Core",
+  title: "Sign in | EFIMS Core",
 };
 
 /**

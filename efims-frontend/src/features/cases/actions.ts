@@ -79,7 +79,7 @@ function summarizePartialFailure(total: number, failed: { caseId: string; reason
   if (failed.length === 0) return {};
   const succeededCount = total - failed.length;
   const reasons = failed.map((f) => f.reason).join("; ");
-  return { error: `${succeededCount} of ${total} succeeded — ${failed.length} failed: ${reasons}` };
+  return { error: `${succeededCount} of ${total} succeeded, ${failed.length} failed: ${reasons}` };
 }
 
 export async function bulkAssignCasesAction(caseIds: string[], _prevState: FormState, formData: FormData): Promise<FormState> {

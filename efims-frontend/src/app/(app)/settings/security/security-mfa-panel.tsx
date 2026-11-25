@@ -83,7 +83,7 @@ export function SecurityMfaPanel({ initialStatus }: { initialStatus: MfaStatus }
           ))}
         </div>
         <Button type="button" className="mt-5 w-full" onClick={acknowledgeBackupCodes}>
-          I&apos;ve saved these — done
+          I&apos;ve saved these, done
         </Button>
       </div>
     );
@@ -129,7 +129,7 @@ export function SecurityMfaPanel({ initialStatus }: { initialStatus: MfaStatus }
           <AlertTriangle size={18} strokeWidth={2} />
           Disable MFA
         </div>
-        <p className="mt-1.5 text-xs text-on-surface-variant">Re-enter your password to confirm — this removes your backup codes too.</p>
+        <p className="mt-1.5 text-xs text-on-surface-variant">Re-enter your password to confirm. This removes your backup codes too.</p>
         <form action={handleDisable} className="mt-4 space-y-3">
           <div>
             <Label htmlFor="password" className="mb-1.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">

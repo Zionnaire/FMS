@@ -30,7 +30,7 @@ export default async function WhistleblowingPage() {
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Protected disclosures</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          {total} disclosure{total === 1 ? "" : "s"} compartmented to WHISTLEBLOWING — reporter identity is kept in a separate vault from the
+          {total} disclosure{total === 1 ? "" : "s"} compartmented to WHISTLEBLOWING. Reporter identity is kept in a separate vault from the
           disclosure content, visible only to roles with this compartment grant.
         </p>
       </div>

@@ -73,7 +73,7 @@ function buildInstitutionalContext(
   const pendingObligations = regulatoryRegister.filter((r) => r.status === "PENDING").length;
   return {
     trend: {
-      title: "Incident activity — last 12 weeks",
+      title: "Incident activity: last 12 weeks",
       points: severityTrend.map((d) => ({ date: d.date, value: d.S1 + d.S2 + d.S3 + d.S4 })),
     },
     severityMix: SEVERITY_TIERS.map((tier) => ({
@@ -439,7 +439,7 @@ export const DASHBOARD_LOADERS: Partial<Record<Role, DashboardLoader>> = {
     const { signals, total } = await listSignals({ accessToken, source: "WHISTLEBLOWER", limit: 20 });
     return {
       title: "Protected intake desk",
-      subtitle: `${total} whistleblower report${total === 1 ? "" : "s"} — metadata only, identity held in a separate vault.`,
+      subtitle: `${total} whistleblower report${total === 1 ? "" : "s"}, metadata only, identity held in a separate vault.`,
       kpis: [{ label: "Whistleblower reports", value: total, icon: EyeOff, color: "var(--color-tertiary)" }],
       queueTitle: "Protected disclosures",
       rows: signals.map((s) => ({

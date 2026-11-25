@@ -17,8 +17,8 @@ export default async function NetworkGraphPage({ searchParams }: { searchParams:
       <div>
         <h1 className="text-2xl font-bold text-on-surface">Network graph</h1>
         <p className="mt-1 text-xs text-on-surface-variant">
-          Bounded-depth relationship traversal over recorded entity links — plain Postgres recursive queries, not a
-          graph database (see docs/architecture.md §6 for why). Click a node to re-center the graph on it.
+          Bounded-depth relationship traversal over recorded entity links: plain Postgres recursive queries, not a
+          graph database. Click a node to re-center the graph on it.
         </p>
       </div>
 
