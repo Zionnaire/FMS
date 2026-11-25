@@ -2,20 +2,25 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@n
 import { Role } from '@prisma/client';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { EXCEPT_REPORTER_ROLES } from '../../common/constants/roles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
 import { TeamsService } from './teams.service';
 
-/** Any authenticated user can list teams — needed so a triage or case caller can discover a
- * valid `assignedTeamId` at all; there's no sensitive information on a Team row itself (just a
- * name), unlike `WhistleblowerVaultService`. Membership management is admin-only, matching
- * `UsersController.createUser`'s own reasoning. */
+/** Every role except the incident reporter can list teams — needed so a triage or case caller
+ * can discover a valid `assignedTeamId` at all; there's no sensitive information on a Team row
+ * itself (just a name), unlike `WhistleblowerVaultService`. The reporter role has no legitimate
+ * use for team discovery (it never assigns or triages anything), so this stays gated like every
+ * other list/stats endpoint rather than left open to "any authenticated user" as it was before.
+ * Membership management is admin-only, matching `UsersController.createUser`'s own reasoning. */
 @Controller('teams')
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(...EXCEPT_REPORTER_ROLES)
   list() {
     return this.teamsService.list();
   }

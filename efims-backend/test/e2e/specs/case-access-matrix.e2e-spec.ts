@@ -1,5 +1,5 @@
 import { createTestApp, TestApp } from '../helpers/app';
-import { bootstrapTenant, createAndLoginUser, TestTenant, TestUser } from '../helpers/fixtures';
+import { bootstrapTenant, createAndLoginUser, expectStatus, TestTenant, TestUser } from '../helpers/fixtures';
 
 /** The full 7-condition case-access rule (CLAUDE.md non-negotiable #6 / architecture.md §4.3):
  * tenant match, role permission, team match (or elevated role), user not a subject/conflict,
@@ -12,6 +12,7 @@ describe('Case access matrix (non-negotiable #6)', () => {
   let teamId: string;
   let caseId: string;
 
+  let caseAdmin: TestUser;
   let memberInScope: TestUser;
   let notOnTeam: TestUser;
   let subjectUser: TestUser;
@@ -32,37 +33,48 @@ describe('Case access matrix (non-negotiable #6)', () => {
     const teamsRes = await testApp.http.get('/teams').set(auth(tenant.admin1.accessToken));
     teamId = teamsRes.body[0].id;
 
-    const caseRes = await testApp.http
-      .post('/cases')
-      .set(auth(tenant.admin1.accessToken))
-      .send({
-        title: 'Case access matrix fixture case',
-        description: 'Used to exercise every one of the 7 access conditions independently',
-        sensitivityLevel: 2,
-        compartment: 'AML_MLRO',
-      });
+    const caseRes = await expectStatus(
+      testApp.http
+        .post('/cases')
+        .set(auth(tenant.admin1.accessToken))
+        .send({
+          title: 'Case access matrix fixture case',
+          description: 'Used to exercise every one of the 7 access conditions independently',
+          sensitivityLevel: 2,
+          compartment: 'AML_MLRO',
+        }),
+      'create the AML_MLRO fixture case',
+      201,
+    );
     caseId = caseRes.body.id;
-    await testApp.http
-      .post(`/cases/${caseId}/team`)
-      .set(auth(tenant.admin1.accessToken))
-      .send({ teamId });
 
-    async function makeUser(email: string, clearanceLevel: number, compartments: string[], onTeam: boolean): Promise<TestUser> {
+    async function makeUser(email: string, clearanceLevel: number, compartments: string[], onTeam: boolean, role = 'INVESTIGATOR'): Promise<TestUser> {
       const user = await createAndLoginUser(testApp.http, tenant.slug, tenant.admin1.accessToken, {
         email,
         fullName: email,
-        role: 'INVESTIGATOR',
+        role,
         clearanceLevel,
         compartments,
       });
       if (onTeam) {
-        await testApp.http
-          .post(`/teams/${teamId}/members`)
-          .set(auth(tenant.admin1.accessToken))
-          .send({ userId: user.id });
+        await expectStatus(
+          testApp.http.post(`/teams/${teamId}/members`).set(auth(tenant.admin1.accessToken)).send({ userId: user.id }),
+          `add ${email} to the team`,
+        );
       }
       return user;
     }
+
+    // Team assignment and subject/conflict flagging both run through the case's own full
+    // 7-condition access check (CasesService.assignTeam/addFlag each call getById first, same
+    // gate as viewing the case) — so whoever performs this fixture's own setup needs real,
+    // granted access to this case's AML_MLRO compartment, same as any real case administrator
+    // would. `tenant.admin1` no longer has a standing grant to every compartment (fixed
+    // 2026-11-25 — see docs/production-readiness/01-current-state-assessment.md), so using it
+    // here would 403 on both calls below and silently leave the case half-configured: that's
+    // exactly what this fixture used to do, masked only because neither call checked its own
+    // response status. `expectStatus` on every setup call now makes that failure loud instead.
+    caseAdmin = await makeUser('case-admin@e2e-case-matrix.e2e.test', 4, ['AML_MLRO'], true, 'TEAM_LEAD');
 
     memberInScope = await makeUser('member-in-scope@e2e-case-matrix.e2e.test', 4, ['AML_MLRO'], true);
     notOnTeam = await makeUser('not-on-team@e2e-case-matrix.e2e.test', 4, ['AML_MLRO'], false);
@@ -78,14 +90,20 @@ describe('Case access matrix (non-negotiable #6)', () => {
       compartments: ['AML_MLRO'],
     });
 
-    await testApp.http
-      .post(`/cases/${caseId}/flags`)
-      .set(auth(tenant.admin1.accessToken))
-      .send({ userId: subjectUser.id, type: 'SUBJECT', reason: 'fixture' });
-    await testApp.http
-      .post(`/cases/${caseId}/flags`)
-      .set(auth(tenant.admin1.accessToken))
-      .send({ userId: conflictUser.id, type: 'CONFLICT', reason: 'fixture' });
+    await expectStatus(
+      testApp.http.post(`/cases/${caseId}/team`).set(auth(caseAdmin.accessToken)).send({ teamId }),
+      'assign the fixture case to the team',
+    );
+    await expectStatus(
+      testApp.http.post(`/cases/${caseId}/flags`).set(auth(caseAdmin.accessToken)).send({ userId: subjectUser.id, type: 'SUBJECT', reason: 'fixture' }),
+      'flag subjectUser as SUBJECT',
+      201,
+    );
+    await expectStatus(
+      testApp.http.post(`/cases/${caseId}/flags`).set(auth(caseAdmin.accessToken)).send({ userId: conflictUser.id, type: 'CONFLICT', reason: 'fixture' }),
+      'flag conflictUser as CONFLICT',
+      201,
+    );
   }, 400000);
 
   afterAll(async () => {
@@ -96,10 +114,17 @@ describe('Case access matrix (non-negotiable #6)', () => {
     const res = await testApp.http.get(`/cases/${caseId}`).set(auth(token));
     expect(res.status).toBe(403);
 
+    // AUD-03 (2026-11-25): `GET /audit-events` now compartment-filters its results the same way
+    // `CasesService` filters case visibility — a reader with no AML_MLRO grant correctly no longer
+    // sees DENIED events for an AML_MLRO case, confirming it's in a protected compartment at all.
+    // `tenant.admin1` has no standing compartment grant since this same date's admin-provisioning
+    // fix (see `tenant-provisioning.ts`), so it can no longer be used here — `caseAdmin` is granted
+    // AML_MLRO and is in `AUDIT_READ_ROLES` (`TEAM_LEAD`), the same real-world shape a genuine case
+    // administrator reviewing their own case's audit trail would have.
     const auditRes = await testApp.http
       .get('/audit-events')
       .query({ entityId: caseId, action: 'cases.case.view', outcome: 'DENIED' })
-      .set(auth(tenant.admin1.accessToken));
+      .set(auth(caseAdmin.accessToken));
     expect(auditRes.status).toBe(200);
     const matching = auditRes.body.events.filter((e: { metadata: { reason?: string } }) => e.metadata?.reason === expectedReason);
     expect(matching.length).toBeGreaterThan(0);

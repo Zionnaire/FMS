@@ -309,6 +309,23 @@ model AuditEvent {
   metadata    Json?
   createdAt   DateTime     @default(now())
 
+  /// Root-caused 2026-11-25: the hash chain can fork under genuinely concurrent writes for the
+  /// same tenant, even with `AuditService.record()`'s advisory-lock serialization, because both
+  /// that method's "find the latest event" lookup and `verifyChain`'s traversal order previously
+  /// relied on `createdAt` — a timestamp generated in application code with millisecond
+  /// resolution, not a database-guaranteed ordering. Two events written close enough together can
+  /// land in the same millisecond, and Postgres gives no guarantee which one sorts first when
+  /// `createdAt` ties — so the "latest" row a write links onto, and the order `verifyChain` walks
+  /// events in, can each independently disagree with true commit order. This column is assigned
+  /// atomically by Postgres itself at insert time, strictly increasing, immune to client clock
+  /// precision entirely — `record()` and `verifyChain` now both order by this, not `createdAt`.
+  /// `createdAt` keeps its existing display/filtering role; this doesn't replace it anywhere else.
+  /// Plain `Int` (a regular `SERIAL`), not `BigInt`/`BIGSERIAL`: no tenant will ever produce over
+  /// two billion audit events in this product's lifetime, and `BigInt` has no native JSON
+  /// representation — it crashed every route that ever returned a raw AuditEvent (found live,
+  /// fixed in the same pass this column was added, before it reached any real caller).
+  sequence Int @default(autoincrement())
+
   previousHash String?
   /// Was nullable for one migration only (`audit_hash_chain`), while a one-time backfill script
   /// (since removed — its job was done, and it can't type-check against this now-required
@@ -317,6 +334,7 @@ model AuditEvent {
   /// entry for the full staged-migration reasoning.
   hash         String
 
+  @@index([tenantId, sequence])
   @@index([tenantId])
   @@index([entityType, entityId])
   @@index([tenantId, createdAt])

@@ -14,8 +14,12 @@ export interface TestUser {
 export interface TestTenant {
   tenantId: string;
   slug: string;
-  /** The tenant's first admin, seeded by `provisionTenant` itself — has every compartment and
-   * the blanket `ADMIN` bypass everywhere in this codebase. */
+  /** The tenant's first admin, seeded by `provisionTenant` itself. Previously held a standing,
+   * ungated grant to every compartment; that was removed from provisioning on 2026-11-24 (see
+   * `tenant-provisioning.ts`) — `ADMIN` itself was never a code-level compartment bypass, just a
+   * grant written at provisioning time. `admin1` is now STANDARD-only like any freshly-created
+   * user, same as production; a fixture needing a protected compartment must request or grant one
+   * explicitly, same as a real tenant would. */
   admin1: TestUser;
 }
 
@@ -98,7 +102,7 @@ function auth(token: string) {
  * is worse than a loud failure: it produces confusing, seemingly-unrelated errors several steps
  * later instead of pointing at the actual broken call. `status` defaults to 2xx; pass an explicit
  * expected status for calls that aren't a plain create/fetch. */
-async function expectStatus<T extends { status: number; body: unknown }>(resPromise: Promise<T>, label: string, expected?: number): Promise<T> {
+export async function expectStatus<T extends { status: number; body: unknown }>(resPromise: Promise<T>, label: string, expected?: number): Promise<T> {
   const res = await resPromise;
   const ok = expected !== undefined ? res.status === expected : res.status >= 200 && res.status < 300;
   if (!ok) {
@@ -181,8 +185,24 @@ export async function seedFullLifecycle(testApp: TestApp, tenant: TestTenant) {
   ).body;
   const secondIncidentId: string = secondIncidentValidation.incidentId;
 
+  // `relate` runs the same compartment-visibility check `getById` would on BOTH incidents
+  // (incidents.service.ts's `relate` calls `getById` on `id` and `relatedIncidentId` in turn), and
+  // `secondIncidentId` above is forced into the WHISTLEBLOWING compartment (it was validated from
+  // a WHISTLEBLOWER-source signal — see SignalsService.validate's `forcedCompartment`). `admin1`
+  // no longer carries a standing blanket compartment grant (removed from provisioning 2026-11-24 —
+  // see tenant-provisioning.ts and TestTenant's own doc comment above), so it can no longer
+  // perform this call itself; found live running the full suite post-AUD-03. A narrowly-granted
+  // reviewer, scoped to exactly the compartment this one call needs, is the actually-correct actor
+  // for linking a whistleblower-sourced incident anyway — not a workaround.
+  const whistleblowingReviewer = await createAndLoginUser(http, slug, admin1.accessToken, {
+    email: `whistleblowing-reviewer@${slug}.e2e.test`,
+    fullName: 'E2E Whistleblowing Reviewer',
+    role: 'COMPLIANCE_MLRO',
+    clearanceLevel: 4,
+    compartments: ['STANDARD', 'WHISTLEBLOWING'],
+  });
   await expectStatus(
-    http.post(`/incidents/${incidentId}/relate`).set(auth(admin1.accessToken)).send({ relatedIncidentId: secondIncidentId }),
+    http.post(`/incidents/${incidentId}/relate`).set(auth(whistleblowingReviewer.accessToken)).send({ relatedIncidentId: secondIncidentId }),
     'relate incidents',
     201,
   );

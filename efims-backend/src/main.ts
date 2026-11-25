@@ -9,6 +9,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
+  // Without this, Nest never runs its module-destroy lifecycle (PrismaService.onModuleDestroy's
+  // $disconnect included) on SIGTERM/SIGINT — it just lets the process die. Render sends SIGTERM
+  // on every deploy and restart, so a live request or transaction mid-flight at that moment was
+  // being cut off uncleanly rather than given a chance to finish — the same failure class that
+  // produced the original audit hash-chain corruption (docs/CHANGELOG.md, 2026-09-30 entry).
+  app.enableShutdownHooks();
+
   // Sets standard security headers (CSP, HSTS, X-Frame-Options, etc.) — a pure API backend
   // never renders HTML for a browser to attack, but this is still the standard baseline
   // hardening pass, and costs nothing to have.

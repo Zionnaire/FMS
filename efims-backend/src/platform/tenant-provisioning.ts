@@ -1,4 +1,4 @@
-import { CdKey, Compartment, Prisma, PrismaClient, Role } from '@prisma/client';
+import { CdKey, Prisma, PrismaClient, Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 export interface ProvisionTenantInput {
@@ -272,17 +272,25 @@ export async function provisionTenant(prisma: PrismaClient, input: ProvisionTena
           passwordHash,
           fullName: input.adminFullName,
           role: Role.ADMIN,
+          // Clearance 4 (maximum) is a reasonable administrative baseline on its own — it says
+          // nothing about which specific protected compartments this account can see, which is a
+          // content-access question, not an administrative-capability one.
           clearanceLevel: 4,
         },
       });
 
-      for (const compartment of Object.values(Compartment)) {
-        await tx.userCompartmentGrant.upsert({
-          where: { userId_compartment: { userId: admin.id, compartment } },
-          update: {},
-          create: { tenantId: tenant.id, userId: admin.id, compartment },
-        });
-      }
+      // Deliberately NOT auto-granting every compartment here (this loop used to). Standing,
+      // permanent, ungated access to every protected compartment — including WHISTLEBLOWING,
+      // LEGAL_PRIVILEGE, HR — the moment an account is provisioned ADMIN is exactly what the
+      // production-readiness review's own instructions told this project not to do: "ADMIN must
+      // not silently bypass... protected compartments merely because the account is an
+      // administrator." An administrator who genuinely needs to see something in a compartment
+      // they're not granted requests it through the existing access-change-request flow
+      // (`AccessChangeService`/`POST /users/:userId/access-change-requests` with
+      // `GRANT_COMPARTMENT`, optionally time-limited via `expiresAt`) — which already requires a
+      // second administrator's approval (the requester can't decide their own request) and is
+      // fully audited on both the request and the decision. That is this project's real
+      // break-glass mechanism; this provisioning step no longer pre-empts it.
 
       const team = await tx.team.upsert({
         where: { tenantId_name: { tenantId: tenant.id, name: teamName } },

@@ -589,7 +589,17 @@ export class CasesService {
     ]);
 
     const flagByUserId = new Map(flags.map((f) => [f.userId, f]));
-    const userById = new Map(users.map((u) => [u.id, u]));
+    // UsersService.list(actor) returns a union of two array types (full UserProfile[] for an
+    // admin viewer, a minimal UserDirectoryEntry[] otherwise — see that service's own doc
+    // comment), not an array of a union — TypeScript doesn't cleanly distribute `.map()`'s
+    // callback parameter type across "A[] | B[]" the way it does for "(A | B)[]". Letting it try
+    // works out under this project's main tsconfig (`noImplicitAny: true`) but silently resolves
+    // to `any[][]` under the e2e test suite's looser one (`noImplicitAny: false`), which then
+    // fails to compile at all. Both union members really do have `id`/`fullName`, so asserting
+    // that narrower shape here sidesteps the inference gap entirely rather than fighting it.
+    const userById = new Map<string, { fullName: string }>(
+      (users as Array<{ id: string; fullName: string }>).map((u) => [u.id, u]),
+    );
 
     const conflictedMembers = memberIds
       .filter((userId) => flagByUserId.has(userId))

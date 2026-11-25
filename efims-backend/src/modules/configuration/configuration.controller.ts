@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
-import { CdKey } from '@prisma/client';
+import { CdKey, ConfigurationEntry, Role } from '@prisma/client';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -19,18 +19,42 @@ import { ParseCdKeyPipe } from './pipes/parse-cd-key.pipe';
  * rather than configuration ratification being just another thing `ADMIN` happens to be allowed
  * to do. A real per-CD-owner approval mapping is future work, not something to invent here ahead
  * of need.
+ *
+ * The read routes stay open to every authenticated role on purpose — the site-wide "N of 8
+ * configuration decisions are still unratified" banner (`unratified-banner.tsx`) deliberately
+ * calls this endpoint for every viewer, since misrepresenting ratification status is everyone's
+ * concern (non-negotiable #9), not just the owning function's. But the full detail — exact
+ * severity thresholds, the approval matrix, retention schedules — is organizational control
+ * logic, not something the incident reporter role has any legitimate need to see in full (and
+ * knowing exact approval thresholds could in principle help someone game them). So the reporter
+ * role gets a status-only shape (key/version/status/effectiveDate, no `value`/`notes`) instead of
+ * being blocked outright — same "minimal shape for a lower-trust viewer, not a hard denial"
+ * pattern `UsersService.list()` already uses for non-admin viewers.
  */
+type ConfigurationStatusOnly = Pick<ConfigurationEntry, 'id' | 'key' | 'version' | 'status' | 'effectiveDate'>;
+
+function toStatusOnly(entry: ConfigurationEntry): ConfigurationStatusOnly {
+  const { id, key, version, status, effectiveDate } = entry;
+  return { id, key, version, status, effectiveDate };
+}
+
 @Controller('configuration')
 export class ConfigurationController {
   constructor(private readonly configurationService: ConfigurationService) {}
 
   @Get()
-  getAllCurrent() {
-    return this.configurationService.getAllCurrent();
+  async getAllCurrent(@CurrentUser() actor: AuthenticatedUser) {
+    const all = await this.configurationService.getAllCurrent();
+    if (actor.role !== Role.INCIDENT_REPORTER) {
+      return all;
+    }
+    return Object.fromEntries(
+      Object.entries(all).map(([key, entry]) => [key, entry ? toStatusOnly(entry) : entry]),
+    );
   }
 
   @Get(':key')
-  async getOne(@Param('key', ParseCdKeyPipe) key: CdKey) {
+  async getOne(@CurrentUser() actor: AuthenticatedUser, @Param('key', ParseCdKeyPipe) key: CdKey) {
     // Sequential, not Promise.all — each call opens its own transaction (see
     // ConfigurationService.getCurrent/getHistory), and firing transactions concurrently is
     // exactly what caused a live, connection-pool-contention failure in getAllCurrent() (see
@@ -38,7 +62,14 @@ export class ConfigurationController {
     // worth the same single-transaction consolidation.
     const current = await this.configurationService.getCurrent(key);
     const history = await this.configurationService.getHistory(key);
-    return { key, current, history };
+    if (actor.role !== Role.INCIDENT_REPORTER) {
+      return { key, current, history };
+    }
+    return {
+      key,
+      current: current ? toStatusOnly(current) : current,
+      history: history.map(toStatusOnly),
+    };
   }
 
   @Post(':key')

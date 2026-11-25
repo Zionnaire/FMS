@@ -114,11 +114,27 @@ REVOKE UPDATE, DELETE ON interviews FROM efims_app;
 GRANT SELECT, INSERT ON findings TO efims_app;
 REVOKE UPDATE, DELETE ON findings FROM efims_app;
 
--- evidence module: evidence_items keeps the same "never hard-deleted" posture as incidents/cases
--- (UPDATE granted for legal-hold toggling only, enforced at the application layer, not by this
--- grant, same caveat as configuration_entries' `value` field). custody_events is pure
--- append-only like interviews/findings — SELECT/INSERT only.
-GRANT SELECT, INSERT, UPDATE ON evidence_items TO efims_app;
+-- evidence module: evidence_items keeps the same "never hard-deleted" posture as incidents/cases.
+-- EVD-02 (fixed 2026-11-25): UPDATE is now column-restricted to exactly the 4 legal-hold fields
+-- `EvidenceService.toggleLegalHold` actually writes — confirmed by grepping every
+-- `evidenceItem.update` call in the codebase before writing this grant; there is exactly one, and
+-- it only ever touches these columns. Every other column, `contentHash` above all (this module's
+-- entire reason for existing — "never recomputed except by an explicit `.../verify` call, and
+-- never mutated once set", per its own schema doc comment), is write-once at ingest and was
+-- previously protected only by the application never happening to call `.update()` on it — the
+-- same "enforced at the application layer, not by this grant" caveat `configuration_entries.value`
+-- still carries below (not fixed in this pass; same treatment would apply there too). This is the
+-- first column-restricted grant in this file. custody_events is pure append-only like
+-- interviews/findings — SELECT/INSERT only.
+GRANT SELECT, INSERT ON evidence_items TO efims_app;
+-- Explicit REVOKE first: GRANT is additive, so re-running this script after an earlier session
+-- already ran the old blanket `GRANT ... UPDATE ON evidence_items` would otherwise leave that
+-- broader table-level grant in place alongside the new column-level one below, silently
+-- defeating the whole point of this fix — caught live, the column-level grant alone did NOT
+-- remove the preexisting blanket one (confirmed via `\dp evidence_items` still showing table-level
+-- `w` for efims_app after the first apply attempt).
+REVOKE UPDATE ON evidence_items FROM efims_app;
+GRANT UPDATE ("legalHold", "legalHoldReason", "legalHoldSetBy", "legalHoldSetAt") ON evidence_items TO efims_app;
 REVOKE DELETE ON evidence_items FROM efims_app;
 GRANT SELECT, INSERT ON custody_events TO efims_app;
 REVOKE UPDATE, DELETE ON custody_events FROM efims_app;
@@ -181,6 +197,19 @@ REVOKE DELETE ON ml_prediction_records FROM efims_app;
 GRANT SELECT, INSERT ON audit_events TO efims_app;
 REVOKE UPDATE, DELETE ON audit_events FROM efims_app;
 
+-- Found live 2026-11-25, verifying AUD-03: `AuditEvent.sequence` (added for AUD-01's chain-
+-- ordering fix, same date) is a Postgres SERIAL-style column, which Postgres backs with its own
+-- implicit sequence object (`audit_events_sequence_seq`) — a SEPARATE grantable object from the
+-- `audit_events` table itself. The table-level INSERT grant above does NOT include permission to
+-- advance that sequence; without this, every single audit write was failing outright with
+-- `permission denied for sequence audit_events_sequence_seq` (`AuditService.record()`'s own
+-- try/catch swallowed the error into a log line per its own design — "an audit write failing must
+-- never take down the request that triggered it" — which is exactly why this went undetected
+-- until a live check specifically went looking for the written events and found none). This is
+-- the only sequence in the schema (every other model uses a UUID `@id`), so this one GRANT closes
+-- the whole gap, not just this one column.
+GRANT USAGE, SELECT ON SEQUENCE audit_events_sequence_seq TO efims_app;
+
 -- access_change_requests (maker-checker for role/compartment changes, added 2026-10-14) follows
 -- the exact same posture as approval_requests: UPDATE for decide() mutating status/decidedBy/
 -- decidedAt/decisionNotes on the same row, no DELETE — a rejected access change stays as a record
@@ -231,7 +260,7 @@ DO $$
 DECLARE
   t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'push_subscriptions', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks', 'ml_prediction_records']
+  FOREACH t IN ARRAY ARRAY['users', 'user_compartment_grants', 'teams', 'team_memberships', 'refresh_tokens', 'audit_events', 'configuration_entries', 'signals', 'incidents', 'incident_relations', 'whistleblower_identity_vault', 'triage_assessments', 'cases', 'case_user_flags', 'case_status_history', 'sla_clocks', 'approval_requests', 'access_change_requests', 'notifications', 'notification_deliveries', 'push_subscriptions', 'investigation_plans', 'investigation_issues', 'interviews', 'findings', 'evidence_items', 'custody_events', 'containment_requests', 'loss_entries', 'recovery_entries', 'write_off_entries', 'root_cause_analyses', 'capa_actions', 'capa_validations', 'regulatory_obligations', 'regulatory_submissions', 'tasks', 'ml_prediction_records', 'entities', 'entity_identifiers', 'entity_relationships', 'entity_case_links', 'entity_risk_assessments']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);

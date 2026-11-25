@@ -1,8 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { AuditOutcome, Role } from '@prisma/client';
+import { AuditOutcome } from '@prisma/client';
 import { PrismaService, TenantScopedClient } from '../../infrastructure/database/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.interface';
 import { AuditService } from '../audit/audit.service';
+import { VAULT_READ_ROLES } from './whistleblower-vault.constants';
 
 /**
  * The ONLY code path that ever writes or reads `WhistleblowerIdentityVaultEntry` — per
@@ -18,7 +19,7 @@ import { AuditService } from '../audit/audit.service';
  * this vault is sensitive enough to log every time, matching how a real whistleblower-protection
  * program logs every identity-vault access for its own audit obligations.
  */
-const VAULT_READ_ROLES: Role[] = [Role.COMPLIANCE_MLRO, Role.LEGAL_COUNSEL, Role.ADMIN];
+// Moved to `./whistleblower-vault.constants` (2026-11-25, AUD-03) — see that file's doc comment.
 
 export interface WhistleblowerIdentityInput {
   isAnonymous: boolean;
